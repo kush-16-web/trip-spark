@@ -44,7 +44,7 @@ const Footer: React.FC = () => {
               <input 
                 type="email" 
                 placeholder="Your email" 
-                className="bg-slate-800 border-none rounded-xl px-4 py-2 w-full focus:ring-2 focus:ring-indigo-500"
+                className="bg-slate-800 border-none rounded-xl px-4 py-2 w-full focus:ring-2 focus:ring-indigo-500 focus:placeholder-transparent"
               />
               <button className="bg-indigo-600 text-white p-2 rounded-xl hover:bg-indigo-700 transition-colors">
                 <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
