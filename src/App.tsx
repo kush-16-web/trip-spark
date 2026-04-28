@@ -1,6 +1,5 @@
 import Navbar from './components/Navbar'
 import Hero from './components/Hero'
-import Features from './components/Features'
 import TripForm from './components/TripForm'
 import Destinations from './components/Destinations'
 import Footer from './components/Footer'
@@ -8,42 +7,26 @@ import './App.css'
 import { useState, useEffect, useRef } from 'react'
 import compass from './assets/compass.gif'
 import TripResult from './components/TripResult'
+import { planTrip, type TripFormPayload, type TripPlanModel } from './services/tripApi'
+
+interface TripState extends Partial<TripPlanModel> {
+  Destination: string;
+  days: number | string;
+  travelers: number | string;
+  budget: string;
+  type?: string;
+  startDate: string;
+  endDate: string;
+  vibe?: string;
+}
 
 function App() {
-  const [trip, setTrip] = useState(null);
+  const [trip, setTrip] = useState<TripState | null>(null);
   const [loading, setLoading] = useState(false);
   const [showResult, setShowResult] = useState(false);
-
-  const formRef = useRef(null);
-  const resultRef = useRef(null);
-
-  const handleFormSubmit = (formData :any) => {
-    setLoading(true);
-
-    formRef.current?.scrollIntoView({behavior:'smooth'});
-
-    setTimeout(() => {
-      setTrip({...trip, ...formData });
-      setShowResult(true);
-      setLoading(false);
-
-      setTimeout(() => {
-        resultRef.current?.scrollIntoView({behavior:'smooth'});
-      },2000)
-    },2500)
-  }
-
-  const handlePlanTrip = (Destination: any) => {
-    setShowResult(false);
-    setLoading(true);
-    formRef.current?.scrollIntoView({behavior:'smooth'});
-    setTimeout(() => {
-      setTrip({
-        Destination,
-      });
-      setLoading(false);
-    }, 2500);
-  }
+  
+  const formRef = useRef<HTMLDivElement | null>(null);
+  const resultRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
     if(!loading && trip){
@@ -53,6 +36,48 @@ function App() {
       }
     }
   }, [loading, trip]);
+
+  const handleFormSubmit = async (formData: TripFormPayload) => {
+    try {
+      setLoading(true);
+      formRef.current?.scrollIntoView({ behavior: 'smooth' });
+
+      const response = await planTrip(formData);
+      // Preserve user input fields while merging generated AI plan.
+      setTrip({
+        ...formData,
+        ...response.plan,
+      } as TripState);
+      setShowResult(true);
+
+      setTimeout(() => {
+        resultRef.current?.scrollIntoView({ behavior: 'smooth' });
+      }, 300);
+    } catch (error) {
+      console.error('Error while planning trip:', error);
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  const handlePlanTrip = (Destination: string) => {
+    setShowResult(false);
+    setLoading(true);
+    formRef.current?.scrollIntoView({behavior:'smooth'});
+    setTimeout(() => {
+      setTrip({
+        Destination,
+        days: '',
+        travelers: '',
+        budget: '',
+        startDate: '',
+        endDate: '',
+      });
+      setLoading(false);
+    }, 2500);
+  }
+
+
   
   return (
     <main className="min-h-screen">
@@ -60,7 +85,7 @@ function App() {
       <Hero onPlanTrip={handlePlanTrip} />
       {/* <Features /> */}
       <div ref={formRef} className="">
-  {loading && 
+  {loading &&  
     <div className="flex flex-col justify-center bg-white items-center h-screen">
       <img src={compass} alt="trip-icon" className="w-24 h-24 ease-out"/>
       <p className="font-lexend text-xl font-semibold mt-4">Planning your trip...</p>

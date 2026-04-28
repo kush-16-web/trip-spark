@@ -1,11 +1,12 @@
 import { useState } from 'react';
 import heroBanner from "../assets/trip_hero_banner.png";
-import way from "../assets/way.gif";
 import tripGIF from '../assets/trip.gif'
-import tripPNG from '../assets/trip.png'
 
-export default function Hero({onPlanTrip}){
-  const [isHovered, setIsHovered] = useState(false);
+interface HeroProps {
+  onPlanTrip: (destination: string) => void;
+}
+
+export default function Hero({ onPlanTrip }: HeroProps) {
   const [Destination, setDestination] = useState("");
 
   return (
@@ -16,11 +17,11 @@ export default function Hero({onPlanTrip}){
       
       {/* Content */}
       <div className="relative z-10 max-w-4xl mx-auto px-6 text-center text-white">
-        <h1 className="text-4xl md:text-5xl lg:text-7xl font-['Lexend'] mb-6 leading-tight drop-shadow-xl">
+        <h1 className="text-4xl md:text-5xl lg:text-7xl mb-6 leading-tight drop-shadow-xl">
           Your Next Great <br />
           <span className="text-black/90">Adventure</span> Starts Here
         </h1>
-        <p className="text-md font-['Lexend'] md:text-xl text-slate-100 mb-10 max-w-2xl mx-auto drop-shadow-md">
+        <p className="text-md md:text-xl text-slate-100 mb-10 max-w-2xl mx-auto drop-shadow-md">
           Ditch the spreadsheets. Our AI-powered planner crafts the perfect itinerary 
           tailored to your unique travel style and budget.
         </p>
@@ -34,7 +35,7 @@ export default function Hero({onPlanTrip}){
               value={Destination}
               onChange={(e) => setDestination(e.target.value)}
               placeholder="Where do you want to go?" 
-              className="bg-transparent font-['Lexend'] focus:placeholder-transparent border-none focus:ring-0 text-black placeholder-black w-full outline-none"
+              className="bg-transparent focus:placeholder-transparent border-none focus:ring-0 text-black placeholder-black w-full outline-none"
               onKeyDown={(e) => {
                 if (e.key === "Enter") {
                   onPlanTrip(Destination);
@@ -43,12 +44,10 @@ export default function Hero({onPlanTrip}){
             />
           </div>
           <button 
-            className="flex items-center justify-center gap-3 shadow-lg bg-violet-500 font-['Lexend'] font-semibold text-black py-3 px-8 rounded-full whitespace-nowrap"
-            onMouseEnter={() => setIsHovered(true)}
-            onMouseLeave={() => setIsHovered(false)}
+            className="flex items-center justify-center gap-3 shadow-lg bg-violet-500 font-semibold text-black py-3 px-8 rounded-full whitespace-nowrap"
             onClick={() => onPlanTrip(Destination)}
           >
-            <span className="font-['Lexend'] text-lg text-white">Plan My Trip</span>
+            <span className="text-lg text-white">Plan My Trip</span>
             {/* <img 
               src={isHovered ? tripGIF : tripPNG} 
               alt="trip-icon" 

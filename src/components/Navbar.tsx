@@ -35,13 +35,13 @@ const Navbar: React.FC = () => {
             <div className="w-10 h-10 rounded-xl flex items-center justify-center bg-white/10 p-1 group-hover:bg-white/20 transition-all">
               <img src={logo} alt="Logo" className="w-full h-full object-contain" />
             </div>
-            <div className="font-['Lexend']">
+            <div className="font-['Outfit']">
               <span className="text-2xl font-bold text-violet-400 group-hover:text-white transition-colors">Trip </span>
               <span className="text-white group-hover:text-violet-400 transition-colors">Spark</span>
             </div>
           </a>
           
-          <div className="flex items-center gap-8 text-white font-['Lexend'] font-medium">
+          <div className="flex items-center gap-8 text-white font-medium">
             {navLinks.map((link) => (
               <a key={link.name} href={link.href} className="hover:text-violet-400 hover:-translate-y-0.5 transition-all duration-300 opacity-80 hover:opacity-100">
                 {link.name}
@@ -84,7 +84,7 @@ const Navbar: React.FC = () => {
       {/* Mobile Branding (Top Left) */}
       <div className="md:hidden fixed top-2 left-[50%] -translate-x-1/2 justify-center z-50 flex items-center gap-2 bg-black/30 backdrop-blur-lg px-4 py-2 rounded-2xl border border-white/10 shadow-lg">
         <img src={logo} alt="Logo" className="w-6 h-6" />
-        <span className="font-['Lexend'] text-lg font-black text-white">TripSpark</span>
+        <span className="font-['Outfit'] text-lg font-black text-white">TripSpark</span>
       </div>
     </>
   );

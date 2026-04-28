@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import soloTravel from '../assets/solo-traveller.gif';
 import Romantic from '../assets/dating.gif'
 import family from '../assets/Family-travel.gif'
@@ -7,14 +7,15 @@ import Travelers from '../assets/family.png'
 import Budget from '../assets/Budget.gif'
 import Moderate from '../assets/wallet.gif'
 import Luxury from '../assets/Premium.gif'
-import tripGIF from '../assets/trip.gif'
 
 interface TripFormProps {
   trip: {
     Destination: string;
-    days: string;
+    days: string | number;
     budget: string;
-    travelers: string;
+    travelers: string | number;
+    startDate: string;
+    endDate: string;
   };
   onComplete: (formData: any) => void;
 }
@@ -22,8 +23,19 @@ interface TripFormProps {
 export default function TripForm({ trip, onComplete }: TripFormProps) {
   const [selectedType, setSelectedType] = useState('Solo');
   const [selectedBudget, setSelectedBudget] = useState('Moderate');
-  const [days, setDays] = useState(1);
+  const [days, setDays] = useState(Number(trip.days) || 1);
   const [travelers, setTravelers] = useState(1);
+  const initialDays = Number(trip.days) || 1;
+  const [startDate, setStartDate] = useState(trip.startDate || new Date().toISOString().split('T')[0]);
+  const [endDate, setEndDate] = useState(
+    new Date(
+      new Date(trip.startDate || new Date().toISOString().split('T')[0]).setDate(
+        new Date(trip.startDate || new Date().toISOString().split('T')[0]).getDate() + (initialDays - 1),
+      ),
+    )
+      .toISOString()
+      .split('T')[0],
+  );
 
   const tripTypes = [
     { id: 'Solo', label: 'Solo', icon: soloTravel },
@@ -38,19 +50,35 @@ export default function TripForm({ trip, onComplete }: TripFormProps) {
     { id: 'Luxury', label: 'Luxury', desc: 'Premium', icon: Luxury },
   ];
 
+  const toDateInputValue = (date: Date) => date.toISOString().split('T')[0];
+
+const addDays = (startDate: string, days: number) => {
+  const date = new Date(startDate);
+  date.setDate(date.getDate() + (days - 1)); // inclusive range
+  return toDateInputValue(date);
+};
+const today = toDateInputValue(new Date());
+
+  useEffect(() => {
+    setEndDate(addDays(startDate, days));
+  }, [startDate, days]);
+
+
   const [isTypeOpen, setIsTypeOpen] = useState(false);
   const [isBudgetOpen, setIsBudgetOpen] = useState(false);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    
-    const formData = {
-      type:selectedType,
-      budget:selectedBudget,
-      days:days,
-      travelers:travelers,
-    };
-    onComplete(formData);
+
+    onComplete({
+      Destination: trip.Destination,
+      days: days,
+      budget: selectedBudget,
+      travelers: travelers,
+      type: selectedType,
+      startDate: startDate,
+      endDate: endDate,
+    });
   }
 
   return (
@@ -147,7 +175,7 @@ export default function TripForm({ trip, onComplete }: TripFormProps) {
                 <div className='flex items-center justify-between p-2 bg-white/50 backdrop-blur-sm rounded-2xl border-2 border-slate-100 focus-within:border-violet-300 transition-all'>
                   <button type="button" className='w-14 h-14 rounded-xl bg-violet-100 text-violet-600 hover:bg-violet-500 hover:text-white transition-all font-black text-2xl flex items-center justify-center shadow-sm active:scale-95'
                     onClick={() => { if (days <= 1) return; setDays(days - 1) }}>-</button>
-                  <input type='number' value={days}
+                  <input type='number' value={days} readOnly
                     className='bg-transparent border-none focus:ring-0 text-3xl font-black text-center w-20 text-slate-800' />
                   <button type="button" className='w-14 h-14 rounded-xl bg-violet-600 text-white hover:bg-violet-700 transition-all font-black text-2xl flex items-center justify-center shadow-md active:scale-95'
                     onClick={() => { setDays(days + 1) }}>+</button>
@@ -162,7 +190,8 @@ export default function TripForm({ trip, onComplete }: TripFormProps) {
                     onClick={() => { if (travelers <= 1) return; setTravelers(travelers - 1) }}>-</button>
                     <input 
                       type='number'
-                      value={travelers} 
+                      value={travelers}
+                      readOnly
                       className='bg-transparent border-none focus:ring-0 text-3xl font-black text-center w-20 text-slate-800'
                     />
                     <button type="button" className='w-14 h-14 rounded-xl bg-violet-600 text-white hover:bg-violet-700 transition-all font-black text-2xl flex items-center justify-center shadow-md active:scale-95'
@@ -175,11 +204,22 @@ export default function TripForm({ trip, onComplete }: TripFormProps) {
             <div className="grid md:grid-cols-2 gap-10">
               <div className="space-y-4">
                 <label className="text-sm font-black uppercase tracking-widest text-slate-400 ml-1">Start Date</label>
-                <input type="date" className="input-field text-lg py-5 bg-white/50 backdrop-blur-sm focus:bg-white transition-all shadow-sm" />
+                <input
+                  type="date"
+                  min={today}
+                  value={startDate}
+                  onChange={(e) => setStartDate(e.target.value)}
+                  className="input-field text-lg py-5 bg-white/50 backdrop-blur-sm focus:bg-white transition-all shadow-sm"
+                />
               </div>
               <div className="space-y-4">
                 <label className="text-sm font-black uppercase tracking-widest text-slate-400 ml-1">End Date</label>
-                <input type="date" className="input-field text-lg py-5 bg-white/50 backdrop-blur-sm focus:bg-white transition-all shadow-sm" />
+                <input
+                  type="date"
+                  value={endDate}
+                  readOnly
+                  className="input-field text-lg py-5 bg-slate-100/70 backdrop-blur-sm shadow-sm cursor-not-allowed"
+                />
               </div>
             </div>
 

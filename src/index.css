@@ -1,4 +1,3 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Lexend:wght@400;500;600;700;800&family=Caveat:wght@400;500;600;700&display=swap');
 
 @tailwind base;
 @tailwind components;
@@ -6,10 +5,11 @@
 
 @layer base {
   body {
-    @apply font-['Inter'] bg-slate-50 text-slate-900 antialiased;
+    font-family: 'Inter', sans-serif !important;
+    @apply bg-slate-50 text-slate-900 antialiased;
   }
   h1, h2, h3, h4, h5, h6 {
-    @apply font-['Lexend'];
+    font-family: 'Outfit', sans-serif !important;
   }
   /* Remove number input spinners */
   input[type="number"]::-webkit-inner-spin-button,

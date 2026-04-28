@@ -1,0 +1,55 @@
+export interface DayActivity {
+  time: string;
+  title: string;
+  desc: string;
+}
+
+export interface DayPlan {
+  day: number;
+  activities: DayActivity[];
+}
+
+export interface BudgetEstimateRow {
+  label: string;
+  amount: string;
+  note: string;
+}
+
+export interface StaySuggestion {
+  name: string;
+  tag: string;
+  blurb: string;
+}
+
+export interface PlaceSuggestion {
+  name: string;
+  tag: string;
+  time: string;
+}
+
+export interface TripPlanRequest {
+  Destination: string;
+  days: number;
+  travelers: number;
+  budget: 'Budget' | 'Moderate' | 'Luxury' | string;
+  type: 'Solo' | 'Couple' | 'Family' | 'Friends' | string;
+  vibe?: string;
+  startDate: string;
+  endDate: string;
+}
+
+export interface TotalEstimate {
+  min: number;
+  max: number;
+  currency: string;
+  note: string;
+}
+
+export interface TripPlanResponse {
+  summary: string;
+  totalEstimate: TotalEstimate;
+  dayPlan: DayPlan[];
+  budgetEstimate: BudgetEstimateRow[];
+  suggestedStays: StaySuggestion[];
+  suggestedPlaces: PlaceSuggestion[];
+}
