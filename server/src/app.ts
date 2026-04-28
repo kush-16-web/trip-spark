@@ -11,7 +11,7 @@ export const app = express();
  */
 app.use(
   cors({
-    origin: env.CLIENT_ORIGIN,
+    origin: [env.CLIENT_ORIGIN, "http://localhost:5173", "https://violation-badge-realty-hartford.trycloudflare.com"],
     credentials: true,
   }),
 );

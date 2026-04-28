@@ -2,6 +2,7 @@ import type { Request, Response } from 'express';
 import type { TripPlanRequest } from '../types/trip.types';
 import { tripPlanRequestSchema } from '../validators/trip.validator';
 import { generateTripPlan } from '../services/ai.service';
+import { getWeatherForecast } from '../services/weather.service';
 
 export const planTrip = async (
   req: Request<unknown, unknown, TripPlanRequest>,
@@ -29,11 +30,14 @@ export const planTrip = async (
     });
 
     const plan = await generateTripPlan(validatedInput);
+  
+    const weather = await getWeatherForecast(validatedInput.Destination, validatedInput.startDate, validatedInput.endDate);
 
     return res.status(200).json({
       ok: true,
       message: 'Plan created successfully',
       plan,
+      weather,
     });
   } catch (error) {
     console.error('[trip.controller] Failed to plan trip:', error);

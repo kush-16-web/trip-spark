@@ -5,7 +5,7 @@ import Destinations from './components/Destinations'
 import Footer from './components/Footer'
 import './App.css'
 import { useState, useEffect, useRef } from 'react'
-import compass from './assets/compass.gif'
+// import compass from './assets/compass.gif'
 import finder from './assets/finder.gif'
 import TripResult from './components/TripResult'
 import { planTrip, type TripFormPayload, type TripPlanModel } from './services/tripApi'
@@ -36,6 +36,28 @@ function App() {
         element.scrollIntoView({behavior:'smooth'})
       }
     }
+
+    if(loading){
+       const messages = [
+    "Cooking your trip...",
+    "Finding the hidden gems...",
+    "Checking the local vibes...",
+    "Hold on, we're almost there...",
+    "Packing your virtual bags...",
+  ];
+
+  let index = 0;
+  const interval = setInterval(() => {
+    setLoadingMessage(messages[index]);
+    index = (index + 1) % messages.length;
+  }, 2000);
+
+  return () => clearInterval(interval);
+    }
+    else{
+      setLoadingMessage("Planning your trip...");
+    }
+
   }, [loading, trip]);
 
   const handleFormSubmit = async (formData: TripFormPayload) => {
@@ -48,6 +70,7 @@ function App() {
       setTrip({
         ...formData,
         ...response.plan,
+        weather: response.weather,
       } as TripState);
       setShowResult(true);
 
@@ -78,6 +101,7 @@ function App() {
     }, 2500);
   }
 
+  const [loadingMessage, setLoadingMessage] = useState("Planning your trip...");
 
   
   return (
@@ -88,9 +112,8 @@ function App() {
       <div ref={formRef} className="">
   {loading &&  
     <div className="flex flex-col justify-center bg-white items-center h-screen">
-      {loading && !showResult && <img src={compass} alt="trip-icon" className="w-24 h-24 ease-out"/>}
-      {loading && showResult && <img src={finder} alt="trip-icon" className="w-24 h-24 ease-out"/>}
-      <p className="font-lexend text-xl font-semibold mt-4">{loading && !showResult ? 'Planning your trip...' : 'Finding your trip...'}</p>
+      <img src={finder} alt="trip-icon" className="w-24 h-24 ease-out"/>
+      <p className="font-lexend text-xl font-semibold mt-4">{loadingMessage}</p>
     </div>
   }
 

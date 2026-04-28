@@ -7,14 +7,22 @@ import friends from '../assets/friends.gif';
 import Budget from '../assets/Budget.gif'
 import Moderate from '../assets/wallet.gif'
 import Luxury from '../assets/Premium.gif'
-import Travelers from '../assets/family.png'
-import calender from '../assets/days.png'
+import Travelers from '../assets/group.gif'
+import Sun from '../assets/sun.gif'
+import Cloudy from '../assets/cloudy.gif'
+import Fog from '../assets/foggy.gif'
+import Raining from '../assets/raining.gif'
+import Snowing from '../assets/snowing.gif'
+import Thunderstorm from '../assets/thunderstorm.gif'
+import calender from '../assets/calendar-time.gif'
+
 import type {
   BudgetEstimateRow,
   DayPlan,
   PlaceSuggestion,
   StaySuggestion,
   TotalEstimate,
+  Weather,
 } from '../services/tripApi';
 
 export interface TripResultData {
@@ -31,6 +39,7 @@ export interface TripResultData {
   budgetEstimate?: BudgetEstimateRow[];
   suggestedStays?: StaySuggestion[];
   suggestedPlaces?: PlaceSuggestion[];
+  weather?: Weather[];
 }
 
 interface TripResultProps {
@@ -124,6 +133,7 @@ export default function TripResult({ data, onEdit }: TripResultProps) {
   const dayCount = Math.max(1, data.dayPlan?.length || Number(data?.days) || 1);
   const days = Array.from({ length: dayCount }, (_, i) => i + 1);
   const activeDayPlan = data.dayPlan?.find((item) => item.day === activeDay);
+  const weatherForDay = data.weather?.[activeDay - 1];
 
   return (
     <section id="trip-result" className="py-16 md:py-24 bg-slate-50 overflow-hidden relative">
@@ -183,7 +193,7 @@ export default function TripResult({ data, onEdit }: TripResultProps) {
               {data.totalEstimate.max.toLocaleString()}
             </p>
             {data.type === 'Friends' && (
-              <span className="text-sm text-slate-300 bg-violet-800/10 rounded-lg p-2 flex items-center gap-2">
+              <span className="text-sm text-white font-bold bg-violet-200/20 shadow-sm shadow-violet-900 italic rounded-lg p-2 flex items-center gap-2">
                 Per person: {data.totalEstimate.currency} {perPersonMin.toLocaleString()} -{' '}
                 {perPersonMax.toLocaleString()}
               </span>
@@ -251,6 +261,37 @@ export default function TripResult({ data, onEdit }: TripResultProps) {
                   <span className="text-[10px] md:text-sm font-bold px-3 py-1.5 bg-violet-50 text-violet-600 rounded-xl uppercase">
                     AI itinerary
                   </span>
+                  {weatherForDay && (
+                    <div className='flex gap-2 items-center shadow-sm shadow-violet-400 p-2 rounded-xl'>
+                      <span className='text-lg'>
+                        {weatherForDay.weatherCode === 0 ? <img src={Sun} alt="Sun" className='w-10 h-10 inline' /> : 
+                        weatherForDay.weatherCode === 1 || weatherForDay.weatherCode === 2 ? <img src={Cloudy} alt="Cloudy" className='w-10 h-10 inline' /> : 
+                        weatherForDay.weatherCode === 3 ? <img src={Cloudy} alt="Cloudy" className='w-10 h-10 inline' /> : 
+                        weatherForDay.weatherCode === 45 || weatherForDay.weatherCode === 48 ? <img src={Fog} alt="Fog" className='w-10 h-10 inline' /> : 
+                        weatherForDay.weatherCode === 51 || weatherForDay.weatherCode === 53 || weatherForDay.weatherCode === 55 ? <img src={Raining} alt="Raining" className='w-10 h-10 inline' /> : 
+                        weatherForDay.weatherCode === 56 || weatherForDay.weatherCode === 57 ? <img src={Raining} alt="Raining" className='w-10 h-10 inline' /> : 
+                        weatherForDay.weatherCode === 61 || weatherForDay.weatherCode === 63 || weatherForDay.weatherCode === 65 ? <img src={Raining} alt="Raining" className='w-10 h-10 inline' /> : 
+                        weatherForDay.weatherCode === 66 || weatherForDay.weatherCode === 67 ? <img src={Raining} alt="Raining" className='w-10 h-10 inline' /> : 
+                        weatherForDay.weatherCode === 71 || weatherForDay.weatherCode === 73 || weatherForDay.weatherCode === 75 ? <img src={Snowing} alt="Snowing" className='w-10 h-10 inline' /> : 
+                        weatherForDay.weatherCode === 77 ? <img src={Snowing} alt="Snowing" className='w-10 h-10 inline' /> : 
+                        weatherForDay.weatherCode === 80 || weatherForDay.weatherCode === 81 || weatherForDay.weatherCode === 82 ? <img src={Raining} alt="Raining" className='w-10 h-10 inline' /> : 
+                        weatherForDay.weatherCode === 85 || weatherForDay.weatherCode === 86 ? <img src={Snowing} alt="Snowing" className='w-10 h-10 inline' /> : 
+                        weatherForDay.weatherCode === 95 ? <img src={Thunderstorm} alt="Thunderstorm" className='w-10 h-10 inline' /> : 
+                        weatherForDay.weatherCode === 96 || weatherForDay.weatherCode === 99 ? <img src={Thunderstorm} alt="Thunderstorm" className='w-10 h-10 inline' /> : ''}
+                      </span>
+                     <span className="text-sm font-bold text-slate-600 ml-1">
+                      {weatherForDay.tempMax}° / {weatherForDay.tempMin}°
+                      </span>
+                      <span className="hidden md:inline text-[10px] md:text-xs font-medium text-violet-600 italic bg-violet-50 px-2 py-1 rounded-lg">
+                        {weatherForDay.weatherCode === 0 ? "Perfect day for sightseeing! 🕶️" : 
+                        weatherForDay.weatherCode >= 1 && weatherForDay.weatherCode <= 3 ? "Good day to explore! 🌤️" :
+                        weatherForDay.weatherCode >= 51 && weatherForDay.weatherCode <= 67 ? "Grab an umbrella! ☔" :
+                        weatherForDay.weatherCode >= 80 && weatherForDay.weatherCode <= 82 ? "Heavy rain expected, stay dry! 🌧️" :
+                        weatherForDay.weatherCode >= 95 ? "Thunderstorms! Better stay indoors. ⚡" :
+                        "Enjoy your day! ✨"}
+                      </span>
+                    </div>
+                  )}
                 </h4>
                 <span className="text-[10px] md:text-xs font-black tracking-widest uppercase text-slate-500 bg-slate-100 px-3 py-1.5 rounded-lg">
                   {(activeDayPlan?.activities.length ? activeDayPlan.activities.length : HARDCODED_DAY_ACTIVITIES.length)} stops

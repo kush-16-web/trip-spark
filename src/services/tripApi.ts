@@ -20,6 +20,13 @@ export interface DayPlan {
   activities: DayActivity[];
 }
 
+export interface Weather {
+  date: string;
+  tempMax: number;
+  tempMin: number;
+  weatherCode: number;
+}
+
 export interface BudgetEstimateRow {
   label: string;
   amount: string;
@@ -58,9 +65,10 @@ export interface PlanTripApiResponse {
   ok: boolean;
   message: string;
   plan: TripPlanModel;
+  weather: Weather[];
 }
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? 'http://localhost:8080';
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080';
 
 export async function planTrip(payload: TripFormPayload): Promise<PlanTripApiResponse> {
   const response = await fetch(`${API_BASE_URL}/api/trip/plan`, {

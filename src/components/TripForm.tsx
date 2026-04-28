@@ -183,7 +183,7 @@ const today = toDateInputValue(new Date());
               </div>
                 <div className="space-y-4" style={{ display: selectedType === 'Solo' ? 'none' : 'block' }}>
                   <label className="flex items-center gap-3 text-sm font-black uppercase tracking-widest text-slate-400 ml-1"><span>Travelers </span>
-                    <img src={Travelers} alt="Travelers-icon" className="w-8 h-8" />
+                    {/* <img src={Travelers} alt="Travelers-icon" className="w-8 h-8" /> */}
                   </label>
                   <div className="relative flex items-center justify-between p-2 bg-white/50 backdrop-blur-sm rounded-2xl border-2 border-slate-100 focus-within:border-violet-300 transition-all">
                     <button  type="button" className='w-14 h-14 rounded-xl bg-violet-100 text-violet-600 hover:bg-violet-500 hover:text-white transition-all font-black text-2xl flex items-center justify-center shadow-sm active:scale-95'
