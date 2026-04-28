@@ -117,6 +117,9 @@ export default function TripResult({ data, onEdit }: TripResultProps) {
     return null;
   }
 
+  const travelerCount = Number(data.travelers) || 1;
+  const perPersonMin = Math.round(data.totalEstimate?.min / travelerCount);
+  const perPersonMax = Math.round(data.totalEstimate?.max / travelerCount);
   const destination = data.Destination?.trim() || 'your destination';
   const dayCount = Math.max(1, data.dayPlan?.length || Number(data?.days) || 1);
   const days = Array.from({ length: dayCount }, (_, i) => i + 1);
@@ -174,10 +177,18 @@ export default function TripResult({ data, onEdit }: TripResultProps) {
         {data.totalEstimate && (
           <div className="rounded-[1.5rem] md:rounded-[2rem] bg-slate-900 text-white p-6 md:p-8 mb-12 md:mb-16 shadow-xl">
             <p className="text-xs uppercase tracking-widest text-violet-200 font-black mb-2">Estimated trip cost</p>
+            <div className="flex items-center justify-start gap-4">
             <p className="text-2xl md:text-4xl font-black">
               {data.totalEstimate.currency} {data.totalEstimate.min.toLocaleString()} -{' '}
               {data.totalEstimate.max.toLocaleString()}
             </p>
+            {data.type === 'Friends' && (
+              <span className="text-sm text-slate-300 bg-violet-800/10 rounded-lg p-2 flex items-center gap-2">
+                Per person: {data.totalEstimate.currency} {perPersonMin.toLocaleString()} -{' '}
+                {perPersonMax.toLocaleString()}
+              </span>
+            )}
+            </div>
             <p className="text-sm text-slate-300 mt-2">{data.totalEstimate.note}</p>
           </div>
         )}
@@ -283,7 +294,7 @@ export default function TripResult({ data, onEdit }: TripResultProps) {
               <div className="rounded-2xl md:rounded-[1.75rem] bg-slate-900 text-white p-5 md:p-7 mb-6 md:mb-8">
                 <p className="text-[10px] md:text-xs font-black uppercase tracking-widest text-violet-200 mb-2">Estimated total</p>
                 <p className="text-2xl md:text-4xl font-black leading-tight">
-                  {data.totalEstimate.currency} {data.totalEstimate.min.toLocaleString()} - {data.totalEstimate.max.toLocaleString()}
+                  {data.totalEstimate.currency} {data.totalEstimate.min.toLocaleString()} - {data.totalEstimate.max.toLocaleString()} 
                 </p>
                 <p className="text-sm text-slate-300 mt-2">{data.totalEstimate.note}</p>
               </div>

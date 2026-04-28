@@ -6,6 +6,7 @@ import Footer from './components/Footer'
 import './App.css'
 import { useState, useEffect, useRef } from 'react'
 import compass from './assets/compass.gif'
+import finder from './assets/finder.gif'
 import TripResult from './components/TripResult'
 import { planTrip, type TripFormPayload, type TripPlanModel } from './services/tripApi'
 
@@ -87,8 +88,9 @@ function App() {
       <div ref={formRef} className="">
   {loading &&  
     <div className="flex flex-col justify-center bg-white items-center h-screen">
-      <img src={compass} alt="trip-icon" className="w-24 h-24 ease-out"/>
-      <p className="font-lexend text-xl font-semibold mt-4">Planning your trip...</p>
+      {loading && !showResult && <img src={compass} alt="trip-icon" className="w-24 h-24 ease-out"/>}
+      {loading && showResult && <img src={finder} alt="trip-icon" className="w-24 h-24 ease-out"/>}
+      <p className="font-lexend text-xl font-semibold mt-4">{loading && !showResult ? 'Planning your trip...' : 'Finding your trip...'}</p>
     </div>
   }
 
