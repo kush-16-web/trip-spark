@@ -7,6 +7,7 @@ export interface TripFormPayload {
   startDate: string;
   endDate: string;
   vibe?: string;
+  placeStyle?: string;
 }
 
 export interface DayActivity {
@@ -54,6 +55,7 @@ export interface TotalEstimate {
 
 export interface TripPlanModel {
   summary: string;
+  summaryBullets: string[];
   totalEstimate: TotalEstimate;
   dayPlan: DayPlan[];
   budgetEstimate: BudgetEstimateRow[];

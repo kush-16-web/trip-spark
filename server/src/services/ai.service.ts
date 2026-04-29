@@ -12,6 +12,7 @@ Days: ${input.days}
 Travelers: ${input.travelers}
 Budget: ${input.budget}
 Trip Type: ${input.type}
+Place Preference: ${input.placeStyle ?? 'balanced'}
 Start Date: ${input.startDate}
 End Date: ${input.endDate}
 Vibe: ${input.vibe ?? 'Not specified'}
@@ -23,6 +24,7 @@ Rules:
 Return this exact JSON shape:
 {
   "summary": "string",
+  "summaryBullets": ["string", "string", "string"],
   "totalEstimate": {
     "min": number,
     "max": number,
@@ -48,11 +50,18 @@ Return this exact JSON shape:
   ]
 }
   Additional Guidelines:
+  - summaryBullets must have exactly 3 concise bullet points.
   - Avoid repetitive tourist phrases.
   - Make activities feel realistic and location-specific.
   - Include a mix of food, sightseeing, and relaxation.
   - Avoid repeating the same activity across days.
   - Recommendations should feel natural, not overly promotional.
+  - Respect Place Preference strictly:
+    - hidden_gems: prioritize less-crowded local spots and unique experiences.
+    - balanced: mix iconic highlights with quieter local discoveries.
+    - must_see: prioritize famous, top-rated landmark attractions.
+  - For places such as temples, zoos, museums, or timed attractions, include opening-hours context in the place tag or activity description.
+  - If exact opening hours are uncertain, explicitly say "Check official website for latest timings".
 `;
 }
 
@@ -71,8 +80,14 @@ function extractJson(rawText: string): string {
 function assertTripPlanShape(data: unknown): TripPlanResponse {
   if (!data || typeof data !== 'object') throw new Error('AI response is not an object');
   const plan = data as Partial<TripPlanResponse>;
+  const summaryBulletsValid =
+    Array.isArray(plan.summaryBullets) &&
+    plan.summaryBullets.length === 3 &&
+    plan.summaryBullets.every((item) => typeof item === 'string' && item.trim().length > 0);
   if (
     typeof plan.summary !== 'string' ||
+    plan.summary.trim().length === 0 ||
+    !summaryBulletsValid ||
     typeof plan.totalEstimate !== 'object' ||
     plan.totalEstimate == null ||
     typeof plan.totalEstimate.min !== 'number' ||
@@ -82,7 +97,11 @@ function assertTripPlanShape(data: unknown): TripPlanResponse {
     !Array.isArray(plan.dayPlan) ||
     !Array.isArray(plan.budgetEstimate) ||
     !Array.isArray(plan.suggestedStays) ||
-    !Array.isArray(plan.suggestedPlaces)
+    !Array.isArray(plan.suggestedPlaces) ||
+    plan.dayPlan.length === 0 ||
+    plan.budgetEstimate.length === 0 ||
+    plan.suggestedStays.length === 0 ||
+    plan.suggestedPlaces.length === 0
   ) {
     throw new Error('AI response has invalid top-level shape');
   }

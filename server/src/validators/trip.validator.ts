@@ -27,6 +27,11 @@ export const tripPlanRequestSchema = z.object({
 
   budget: z.string().trim().min(1, 'budget is required'),
   type: z.string().trim().min(1, 'type is required'),
+  placeStyle: z
+    .enum(['hidden_gems', 'balanced', 'must_see'], {
+      error: 'placeStyle must be hidden_gems, balanced, or must_see',
+    })
+    .optional(),
   startDate: z.string().trim().min(1, 'startDate is required'),
   endDate: z.string().trim().min(1, 'endDate is required'),
   vibe: z.string().trim().max(120, 'vibe is too long').optional(),

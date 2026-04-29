@@ -33,6 +33,7 @@ export interface TripPlanRequest {
   travelers: number;
   budget: 'Budget' | 'Moderate' | 'Luxury' | string;
   type: 'Solo' | 'Couple' | 'Family' | 'Friends' | string;
+  placeStyle?: 'hidden_gems' | 'balanced' | 'must_see' | string;
   vibe?: string;
   startDate: string;
   endDate: string;
@@ -47,6 +48,7 @@ export interface TotalEstimate {
 
 export interface TripPlanResponse {
   summary: string;
+  summaryBullets: string[];
   totalEstimate: TotalEstimate;
   dayPlan: DayPlan[];
   budgetEstimate: BudgetEstimateRow[];

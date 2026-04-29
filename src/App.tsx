@@ -16,6 +16,7 @@ interface TripState extends Partial<TripPlanModel> {
   travelers: number | string;
   budget: string;
   type?: string;
+  placeStyle?: string;
   startDate: string;
   endDate: string;
   vibe?: string;

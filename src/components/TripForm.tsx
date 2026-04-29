@@ -3,10 +3,12 @@ import soloTravel from '../assets/solo-traveller.gif';
 import Romantic from '../assets/dating.gif'
 import family from '../assets/Family-travel.gif'
 import friends from '../assets/friends.gif'
-import Travelers from '../assets/family.png'
 import Budget from '../assets/Budget.gif'
 import Moderate from '../assets/wallet.gif'
 import Luxury from '../assets/Premium.gif'
+import hiddenGems from '../assets/hiddenGems.gif'
+import balanced from '../assets/balanced.gif'
+import mustSee from '../assets/mustSee.gif'
 
 interface TripFormProps {
   trip: {
@@ -14,6 +16,7 @@ interface TripFormProps {
     days: string | number;
     budget: string;
     travelers: string | number;
+    placeStyle?: string;
     startDate: string;
     endDate: string;
   };
@@ -25,6 +28,7 @@ export default function TripForm({ trip, onComplete }: TripFormProps) {
   const [selectedBudget, setSelectedBudget] = useState('Moderate');
   const [days, setDays] = useState(Number(trip.days) || 1);
   const [travelers, setTravelers] = useState(1);
+  const [selectedPlaceStyle, setSelectedPlaceStyle] = useState(trip.placeStyle || 'balanced');
   const initialDays = Number(trip.days) || 1;
   const [startDate, setStartDate] = useState(trip.startDate || new Date().toISOString().split('T')[0]);
   const [endDate, setEndDate] = useState(
@@ -42,6 +46,12 @@ export default function TripForm({ trip, onComplete }: TripFormProps) {
     { id: 'Couple', label: 'Couple', icon: Romantic },
     { id: 'Family', label: 'Family', icon: family },
     { id: 'Friends', label: 'Friends', icon: friends },
+  ];
+
+  const placeStyles = [
+    { id: 'hidden_gems', label: 'Hidden Gems', icon: hiddenGems },
+    { id: 'balanced', label: 'Balanced', icon: balanced },
+    { id: 'must_see', label: 'Must-See', icon: mustSee },
   ];
 
   const budgetLevels = [
@@ -76,6 +86,7 @@ const today = toDateInputValue(new Date());
       budget: selectedBudget,
       travelers: travelers,
       type: selectedType,
+      placeStyle: selectedPlaceStyle,
       startDate: startDate,
       endDate: endDate,
     });
@@ -292,6 +303,30 @@ const today = toDateInputValue(new Date());
                       <p className="text-xs text-slate-500 font-medium">{level.desc}</p>
                     </div>
                   </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Place preference */}
+            <div className="space-y-4">
+              <label className="text-sm font-black uppercase tracking-widest text-slate-400 ml-1">
+                Place preference
+              </label>
+              <div className="grid md:grid-cols-3 gap-4">
+                {placeStyles.map((style) => (
+                  <button
+                    key={style.id}
+                    type="button"
+                    onClick={() => setSelectedPlaceStyle(style.id)}
+                    className={`flex items-center gap-4 p-4 rounded-2xl border-2 transition-all ${
+                      selectedPlaceStyle === style.id
+                        ? 'border-violet-500 ring-4 ring-violet-500/10 bg-violet-50'
+                        : 'border-slate-100 bg-white hover:border-violet-200'
+                    }`}
+                  >
+                    <img src={style.icon} alt={style.label} className="w-10 h-10 object-contain" />
+                    <span className="font-bold text-slate-800">{style.label}</span>
+                  </button>
                 ))}
               </div>
             </div>

@@ -11,13 +11,14 @@ export const planTrip = async (
   res: Response,
 )=> {
   try {
-    const { Destination, days, budget, travelers, type, vibe, startDate, endDate } = req.body;
+    const { Destination, days, budget, travelers, type, placeStyle, vibe, startDate, endDate } = req.body;
     const validatedInput = tripPlanRequestSchema.parse({
       Destination,
       days,
       budget,
       travelers,
       type,
+      placeStyle,
       vibe,
       startDate,
       endDate,

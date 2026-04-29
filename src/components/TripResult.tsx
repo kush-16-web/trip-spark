@@ -34,6 +34,7 @@ export interface TripResultData {
   endDate?: string;
   type?: string;
   summary?: string;
+  summaryBullets?: string[];
   totalEstimate?: TotalEstimate;
   dayPlan?: DayPlan[];
   budgetEstimate?: BudgetEstimateRow[];
@@ -127,8 +128,8 @@ export default function TripResult({ data, onEdit }: TripResultProps) {
   }
 
   const travelerCount = Number(data.travelers) || 1;
-  const perPersonMin = Math.round(data.totalEstimate?.min / travelerCount);
-  const perPersonMax = Math.round(data.totalEstimate?.max / travelerCount);
+  const perPersonMin = Math.round((data.totalEstimate?.min ?? 0) / travelerCount);
+  const perPersonMax = Math.round((data.totalEstimate?.max ?? 0) / travelerCount);
   const destination = data.Destination?.trim() || 'your destination';
   const dayCount = Math.max(1, data.dayPlan?.length || Number(data?.days) || 1);
   const days = Array.from({ length: dayCount }, (_, i) => i + 1);
@@ -211,11 +212,7 @@ export default function TripResult({ data, onEdit }: TripResultProps) {
               {data.summary ?? `Trip plan for ${destination}.`}
             </p>
             <ul className="grid sm:grid-cols-2 gap-4">
-              {[
-                'Balanced mix of sights, food, and downtime',
-                'Suited to your group size and budget band',
-                'Day blocks you can reorder without losing the story',
-              ].map((item) => (
+              {(data.summaryBullets ?? []).map((item) => (
                 <li
                   key={item}
                   className="flex gap-3 items-start text-slate-700 text-sm md:text-base leading-relaxed"
@@ -255,47 +252,69 @@ export default function TripResult({ data, onEdit }: TripResultProps) {
             <div className="p-6 md:p-10 rounded-[2rem] md:rounded-[3rem] bg-white border border-slate-100 shadow-sm transition-all relative overflow-hidden group">
               <div className="absolute top-0 right-0 w-36 h-36 bg-violet-50 rounded-bl-full -z-10 transition-transform duration-500 group-hover:scale-110" />
               
-              <div className="flex flex-wrap items-center justify-between gap-3 mb-8">
+              <div className="flex flex-col items-start justify-between gap-3 mb-8">
+                <div className='flex items-center gap-3'>
                 <h4 className="text-xl md:text-3xl font-black text-slate-900 flex flex-wrap items-center gap-3">
-                  Day {activeDay}
+                  Day {activeDay} {data.startDate && (
+                    (() => {
+                      const start = new Date(data.startDate);
+                      const dayDate = new Date(start);
+                      dayDate.setDate(start.getDate() + (activeDay - 1));
+                      return (
+                        <span className="text-slate-500 text-base font-normal ml-2">
+                          {dayDate.toLocaleDateString(undefined, {
+                            year: 'numeric',
+                            month: 'short',
+                            day: 'numeric'
+                          })}
+                        </span>
+                      );
+                    })()
+                  )}
+             
                   <span className="text-[10px] md:text-sm font-bold px-3 py-1.5 bg-violet-50 text-violet-600 rounded-xl uppercase">
                     AI itinerary
                   </span>
-                  {weatherForDay && (
-                    <div className='flex gap-2 items-center shadow-sm shadow-violet-400 p-2 rounded-xl'>
-                      <span className='text-lg'>
-                        {weatherForDay.weatherCode === 0 ? <img src={Sun} alt="Sun" className='w-10 h-10 inline' /> : 
-                        weatherForDay.weatherCode === 1 || weatherForDay.weatherCode === 2 ? <img src={Cloudy} alt="Cloudy" className='w-10 h-10 inline' /> : 
-                        weatherForDay.weatherCode === 3 ? <img src={Cloudy} alt="Cloudy" className='w-10 h-10 inline' /> : 
-                        weatherForDay.weatherCode === 45 || weatherForDay.weatherCode === 48 ? <img src={Fog} alt="Fog" className='w-10 h-10 inline' /> : 
-                        weatherForDay.weatherCode === 51 || weatherForDay.weatherCode === 53 || weatherForDay.weatherCode === 55 ? <img src={Raining} alt="Raining" className='w-10 h-10 inline' /> : 
-                        weatherForDay.weatherCode === 56 || weatherForDay.weatherCode === 57 ? <img src={Raining} alt="Raining" className='w-10 h-10 inline' /> : 
-                        weatherForDay.weatherCode === 61 || weatherForDay.weatherCode === 63 || weatherForDay.weatherCode === 65 ? <img src={Raining} alt="Raining" className='w-10 h-10 inline' /> : 
-                        weatherForDay.weatherCode === 66 || weatherForDay.weatherCode === 67 ? <img src={Raining} alt="Raining" className='w-10 h-10 inline' /> : 
-                        weatherForDay.weatherCode === 71 || weatherForDay.weatherCode === 73 || weatherForDay.weatherCode === 75 ? <img src={Snowing} alt="Snowing" className='w-10 h-10 inline' /> : 
-                        weatherForDay.weatherCode === 77 ? <img src={Snowing} alt="Snowing" className='w-10 h-10 inline' /> : 
-                        weatherForDay.weatherCode === 80 || weatherForDay.weatherCode === 81 || weatherForDay.weatherCode === 82 ? <img src={Raining} alt="Raining" className='w-10 h-10 inline' /> : 
-                        weatherForDay.weatherCode === 85 || weatherForDay.weatherCode === 86 ? <img src={Snowing} alt="Snowing" className='w-10 h-10 inline' /> : 
-                        weatherForDay.weatherCode === 95 ? <img src={Thunderstorm} alt="Thunderstorm" className='w-10 h-10 inline' /> : 
-                        weatherForDay.weatherCode === 96 || weatherForDay.weatherCode === 99 ? <img src={Thunderstorm} alt="Thunderstorm" className='w-10 h-10 inline' /> : ''}
-                      </span>
-                     <span className="text-sm font-bold text-slate-600 ml-1">
-                      {weatherForDay.tempMax}° / {weatherForDay.tempMin}°
-                      </span>
-                      <span className="hidden md:inline text-[10px] md:text-xs font-medium text-violet-600 italic bg-violet-50 px-2 py-1 rounded-lg">
-                        {weatherForDay.weatherCode === 0 ? "Perfect day for sightseeing! 🕶️" : 
-                        weatherForDay.weatherCode >= 1 && weatherForDay.weatherCode <= 3 ? "Good day to explore! 🌤️" :
-                        weatherForDay.weatherCode >= 51 && weatherForDay.weatherCode <= 67 ? "Grab an umbrella! ☔" :
-                        weatherForDay.weatherCode >= 80 && weatherForDay.weatherCode <= 82 ? "Heavy rain expected, stay dry! 🌧️" :
-                        weatherForDay.weatherCode >= 95 ? "Thunderstorms! Better stay indoors. ⚡" :
-                        "Enjoy your day! ✨"}
-                      </span>
+                </h4>
+                </div>
+                <div className='w-full flex justify-between items-center gap-4'>
+                {weatherForDay && (
+                    <div className="flex flex-col md:flex-row gap-3 items-center bg-white border border-violet-200/70 rounded-2xl shadow-sm px-4 py-3 mb-2 transition-all relative">
+                      <div className="flex items-center justify-center w-12 h-12 rounded-xl border border-violet-200 mr-0 md:mr-3 mb-1 md:mb-0">
+                        {weatherForDay.weatherCode === 0 ? <img src={Sun} alt="Sun" className='w-10 h-10' /> : 
+                        weatherForDay.weatherCode === 1 || weatherForDay.weatherCode === 2 ? <img src={Cloudy} alt="Cloudy" className='w-10 h-10' /> : 
+                        weatherForDay.weatherCode === 3 ? <img src={Cloudy} alt="Cloudy" className='w-10 h-10' /> : 
+                        weatherForDay.weatherCode === 45 || weatherForDay.weatherCode === 48 ? <img src={Fog} alt="Fog" className='w-10 h-10' /> : 
+                        weatherForDay.weatherCode === 51 || weatherForDay.weatherCode === 53 || weatherForDay.weatherCode === 55 ? <img src={Raining} alt="Raining" className='w-10 h-10' /> : 
+                        weatherForDay.weatherCode === 56 || weatherForDay.weatherCode === 57 ? <img src={Raining} alt="Raining" className='w-10 h-10' /> : 
+                        weatherForDay.weatherCode === 61 || weatherForDay.weatherCode === 63 || weatherForDay.weatherCode === 65 ? <img src={Raining} alt="Raining" className='w-10 h-10' /> : 
+                        weatherForDay.weatherCode === 66 || weatherForDay.weatherCode === 67 ? <img src={Raining} alt="Raining" className='w-10 h-10' /> : 
+                        weatherForDay.weatherCode === 71 || weatherForDay.weatherCode === 73 || weatherForDay.weatherCode === 75 ? <img src={Snowing} alt="Snowing" className='w-10 h-10' /> : 
+                        weatherForDay.weatherCode === 77 ? <img src={Snowing} alt="Snowing" className='w-10 h-10' /> : 
+                        weatherForDay.weatherCode === 80 || weatherForDay.weatherCode === 81 || weatherForDay.weatherCode === 82 ? <img src={Raining} alt="Raining" className='w-10 h-10' /> : 
+                        weatherForDay.weatherCode === 85 || weatherForDay.weatherCode === 86 ? <img src={Snowing} alt="Snowing" className='w-10 h-10' /> : 
+                        weatherForDay.weatherCode === 95 ? <img src={Thunderstorm} alt="Thunderstorm" className='w-10 h-10' /> : 
+                        weatherForDay.weatherCode === 96 || weatherForDay.weatherCode === 99 ? <img src={Thunderstorm} alt="Thunderstorm" className='w-10 h-10' /> : ''}
+                      </div>
+                      <div className="flex flex-col items-center md:items-start flex-1 min-w-0">
+                        <span className="text-lg font-bold text-slate-800 mb-1">
+                          {weatherForDay.tempMax}° / {weatherForDay.tempMin}°
+                        </span>
+                        <span className="text-[11px] md:text-xs font-medium text-violet-700 bg-violet-50 px-2.5 py-1 italic rounded-md text-center md:text-left">
+                          {weatherForDay.weatherCode === 0 ? "Sun's out! Great day to explore 😎" :
+                          weatherForDay.weatherCode >= 1 && weatherForDay.weatherCode <= 3 ? "Nice weather overall, enjoy your adventure 🌤️" :
+                          weatherForDay.weatherCode >= 51 && weatherForDay.weatherCode <= 67 ? "Rain possible later, keep an umbrella handy ☔" :
+                          weatherForDay.weatherCode >= 80 && weatherForDay.weatherCode <= 82 ? "Showers likely today, plan a backup indoor stop 🌧️" :
+                          weatherForDay.weatherCode >= 95 ? "Storm risk possible, safer to keep indoor options ⚡" :
+                          "Weather may shift - stay flexible and have fun ✨"}
+                        </span>
+                      </div>
                     </div>
                   )}
-                </h4>
                 <span className="text-[10px] md:text-xs font-black tracking-widest uppercase text-slate-500 bg-slate-100 px-3 py-1.5 rounded-lg">
                   {(activeDayPlan?.activities.length ? activeDayPlan.activities.length : HARDCODED_DAY_ACTIVITIES.length)} stops
                 </span>
+                </div>
               </div>
 
               <div className="space-y-4">
