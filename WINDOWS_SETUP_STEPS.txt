@@ -1,0 +1,120 @@
+Trip Spark - Windows Setup After Git Pull
+==========================================
+
+Important
+---------
+If you already pushed from Ubuntu and will run `git pull` on Windows, most code/files are already included.
+On Windows you mainly need local machine setup: Node, Postgres, env vars, and Prisma apply.
+
+
+1) Pull latest code
+-------------------
+In project folder on Windows:
+
+git pull
+
+
+2) Install dependencies
+-----------------------
+From project root:
+
+npm install
+
+Then backend deps:
+
+cd server
+npm install
+cd ..
+
+
+3) Install/start PostgreSQL (Windows)
+-------------------------------------
+If not installed, install PostgreSQL via official Windows installer.
+
+Then create DB/user once (SQL shell or pgAdmin query):
+
+CREATE DATABASE tripspark;
+CREATE USER tripspark_app WITH PASSWORD 'your-strong-password';
+GRANT ALL PRIVILEGES ON DATABASE tripspark TO tripspark_app;
+
+If Prisma permission errors happen:
+
+GRANT USAGE, CREATE ON SCHEMA public TO tripspark_app;
+ALTER ROLE tripspark_app CREATEDB;
+
+
+4) Set env vars (required)
+--------------------------
+Edit only:
+
+server/.env
+
+Put:
+
+DATABASE_URL=postgresql://tripspark_app:your-strong-password@localhost:5432/tripspark
+GEMINI_API_KEY=your_real_key
+GEMINI_MODEL=gemini-2.5-flash
+
+Do NOT commit real secrets.
+
+
+5) Apply Prisma on Windows DB
+-----------------------------
+From `server` folder:
+
+npx prisma generate
+npx prisma migrate deploy
+
+If `migrate deploy` cannot apply on fresh local DB, use once:
+
+npx prisma migrate dev --name init_local
+
+
+6) Run app
+----------
+Terminal A (backend):
+
+cd server
+npm run dev
+
+Terminal B (frontend):
+
+cd ..
+npm run dev
+
+
+7) Quick checks
+---------------
+Open frontend (usually http://localhost:5173) and verify:
+
+1. Hero -> Trip Form opens
+2. Trip Form has Place Preference selector
+3. Plan generation works
+4. `/api/trip/my-trips` returns saved trips
+5. `/api/trip/<id>` opens one trip
+
+
+8) If something breaks
+----------------------
+Run:
+
+Root build:
+npm run build
+
+Backend typecheck:
+cd server
+npm run typecheck
+
+Then re-check:
+- `server/.env` values
+- PostgreSQL service running in Windows Services
+- Prisma commands in step 5
+
+
+Summary
+-------
+After `git pull`, you usually do:
+1) install deps
+2) set `server/.env`
+3) run Prisma commands
+4) start frontend/backend
