@@ -10,7 +10,7 @@ Create a travel plan in strict JSON format for:
 Destination: ${input.Destination}
 Days: ${input.days}
 Travelers: ${input.travelers}
-Budget: ${input.budget}
+Budget Range: ${input.budgetRange.min} to ${input.budgetRange.max} (Total Budget)
 Trip Type: ${input.type}
 Place Preference: ${input.placeStyle ?? 'balanced'}
 Start Date: ${input.startDate}
@@ -18,7 +18,7 @@ End Date: ${input.endDate}
 Vibe: ${input.vibe ?? 'Not specified'}
 Rules:
 - Return ONLY valid JSON (no markdown, no explanation text).
-- Budget must align with selected tier (${input.budget}).
+- Budget must align strictly with the total range provided: ${input.budgetRange.min} to ${input.budgetRange.max}.
 - Include realistic total trip cost range.
 - Day plan length must match exactly ${input.days} days.
 Return this exact JSON shape:

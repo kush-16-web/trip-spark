@@ -31,7 +31,7 @@ export interface TripPlanRequest {
   Destination: string;
   days: number;
   travelers: number;
-  budget: 'Budget' | 'Moderate' | 'Luxury' | string;
+  budgetRange: { min: number; max: number };
   type: 'Solo' | 'Couple' | 'Family' | 'Friends' | string;
   placeStyle?: 'hidden_gems' | 'balanced' | 'must_see' | string;
   vibe?: string;

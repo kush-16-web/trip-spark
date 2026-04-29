@@ -2,7 +2,7 @@ export interface TripFormPayload {
   Destination: string;
   days: number;
   travelers: number;
-  budget: string;
+  budgetRange: { min: number; max: number };
   type: string;
   startDate: string;
   endDate: string;

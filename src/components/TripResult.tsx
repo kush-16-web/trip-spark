@@ -191,8 +191,8 @@ export default function TripResult({ data, onEdit }: TripResultProps) {
               className="p-6 md:p-8 rounded-[2rem] bg-white/80 backdrop-blur-sm border border-white/40 shadow-[0_8px_30px_rgb(0,0,0,0.04)] hover:shadow-[0_20px_50px_rgba(79,70,229,0.1)] transition-all duration-500 group"
             >
               <div className="flex items-center gap-4 mb-4">
-                <div className="p-3 bg-slate-50 rounded-2xl group-hover:bg-violet-50 transition-colors duration-500">
-                  <img src={stat.icon} alt={stat.label} className='h-6 w-6 md:h-7 md:w-7' />
+                <div className=" bg-slate-50 rounded-2xl group-hover:bg-violet-50 transition-colors duration-500">
+                  <img src={stat.icon} alt={stat.label} className='h-10 w-10' />
                 </div>
               </div>
               <p className="text-[10px] md:text-xs font-bold text-slate-400 uppercase tracking-[0.2em] mb-1.5">{stat.label}</p>
@@ -274,22 +274,65 @@ export default function TripResult({ data, onEdit }: TripResultProps) {
           <SectionHeading id="day-plan-heading" eyebrow="Schedule" title="Day-wise plan" icon="🗺️" />
           
           <div className="max-w-4xl">
-            {/* Horizontal Tabs */}
-            <div className="flex bg-violet-100 w-fit rounded-full py-2 px-4 transition-all duration-300 overflow-x-auto gap-2 mb-6 md:mb-10 snap-x [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
-              {days.map((day) => (
-                <button
-                  key={day}
-                  onClick={() => setActiveDay(day)}
-                  className={`shrink-0 snap-start py-1 px-4 rounded-2xl font-bold text-base md:text-lg transition-all duration-300 flex items-center gap-1 border-2 ${
-                    activeDay === day 
-                      ? 'bg-violet-600 text-white border-violet-600 shadow-lg shadow-violet-200 scale-100' 
-                      : 'bg-white text-slate-500 border-slate-100 hover:border-violet-200 hover:bg-violet-50 hover:scale-90'
-                  }`}
-                >
-                  <span className={`text-[10px] md:text-xs uppercase tracking-widest ${activeDay === day ? 'text-white' : 'text-slate-400'}`}>Day</span>
-                  <span>{day}</span>
-                </button>
-              ))}
+            {/* Horizontal Tabs - Mobile Optimized with Sliding Animation */}
+            <div className="relative mb-8 md:mb-12">
+              <div 
+                className="relative flex bg-slate-100/80 backdrop-blur-sm p-1.5 rounded-[2rem] overflow-x-auto snap-x no-scrollbar"
+                style={{
+                  '--tab-w': '100px',
+                  '--tab-gap': '4px',
+                  '--md-tab-w': '120px'
+                } as any}
+              >
+                {/* The Sliding Background */}
+                <div 
+                  className="absolute top-1.5 bottom-1.5 bg-white rounded-[1.5rem] shadow-[0_4px_12px_rgba(0,0,0,0.08)] transition-all duration-300 ease-out pointer-events-none"
+                  style={{
+                    width: 'var(--tab-w)',
+                    transform: `translateX(calc(${(activeDay - 1)} * (var(--tab-w) + var(--tab-gap)) + 2px))`, // +2px for the internal px-0.5
+                  } as any}
+                  data-md-style={`width: var(--md-tab-w); transform: translateX(calc(${(activeDay - 1)} * (var(--md-tab-w) + var(--tab-gap)) + 2px))`}
+                />
+                
+                {/* Responsive CSS for the slider (since style={} doesn't support @media) */}
+                <style>{`
+                  @media (min-width: 768px) {
+                    .active-slider {
+                      width: 120px !important;
+                      transform: translateX(calc(${(activeDay - 1)} * 124px + 2px)) !important;
+                    }
+                  }
+                `}</style>
+
+                <div className="flex gap-1 px-0.5 relative">
+                  {/* The Slider (Now with a class for the media query) */}
+                  <div 
+                    className="active-slider absolute top-0 bottom-0 bg-white rounded-[1.5rem] shadow-[0_4px_12px_rgba(0,0,0,0.08)] transition-all duration-300 ease-out pointer-events-none"
+                    style={{
+                      width: '100px',
+                      transform: `translateX(calc(${(activeDay - 1)} * 104px))`
+                    }}
+                  />
+
+                  {days.map((day) => (
+                    <button
+                      key={day}
+                      onClick={() => setActiveDay(day)}
+                      className={`relative z-10 shrink-0 snap-start min-w-[100px] md:min-w-[120px] py-3 px-6 rounded-[1.5rem] font-bold text-sm md:text-base transition-colors duration-300 flex flex-col items-center justify-center gap-0.5 ${
+                        activeDay === day ? 'text-violet-600' : 'text-slate-500 hover:text-slate-700'
+                      }`}
+                    >
+                      <span className={`text-[9px] uppercase tracking-[0.2em] font-black ${activeDay === day ? 'text-violet-400' : 'text-slate-400'}`}>
+                        Day
+                      </span>
+                      <span className="text-lg md:text-xl leading-none">{day}</span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+              
+              {/* Subtle scroll indicator */}
+              <div className="absolute right-0 top-0 bottom-0 w-8 bg-gradient-to-l from-slate-50 to-transparent pointer-events-none md:hidden" />
             </div>
 
             {/* Active Day Content */}
@@ -323,14 +366,14 @@ export default function TripResult({ data, onEdit }: TripResultProps) {
                 </div>
                 <div className='w-full flex justify-between items-center gap-4'>
                 {weatherForDay && (
-                    <div className="flex flex-col md:flex-row gap-3 items-center bg-white border border-violet-200/70 rounded-2xl shadow-sm px-4 py-3 mb-2 transition-all relative">
+                    <div className="flex flex-row gap-3 items-center bg-white border border-violet-200/70 rounded-2xl shadow-sm px-4 py-3 mb-2 transition-all relative">
                       <div className="flex items-center justify-center w-12 h-12 rounded-xl border border-violet-200 mr-0 md:mr-3 mb-1 md:mb-0">
-                        {weatherForDay.weatherCode === 0 ? <img src={Sun} alt="Sun" className='w-10 h-10' /> : 
-                        weatherForDay.weatherCode === 1 || weatherForDay.weatherCode === 2 ? <img src={Cloudy} alt="Cloudy" className='w-10 h-10' /> : 
-                        weatherForDay.weatherCode === 3 ? <img src={Cloudy} alt="Cloudy" className='w-10 h-10' /> : 
-                        weatherForDay.weatherCode === 45 || weatherForDay.weatherCode === 48 ? <img src={Fog} alt="Fog" className='w-10 h-10' /> : 
-                        weatherForDay.weatherCode === 51 || weatherForDay.weatherCode === 53 || weatherForDay.weatherCode === 55 ? <img src={Raining} alt="Raining" className='w-10 h-10' /> : 
-                        weatherForDay.weatherCode === 56 || weatherForDay.weatherCode === 57 ? <img src={Raining} alt="Raining" className='w-10 h-10' /> : 
+                        {weatherForDay.weatherCode === 0 ? <img src={Sun} alt="Sun" className='md:w-10 md:h-10 w-6 h-6' /> : 
+                        weatherForDay.weatherCode === 1 || weatherForDay.weatherCode === 2 ? <img src={Cloudy} alt="Cloudy" className='md:w-10 md:h-10 w-6 h-6' /> : 
+                        weatherForDay.weatherCode === 3 ? <img src={Cloudy} alt="Cloudy" className='md:w-10 md:h-10 w-6 h-6' /> : 
+                        weatherForDay.weatherCode === 45 || weatherForDay.weatherCode === 48 ? <img src={Fog} alt="Fog" className='md:w-10 md:h-10 w-6 h-6' /> : 
+                        weatherForDay.weatherCode === 51 || weatherForDay.weatherCode === 53 || weatherForDay.weatherCode === 55 ? <img src={Raining} alt="Raining" className='md:w-10 md:h-10 w-6 h-6' /> : 
+                        weatherForDay.weatherCode === 56 || weatherForDay.weatherCode === 57 ? <img src={Raining} alt="Raining" className='md:w-10 md:h-10 w-6 h-6' /> : 
                         weatherForDay.weatherCode === 61 || weatherForDay.weatherCode === 63 || weatherForDay.weatherCode === 65 ? <img src={Raining} alt="Raining" className='w-10 h-10' /> : 
                         weatherForDay.weatherCode === 66 || weatherForDay.weatherCode === 67 ? <img src={Raining} alt="Raining" className='w-10 h-10' /> : 
                         weatherForDay.weatherCode === 71 || weatherForDay.weatherCode === 73 || weatherForDay.weatherCode === 75 ? <img src={Snowing} alt="Snowing" className='w-10 h-10' /> : 
@@ -341,10 +384,15 @@ export default function TripResult({ data, onEdit }: TripResultProps) {
                         weatherForDay.weatherCode === 96 || weatherForDay.weatherCode === 99 ? <img src={Thunderstorm} alt="Thunderstorm" className='w-10 h-10' /> : ''}
                       </div>
                       <div className="flex flex-col items-center md:items-start flex-1 min-w-0">
-                        <span className="text-lg font-bold text-slate-800 mb-1">
+                       <div className='flex gap-2 items-center w-full justify-between'>
+                         <span className="text-xs md:text-lg font-bold text-slate-800 mb-1">
                           {weatherForDay.tempMax}° / {weatherForDay.tempMin}°
                         </span>
-                        <span className="text-[11px] md:text-xs font-medium text-violet-700 bg-violet-50 px-2.5 py-1 italic rounded-md text-center md:text-left">
+                         <span className="text-[10px] block md:hidden md:text-xs font-black tracking-widest uppercase text-slate-500 bg-slate-100 px-3 py-1.5 rounded-lg">
+                  {(activeDayPlan?.activities.length ? activeDayPlan.activities.length : HARDCODED_DAY_ACTIVITIES.length)} stops
+                </span>
+                       </div>
+                        <span className="text-[10px] md:text-xs font-medium text-violet-700 bg-violet-50 px-2.5 py-1 italic rounded-md text-center md:text-left">
                           {weatherForDay.weatherCode === 0 ? "Sun's out! Great day to explore 😎" :
                           weatherForDay.weatherCode >= 1 && weatherForDay.weatherCode <= 3 ? "Nice weather overall, enjoy your adventure 🌤️" :
                           weatherForDay.weatherCode >= 51 && weatherForDay.weatherCode <= 67 ? "Rain possible later, keep an umbrella handy ☔" :
@@ -355,7 +403,7 @@ export default function TripResult({ data, onEdit }: TripResultProps) {
                       </div>
                     </div>
                   )}
-                <span className="text-[10px] md:text-xs font-black tracking-widest uppercase text-slate-500 bg-slate-100 px-3 py-1.5 rounded-lg">
+                <span className="text-[10px] hidden md:block md:text-xs font-black tracking-widest uppercase text-slate-500 bg-slate-100 px-3 py-1.5 rounded-lg">
                   {(activeDayPlan?.activities.length ? activeDayPlan.activities.length : HARDCODED_DAY_ACTIVITIES.length)} stops
                 </span>
                 </div>

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import heroBanner from "../assets/trip_hero_banner.png";
 import tripGIF from '../assets/trip.gif'
 
@@ -9,6 +9,35 @@ interface HeroProps {
 
 export default function Hero({ onPlanTrip }: HeroProps) {
   const [Destination, setDestination] = useState("");
+  const [placeholderText, setPlaceholderText] = useState("");
+  const [destIndex, setDestIndex] = useState(0);
+  const [subIndex, setSubIndex] = useState(0);
+  const [isDeleting, setIsDeleting] = useState(false);
+
+  const destinations = ["Goa, India", "Manali, India","Himalayas, India", "Gokarna, India", "Tokyo, Japan", "Paris, France", "Bali, Indonesia", "New York, USA"];
+
+  useEffect(() => {
+    if (subIndex === destinations[destIndex].length + 1 && !isDeleting) {
+      const timeout = setTimeout(() => setIsDeleting(true), 1500);
+      return () => clearTimeout(timeout);
+    }
+
+    if (subIndex === 0 && isDeleting) {
+      setIsDeleting(false);
+      setDestIndex((prev) => (prev + 1) % destinations.length);
+      return;
+    }
+
+    const timeout = setTimeout(() => {
+      setSubIndex((prev) => prev + (isDeleting ? -1 : 1));
+    }, isDeleting ? 50 : 100);
+
+    return () => clearTimeout(timeout);
+  }, [subIndex, destIndex, isDeleting]);
+
+  useEffect(() => {
+    setPlaceholderText(`Try "${destinations[destIndex].substring(0, subIndex)}"`);
+  }, [subIndex, destIndex]);
 
   const handlePlanTrip = () => {
     const destinationToUse = Destination.trim();
@@ -44,8 +73,8 @@ export default function Hero({ onPlanTrip }: HeroProps) {
                 onChange={(e) => {
                   setDestination(e.target.value);
                 }}
-                placeholder="Where do you want to go?"
-                className="bg-transparent focus:placeholder-transparent border-none focus:ring-0 text-black placeholder-black w-full outline-none"
+                placeholder={placeholderText}
+                className="bg-transparent focus:placeholder-transparent border-none focus:ring-0 text-black placeholder-slate-400 w-full outline-none"
                 onKeyDown={(e) => {
                   if (e.key === "Enter") {
                     handlePlanTrip();

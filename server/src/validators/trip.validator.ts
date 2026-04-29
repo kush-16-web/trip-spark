@@ -25,7 +25,10 @@ export const tripPlanRequestSchema = z.object({
     .min(1, 'travelers must be at least 1')
     .max(20, 'travelers must be at most 20'),
 
-  budget: z.string().trim().min(1, 'budget is required'),
+  budgetRange: z.object({
+    min: z.number().min(0),
+    max: z.number().min(0),
+  }),
   type: z.string().trim().min(1, 'type is required'),
   placeStyle: z
     .enum(['hidden_gems', 'balanced', 'must_see'], {

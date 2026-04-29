@@ -14,7 +14,7 @@ interface TripState extends Partial<TripPlanModel> {
   Destination: string;
   days: number | string;
   travelers: number | string;
-  budget: string;
+  budgetRange?: { min: number; max: number };
   type?: string;
   placeStyle?: string;
   startDate: string;
@@ -94,7 +94,7 @@ function App() {
         Destination,
         days: '',
         travelers: '',
-        budget: '',
+        budgetRange: { min: 10000, max: 50000 },
         startDate: '',
         endDate: '',
       });

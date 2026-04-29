@@ -48,16 +48,13 @@ export default function TripForm({ trip, onComplete }: TripFormProps) {
     { id: 'Friends', label: 'Friends', icon: friends },
   ];
 
+  const [minBudget, setMinBudget] = useState(10000);
+  const [maxBudget, setMaxBudget] = useState(50000);
+
   const placeStyles = [
     { id: 'hidden_gems', label: 'Hidden Gems', icon: hiddenGems },
     { id: 'balanced', label: 'Balanced', icon: balanced },
     { id: 'must_see', label: 'Must-See', icon: mustSee },
-  ];
-
-  const budgetLevels = [
-    { id: 'Budget', label: 'Budget', desc: 'Economic', icon: Budget },
-    { id: 'Moderate', label: 'Moderate', desc: 'Balanced', icon: Moderate },
-    { id: 'Luxury', label: 'Luxury', desc: 'Premium', icon: Luxury },
   ];
 
   const toDateInputValue = (date: Date) => date.toISOString().split('T')[0];
@@ -83,7 +80,7 @@ const today = toDateInputValue(new Date());
     onComplete({
       Destination: trip.Destination,
       days: days,
-      budget: selectedBudget,
+      budgetRange: { min: minBudget, max: maxBudget },
       travelers: travelers,
       type: selectedType,
       placeStyle: selectedPlaceStyle,
@@ -100,14 +97,14 @@ const today = toDateInputValue(new Date());
       <div className="max-w-5xl mx-auto px-6 relative z-10">
         <div className="glass p-8 md:p-14 rounded-[3rem] shadow-2xl shadow-indigo-100/50 border border-white/40">
           <div className="text-center mb-12">
-            <h2 className="text-4xl md:text-6xl font-extrabold mb-4 bg-gradient-to-r from-indigo-600 to-violet-600 bg-clip-text text-transparent">
+            <h2 className="text-4xl md:text-6xl font-extrabold mb-4 bg-gradient-to-r from-indigo-600 to-violet-600 bg-clip-text text-transparent text-center">
               Plan Your Trip
             </h2>
             <p className="text-slate-500 text-xl font-medium">Tell us a bit more about your adventure…</p>
           </div>
 
           <form className="space-y-10" onSubmit={handleSubmit} >
-            {/* Destination */}
+            {/* ... other fields remain same ... */}
             <div className="space-y-4">
               <label className="text-sm font-black uppercase tracking-widest text-slate-400 ml-1">Where are you headed?</label>
               <div className="relative group">
@@ -193,9 +190,7 @@ const today = toDateInputValue(new Date());
                 </div>
               </div>
                 <div className="space-y-4" style={{ display: selectedType === 'Solo' ? 'none' : 'block' }}>
-                  <label className="flex items-center gap-3 text-sm font-black uppercase tracking-widest text-slate-400 ml-1"><span>Travelers </span>
-                    {/* <img src={Travelers} alt="Travelers-icon" className="w-8 h-8" /> */}
-                  </label>
+                  <label className="flex items-center gap-3 text-sm font-black uppercase tracking-widest text-slate-400 ml-1"><span>Travelers </span></label>
                   <div className="relative flex items-center justify-between p-2 bg-white/50 backdrop-blur-sm rounded-2xl border-2 border-slate-100 focus-within:border-violet-300 transition-all">
                     <button  type="button" className='w-14 h-14 rounded-xl bg-violet-100 text-violet-600 hover:bg-violet-500 hover:text-white transition-all font-black text-2xl flex items-center justify-center shadow-sm active:scale-95'
                     onClick={() => { if (travelers <= 1) return; setTravelers(travelers - 1) }}>-</button>
@@ -234,76 +229,59 @@ const today = toDateInputValue(new Date());
               </div>
             </div>
 
-            {/* Budget Selection */}
-            <div className="space-y-4">
-              <label className="text-sm font-black uppercase tracking-widest text-slate-400 ml-1">What's the budget?</label>
-              
-              {/* Mobile Dropdown for Budget */}
-              <div className="md:hidden relative">
-                <button 
-                  type="button"
-                  onClick={() => setIsBudgetOpen(!isBudgetOpen)}
-                  className="w-full flex items-center justify-between p-4 bg-white/50 backdrop-blur-sm rounded-2xl border-2 border-slate-100 shadow-sm active:scale-[0.98] transition-all"
-                >
-                  <div className="flex items-center gap-3">
-                    <div className="flex-shrink-0 w-10 h-10 flex items-center justify-center rounded-xl bg-slate-50 shadow-sm">
-                      <img src={budgetLevels.find(b => b.id === selectedBudget)?.icon} alt="" className="w-8 h-8 object-contain" />
-                    </div>
-                    <div className="text-left">
-                      <p className="font-bold text-slate-700 leading-none">{selectedBudget}</p>
-                      <p className="text-xs text-slate-400 mt-1">{budgetLevels.find(b => b.id === selectedBudget)?.desc}</p>
-                    </div>
-                  </div>
-                  <svg xmlns="http://www.w3.org/2000/svg" className={`h-6 w-6 text-slate-400 transition-transform duration-300 ${isBudgetOpen ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                  </svg>
-                </button>
-                
-                {isBudgetOpen && (
-                  <div className="absolute z-50 mt-2 w-full bg-white rounded-2xl border-2 border-slate-100 shadow-2xl overflow-hidden animate-in fade-in slide-in-from-top-2 duration-200">
-                    {budgetLevels.map((level) => (
-                      <div 
-                        key={level.id}
-                        onClick={() => {
-                          setSelectedBudget(level.id);
-                          setIsBudgetOpen(false);
-                        }}
-                        className={`flex items-center gap-4 p-4 hover:bg-violet-50 cursor-pointer transition-colors ${selectedBudget === level.id ? 'bg-violet-50 border-l-4 border-violet-500' : 'border-l-4 border-transparent'}`}
-                      >
-                        <div className="flex-shrink-0 w-10 h-10 flex items-center justify-center">
-                          <img src={level.icon} className="w-full h-full object-contain" alt="" />
-                        </div>
-                        <div>
-                          <p className={`font-bold ${selectedBudget === level.id ? 'text-violet-600' : 'text-slate-700'}`}>{level.label}</p>
-                          <p className="text-xs text-slate-400">{level.desc}</p>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                )}
+            {/* Budget Range Slider */}
+            <div className="space-y-8">
+              <div className="flex items-center justify-between">
+                <label className="text-[9px] font-black uppercase tracking-widest text-slate-400 ml-1">What's the budget range?</label>
+                <div className="px-4 py-2 bg-violet-100 text-violet-700 rounded-xl font-black text-sm">
+                  ₹{minBudget.toLocaleString()} - ₹{maxBudget.toLocaleString()}
+                </div>
               </div>
-
-              {/* Tablet/Desktop Grid */}
-              <div className="hidden md:grid md:grid-cols-3 gap-4">
-                {budgetLevels.map((level) => (
-                  <div 
-                    key={level.id}
-                    onClick={() => setSelectedBudget(level.id)}
-                    className={`flex items-center gap-4 p-5 rounded-2xl border-2 cursor-pointer transition-all ${
-                      selectedBudget === level.id 
-                        ? 'border-violet-500 ring-4 ring-violet-500/10' 
-                        : 'border-slate-100 bg-white hover:border-violet-200'
-                    }`}
-                  >
-                    <div className="flex-shrink-0 w-12 h-12 rounded-xl bg-slate-50 flex items-center justify-center shadow-sm group-hover:bg-violet-100 transition-colors">
-                      <img className="w-8 h-8 object-contain" src={level.icon} alt="Budget-icon" />
+              
+              <div className="relative pt-6 pb-2 px-2 bg-white/40 backdrop-blur-sm rounded-3xl border-2 border-slate-100 p-8">
+                <div className="flex flex-col gap-6">
+                   <div className="space-y-4">
+                    <div className="flex justify-between text-xs font-bold text-slate-400 uppercase tracking-widest">
+                      <span>Min Budget</span>
+                      <span>₹{minBudget.toLocaleString()}</span>
                     </div>
-                    <div>
-                      <p className="font-bold text-slate-800 leading-none mb-1">{level.label}</p>
-                      <p className="text-xs text-slate-500 font-medium">{level.desc}</p>
-                    </div>
+                    <input 
+                      type="range" 
+                      min="5000" 
+                      max="100000" 
+                      step="5000"
+                      value={minBudget}
+                      onChange={(e) => {
+                        const val = Number(e.target.value);
+                        if (val < maxBudget) setMinBudget(val);
+                      }}
+                      className="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-violet-600"
+                    />
                   </div>
-                ))}
+
+                  <div className="space-y-4">
+                    <div className="flex justify-between text-xs font-bold text-slate-400 uppercase tracking-widest">
+                      <span>Max Budget</span>
+                      <span>₹{maxBudget.toLocaleString()}</span>
+                    </div>
+                    <input 
+                      type="range" 
+                      min="10000" 
+                      max="500000" 
+                      step="5000"
+                      value={maxBudget}
+                      onChange={(e) => {
+                        const val = Number(e.target.value);
+                        if (val > minBudget) setMaxBudget(val);
+                      }}
+                      className="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-indigo-600"
+                    />
+                  </div>
+                </div>
+                
+                <p className="mt-6 text-center text-slate-400 text-sm font-medium italic">
+                  AI will suggest stays and activities within this total budget.
+                </p>
               </div>
             </div>
 
