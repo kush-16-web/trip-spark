@@ -1,5 +1,6 @@
 import { Router } from 'express';
 import { planTrip } from '../controllers/trip.controller';
+import { getMyTrips } from '../controllers/trip.controller';
 
 export const tripRouter = Router();
 
@@ -8,3 +9,4 @@ tripRouter.get('/ping', (_req, res) => {
 });
 
 tripRouter.post('/plan', planTrip);
+tripRouter.get('/my-trips', getMyTrips);

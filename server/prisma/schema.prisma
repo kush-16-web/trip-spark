@@ -19,4 +19,8 @@ model TripPlan {
   endDate     String
   plan        Json
   weather     Json?
+  shareId   String   @unique @default(cuid())
+  isPublic  Boolean  @default(true)
+  ownerId   String?
+  updatedAt DateTime @updatedAt 
 }
