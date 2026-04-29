@@ -83,8 +83,10 @@ const Navbar: React.FC = () => {
 
       {/* Mobile Branding (Top Left) */}
       <div className="md:hidden fixed top-2 left-[50%] -translate-x-1/2 justify-center z-50 flex items-center gap-2 bg-black/30 backdrop-blur-lg px-4 py-2 rounded-2xl border border-white/10 shadow-lg">
-        <img src={logo} alt="Logo" className="w-6 h-6" />
+        <a href="/" className="flex items-center gap-2 group cursor-pointer">
+          <img src={logo} alt="Logo" className="w-6 h-6" />
         <span className="font-['Outfit'] text-lg font-black text-white">TripSpark</span>
+        </a>
       </div>
     </>
   );

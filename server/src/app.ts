@@ -11,7 +11,19 @@ export const app = express();
  */
 app.use(
   cors({
-    origin: [env.CLIENT_ORIGIN, "http://localhost:5173", "https://violation-badge-realty-hartford.trycloudflare.com"],
+    origin: (origin, callback) => {
+      // Allow local development, configured CLIENT_ORIGIN, and any trycloudflare tunnel
+      if (
+        !origin || 
+        origin === env.CLIENT_ORIGIN || 
+        origin.includes("localhost") || 
+        origin.endsWith(".trycloudflare.com")
+      ) {
+        callback(null, true);
+      } else {
+        callback(new Error("Not allowed by CORS"));
+      }
+    },
     credentials: true,
   }),
 );

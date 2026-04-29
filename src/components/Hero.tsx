@@ -24,13 +24,13 @@ export default function Hero({ onPlanTrip }: HeroProps) {
       
       {/* Content */}
       <div className="relative z-10 max-w-4xl mx-auto px-3 text-center text-white">
-        <h1 className="text-4xl md:text-5xl lg:text-7xl mb-6 leading-tight drop-shadow-xl">
-          Your Next Great <br />
-          <span className="text-black/90">Adventure</span> Starts Here
+        <h1 className="text-4xl md:text-5xl lg:text-7xl mb-6 font-bold leading-tight drop-shadow-xl">
+          Stop Dreaming, <br />
+          Start <span className="text-black/90">Trippin'</span>
         </h1>
-        <p className="text-md md:text-xl text-slate-100 mb-10 max-w-2xl mx-auto drop-shadow-md">
-          Ditch the spreadsheets. Our AI-powered planner crafts the perfect itinerary 
-          tailored to your unique travel style and budget.
+        <p className="text-md md:text-xl text-slate-100 mb-10 max-w-2xl mx-auto drop-shadow-md font-medium">
+          No more mid itineraries. Our AI builds the main character energy your next trip deserves. 
+          Low effort planning, high vibe traveling.
         </p>
         
         {/* Floating Search/CTA */}

@@ -145,19 +145,31 @@ export default function TripResult({ data, onEdit }: TripResultProps) {
         {/* Header */}
         <div className="flex flex-col md:flex-row justify-between items-start md:items-end mb-12 md:mb-16 gap-8">
           <div className="w-full md:w-auto">
-            <div className="flex flex-wrap items-center gap-3 mb-6">
-              <span className="px-4 py-1.5 bg-violet-100 text-violet-700 rounded-full text-xs md:text-sm font-bold tracking-wide uppercase">
+            <div className="flex items-center gap-3 mb-6">
+              <span className="px-4 py-3 bg-violet-100 text-violet-700 rounded-full text-[9px] md:text-sm font-bold tracking-wide uppercase">
                 Your adventure is ready
               </span>
               <TripTypeBadge tripType={data?.type} />
             </div>
+            <div className='flex md:flex-col justify-between items-center'>
             <h2 className="text-5xl md:text-8xl font-black text-slate-900 leading-none tracking-tight">{destination}</h2>
+             <button
+            type="button"
+            onClick={onEdit}
+            className="group flex px-4 py-3 bg-slate-900 text-white rounded-3xl md:rounded-[2rem] font-bold text-[12px] md:text-lg hover:bg-violet-600 transition-all duration-300 shadow-xl shadow-slate-200 md:hidden items-center gap-3 active:scale-95"
+          >
+            <span>Edit preferences</span>
+            <span className="group-hover:rotate-180 transition-transform duration-500" aria-hidden>
+              ⚙️
+            </span>
+          </button>
+            </div>
           </div>
 
           <button
             type="button"
             onClick={onEdit}
-            className="group px-6 py-4 md:px-8 md:py-5 bg-slate-900 text-white rounded-3xl md:rounded-[2rem] font-bold text-base md:text-lg hover:bg-violet-600 transition-all duration-300 shadow-xl shadow-slate-200 flex items-center gap-3 active:scale-95"
+            className="group hidden  px-6 py-4 md:px-8 md:py-5 bg-slate-900 text-white rounded-3xl md:rounded-[2rem] font-bold text-base md:text-lg hover:bg-violet-600 transition-all duration-300 shadow-xl shadow-slate-200 md:flex items-center gap-3 active:scale-95"
           >
             <span>Edit preferences</span>
             <span className="group-hover:rotate-180 transition-transform duration-500" aria-hidden>
@@ -167,61 +179,93 @@ export default function TripResult({ data, onEdit }: TripResultProps) {
         </div>
 
         {/* At-a-glance (feeds into summary context) */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6 mb-12 md:mb-16">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6 mb-12 md:mb-16">
           {[
             { label: 'Duration', value: `${dayCount} day${dayCount === 1 ? '' : 's'}`, icon: calender },
-            { label: 'Group', value: `${data?.travelers ?? '—'} people`, icon: Travelers },
-            { label: 'Budget style', value: data?.budget ?? '—', icon: data?.budget === 'Budget' ? Budget : data?.budget === 'Moderate' ? Moderate : Luxury },
-            { label: 'Trip type', value: data?.type ?? '—', icon: data?.type === 'Friends' ? friends : data?.type === 'Family' ? family : data?.type === 'Couple' ? Couples : soloTravel },
+            { label: 'Group size', value: `${data?.travelers ?? '—'} people`, icon: Travelers },
+            { label: 'Budget', value: data?.budget ?? '—', icon: data?.budget === 'Budget' ? Budget : data?.budget === 'Moderate' ? Moderate : Luxury },
+            { label: 'Style', value: data?.type ?? '—', icon: data?.type === 'Friends' ? friends : data?.type === 'Family' ? family : data?.type === 'Couple' ? Couples : soloTravel },
           ].map((stat) => (
             <div
               key={stat.label}
-              className="p-5 md:p-8 rounded-[2rem] md:rounded-[2.5rem] bg-white border border-slate-100 shadow-sm hover:shadow-xl hover:shadow-indigo-50 transition-all duration-500"
+              className="p-6 md:p-8 rounded-[2rem] bg-white/80 backdrop-blur-sm border border-white/40 shadow-[0_8px_30px_rgb(0,0,0,0.04)] hover:shadow-[0_20px_50px_rgba(79,70,229,0.1)] transition-all duration-500 group"
             >
-              <img src={stat.icon} alt={stat.label} className='h-8 w-8 mb-4' />
-              <p className="text-[10px] md:text-xs font-black text-slate-400 uppercase tracking-widest mb-1">{stat.label}</p>
-              <p className="text-lg md:text-2xl font-bold text-slate-800">{stat.value}</p>
+              <div className="flex items-center gap-4 mb-4">
+                <div className="p-3 bg-slate-50 rounded-2xl group-hover:bg-violet-50 transition-colors duration-500">
+                  <img src={stat.icon} alt={stat.label} className='h-6 w-6 md:h-7 md:w-7' />
+                </div>
+              </div>
+              <p className="text-[10px] md:text-xs font-bold text-slate-400 uppercase tracking-[0.2em] mb-1.5">{stat.label}</p>
+              <p className="text-xl md:text-2xl font-extrabold text-slate-900 tracking-tight">{stat.value}</p>
             </div>
           ))}
         </div>
 
         {data.totalEstimate && (
-          <div className="rounded-[1.5rem] md:rounded-[2rem] bg-slate-900 text-white p-6 md:p-8 mb-12 md:mb-16 shadow-xl">
-            <p className="text-xs uppercase tracking-widest text-violet-200 font-black mb-2">Estimated trip cost</p>
-            <div className="flex items-center justify-start gap-4">
-            <p className="text-2xl md:text-4xl font-black">
-              {data.totalEstimate.currency} {data.totalEstimate.min.toLocaleString()} -{' '}
-              {data.totalEstimate.max.toLocaleString()}
-            </p>
-            {data.type === 'Friends' && (
-              <span className="text-sm text-white font-bold bg-violet-200/20 shadow-sm shadow-violet-900 italic rounded-lg p-2 flex items-center gap-2">
-                Per person: {data.totalEstimate.currency} {perPersonMin.toLocaleString()} -{' '}
-                {perPersonMax.toLocaleString()}
-              </span>
-            )}
+          <div className="relative overflow-hidden rounded-[2rem] md:rounded-[2.5rem] bg-gradient-to-br from-slate-900 via-slate-900 to-indigo-950 text-white p-8 md:p-12 mb-12 md:mb-16 shadow-2xl shadow-indigo-100">
+            {/* Background design elements */}
+            <div className="absolute top-0 right-0 w-64 h-64 bg-violet-500/10 rounded-full blur-3xl -mr-32 -mt-32" />
+            
+            <div className="relative z-10">
+              <div className="flex items-center gap-2 mb-6">
+                <span className="w-8 h-[2px] bg-violet-400" />
+                <p className="text-[10px] md:text-xs uppercase tracking-[0.3em] text-violet-300 font-black">Estimated investment</p>
+              </div>
+
+              <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-8">
+                <div>
+                  <p className="text-2xl md:text-6xl font-black items-center tracking-tighter mb-4">
+                    <span className="text-violet-400 text-xl md:text-4xl mr-2">{data.totalEstimate.currency}</span>
+                    {data.totalEstimate.min.toLocaleString()} <span className="text-slate-500 mx-2 text-lg md:text-5xl">—</span> {data.totalEstimate.max.toLocaleString()}
+                  </p>
+                  <p className="text-sm text-slate-400 max-w-xl leading-relaxed">{data.totalEstimate.note}</p>
+                </div>
+
+                {data.travelers && Number(data.travelers) > 1 && (
+                  <div className="flex flex-col gap-3 p-6 bg-white/5 backdrop-blur-xl rounded-3xl border border-white/10">
+                    <p className="text-[10px] uppercase tracking-widest text-slate-400 font-bold">Per person split</p>
+                    <p className="text-2xl font-black text-white">
+                      <span className='text-violet-400'>{data.totalEstimate.currency}</span> {perPersonMin.toLocaleString()} <span className="text-slate-600 font-normal text-lg">to</span> {perPersonMax.toLocaleString()}
+                    </p>
+                  </div>
+                )}
+              </div>
             </div>
-            <p className="text-sm text-slate-300 mt-2">{data.totalEstimate.note}</p>
           </div>
         )}
 
         {/* 1. Trip summary */}
-        <section className="mb-16 md:mb-24" aria-labelledby="trip-summary-heading">
-          <SectionHeading id="trip-summary-heading" eyebrow="Overview" title="Trip summary" icon="📋" />
-          <div className="rounded-[2rem] md:rounded-[3rem] bg-white border border-slate-100 shadow-sm p-8 md:p-12">
-            <p className="text-slate-600 text-base md:text-lg leading-relaxed mb-8">
-              {data.summary ?? `Trip plan for ${destination}.`}
-            </p>
-            <ul className="grid sm:grid-cols-2 gap-4">
-              {(data.summaryBullets ?? []).map((item) => (
-                <li
-                  key={item}
-                  className="flex gap-3 items-start text-slate-700 text-sm md:text-base leading-relaxed"
-                >
-                  <span className="mt-1 shrink-0 w-2 h-2 rounded-full bg-violet-500" aria-hidden />
-                  {item}
-                </li>
-              ))}
-            </ul>
+        <section className="mb-20 md:mb-32" aria-labelledby="trip-summary-heading">
+          <div className="flex flex-col md:flex-row gap-12 md:gap-20 items-start">
+            <div className="md:w-1/3">
+              <div className="inline-block px-3 py-1 bg-violet-600 text-[10px] text-white italic font-bold tracking-[0.3em] uppercase mb-6">
+                Overview
+              </div>
+              <h3 id="trip-summary-heading" className="text-3xl md:text-4xl font-black text-slate-900 leading-tight">
+                Trip <br />Perspective
+              </h3>
+            </div>
+            
+            <div className="md:w-2/3">
+              <div className="relative pl-8 md:pl-12 border-l-2 border-slate-200">
+                <p className="text-xl md:text-2xl text-slate-800 font-medium leading-relaxed mb-12 italic">
+                  "{data.summary ?? `An curated journey through ${destination}.`}"
+                </p>
+                
+                <div className="grid sm:grid-cols-2 gap-x-12 gap-y-8">
+                  {(data.summaryBullets ?? []).map((item, idx) => (
+                    <div key={idx} className="group">
+                      <div className="flex items-start  gap-4">
+                        <span className="text-violet-600 font-black text-sm pt-0.5">0{idx + 1}</span>
+                        <p className="text-slate-600 text-sm md:text-base leading-relaxed border-b border-slate-100 pb-4 group-hover:border-violet-200 transition-colors duration-300">
+                          {item}
+                        </p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
           </div>
         </section>
 

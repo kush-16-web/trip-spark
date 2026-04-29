@@ -23,7 +23,7 @@ npm install
 Then backend deps:
 
 cd server
-npm install
+npm install my postgres path for windows setup C:\Program Files\PostgreSQL\16
 cd ..
 
 

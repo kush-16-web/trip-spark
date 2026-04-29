@@ -1,3 +1,4 @@
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Sora:wght@400;600;700&display=swap');
 
 @tailwind base;
 @tailwind components;
@@ -5,7 +6,7 @@
 
 @layer base {
   body {
-    font-family: 'Inter', sans-serif !important;
+    font-family: 'Outfit', sans-serif !important;
     @apply bg-slate-50 text-slate-900 antialiased;
   }
   h1, h2, h3, h4, h5, h6 {
