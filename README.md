@@ -71,3 +71,69 @@ export default defineConfig([
   },
 ])
 ```
+
+## PostgreSQL (local dev)
+
+Use this when you clone the repo on another machine (for example your Windows laptop at home) so you do not miss a step.
+
+### Ubuntu (e.g. 24.04)
+
+1. **Install** (only if Postgres is not installed yet):
+
+   ```bash
+   sudo apt update
+   sudo apt install -y postgresql postgresql-contrib
+   sudo systemctl start postgresql
+   sudo systemctl enable postgresql
+   ```
+
+2. **Check the umbrella service** (often shows `active (exited)` — that is normal):
+
+   ```bash
+   sudo systemctl status postgresql
+   ```
+
+3. **See the real cluster** (name may differ; example for 18 / main):
+
+   ```bash
+   pg_lsclusters
+   sudo systemctl status postgresql@18-main
+   ```
+
+   Adjust `18-main` to match `pg_lsclusters` output.
+
+4. **Verify the server answers:**
+
+   ```bash
+   psql --version
+   sudo -u postgres psql -c "SELECT version();"
+   ```
+
+   You should see a version string in the query result. If something fails, note the error text.
+
+5. Later, your app will use a **connection URL** (host, port, database, user, password) in server environment variables — that comes after you create a database and user (next phase in your setup guide).
+
+### Windows (home laptop)
+
+1. **Install:** Download the official Windows installer from [postgresql.org/download/windows](https://www.postgresql.org/download/windows/) and run it. Remember the password you set for the `postgres` superuser and the port (default **5432**).
+
+2. **Check the service:** Press **Win + R**, type `services.msc`, find **postgresql** (name includes the version), and confirm it is **Running**.
+
+3. **Verify client:** Open **Command Prompt** or **PowerShell**. If the installer added `psql` to your PATH:
+
+   ```text
+   psql --version
+   ```
+
+4. **Test connection** (use the password you chose during install):
+
+   ```text
+   psql -U postgres -h localhost -c "SELECT version();"
+   ```
+
+5. Same as Ubuntu: later you will put a **connection URL** in the server `.env` when you wire Prisma (or another client) to this database.
+
+### Notes
+
+- Install and `systemctl` commands apply to **that machine only**; they are not tied to the Trip Spark project folder.
+- The **frontend** never connects to Postgres directly; only the **Node server** does.

@@ -39,7 +39,7 @@ export interface TripResultData {
   budgetEstimate?: BudgetEstimateRow[];
   suggestedStays?: StaySuggestion[];
   suggestedPlaces?: PlaceSuggestion[];
-  weather?: Weather[];
+  weather?: Weather[] | null;
 }
 
 interface TripResultProps {

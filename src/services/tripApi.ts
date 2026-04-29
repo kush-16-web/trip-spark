@@ -65,7 +65,8 @@ export interface PlanTripApiResponse {
   ok: boolean;
   message: string;
   plan: TripPlanModel;
-  weather: Weather[];
+  /** Present when Open-Meteo succeeds; null if geocode/forecast failed (plan still valid). */
+  weather: Weather[] | null;
 }
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080';

@@ -1,0 +1,22 @@
+// Prisma schema = (1) how to generate the TS client, (2) which DB engine, (3) your tables as `model`s.
+// Connection URL lives in prisma.config.ts → process.env.DATABASE_URL (your .env).
+
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+/// One row = one generated trip (destination, dates, full plan JSON, optional weather JSON).
+model TripPlan {
+  id          String   @id @default(cuid())
+  createdAt   DateTime @default(now())
+  destination String
+  startDate   String
+  endDate     String
+  plan        Json
+  weather     Json?
+}
