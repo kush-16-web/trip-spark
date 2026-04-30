@@ -3,12 +3,13 @@ import Hero from './components/Hero'
 import TripForm from './components/TripForm'
 import Destinations from './components/Destinations'
 import Footer from './components/Footer'
+import MyTrips from './components/MyTrips'
 import './App.css'
 import { useState, useEffect, useRef } from 'react'
 // import compass from './assets/compass.gif'
 import finder from './assets/finder.gif'
 import TripResult from './components/TripResult'
-import { planTrip, type TripFormPayload, type TripPlanModel } from './services/tripApi'
+import { getTripById, planTrip, type TripFormPayload, type TripPlanModel } from './services/tripApi'
 
 interface TripState extends Partial<TripPlanModel> {
   Destination: string;
@@ -26,6 +27,8 @@ function App() {
   const [trip, setTrip] = useState<TripState | null>(null);
   const [loading, setLoading] = useState(false);
   const [showResult, setShowResult] = useState(false);
+  const [activeView, setActiveView] = useState<'planner' | 'myTrips'>('planner');
+  const [userEmail, setUserEmail] = useState<string | undefined>(undefined);
   
   const formRef = useRef<HTMLDivElement | null>(null);
   const resultRef = useRef<HTMLDivElement | null>(null);
@@ -61,6 +64,21 @@ function App() {
 
   }, [loading, trip]);
 
+  useEffect(() => {
+    const hydrateUser = () => {
+      try {
+        const raw = localStorage.getItem('auth_user');
+        const parsed = raw ? (JSON.parse(raw) as { email?: string }) : null;
+        setUserEmail(parsed?.email);
+      } catch {
+        setUserEmail(undefined);
+      }
+    };
+    hydrateUser();
+    window.addEventListener('focus', hydrateUser);
+    return () => window.removeEventListener('focus', hydrateUser);
+  }, []);
+
   const handleFormSubmit = async (formData: TripFormPayload) => {
     try {
       setLoading(true);
@@ -74,6 +92,7 @@ function App() {
         weather: response.weather,
       } as TripState);
       setShowResult(true);
+      setActiveView('planner');
 
       setTimeout(() => {
         resultRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -86,6 +105,7 @@ function App() {
   }
 
   const handlePlanTrip = (Destination: string) => {
+    setActiveView('planner');
     setShowResult(false);
     setLoading(true);
     formRef.current?.scrollIntoView({behavior:'smooth'});
@@ -104,10 +124,40 @@ function App() {
 
   const [loadingMessage, setLoadingMessage] = useState("Planning your trip...");
 
+  const handleOpenTrip = async (tripId: string) => {
+    try {
+      setLoading(true);
+      const response = await getTripById(tripId);
+      const plannedTrip = response.trip;
+      const plan = plannedTrip.plan;
+
+      setTrip({
+        Destination: plannedTrip.destination,
+        days: plan.dayPlan?.length ?? 1,
+        travelers: 1,
+        budgetRange: undefined,
+        startDate: plannedTrip.startDate,
+        endDate: plannedTrip.endDate,
+        ...plan,
+        weather: plannedTrip.weather,
+      } as TripState);
+      setShowResult(true);
+      setActiveView('planner');
+    } catch (error) {
+      console.error('Failed to open trip by id:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   
   return (
     <main className="min-h-screen">
-      <Navbar />
+      <Navbar activeView={activeView} onChangeView={setActiveView} userEmail={userEmail} />
+      {activeView === 'myTrips' ? (
+        <MyTrips onOpenTrip={handleOpenTrip} onBackToPlanner={() => setActiveView('planner')} />
+      ) : (
+        <>
       <Hero onPlanTrip={handlePlanTrip} />
       {/* <Features /> */}
       <div ref={formRef} className="">
@@ -120,12 +170,20 @@ function App() {
 
   {!loading && trip && !showResult && <TripForm trip={trip} onComplete={handleFormSubmit} />}
   <div ref={resultRef}>
-   {!loading && showResult && <TripResult data={trip} onEdit={() => setShowResult(false)} />}
+   {!loading && showResult && (
+     <TripResult
+       data={trip}
+       onEdit={() => setShowResult(false)}
+       onViewMyTrips={() => setActiveView('myTrips')}
+     />
+   )}
 </div>
 
 </div>
       <Destinations />
       <Footer />
+      </>
+      )}
     </main>
   )
 }

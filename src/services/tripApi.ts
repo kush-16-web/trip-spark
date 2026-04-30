@@ -73,6 +73,38 @@ export interface PlanTripApiResponse {
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080';
 
+export interface MyTripListItem {
+  id: string;
+  shareId: string;
+  destination: string;
+  startDate: string;
+  endDate: string;
+  createdAt: string;
+}
+
+export interface MyTripsApiResponse {
+  ok: boolean;
+  message: string;
+  trips: MyTripListItem[];
+}
+
+export interface TripByIdApiResponse {
+  ok: boolean;
+  message: string;
+  trip: {
+    id: string;
+    shareId: string;
+    destination: string;
+    startDate: string;
+    endDate: string;
+    createdAt: string;
+    updatedAt: string;
+    isPublic: boolean;
+    plan: TripPlanModel;
+    weather: Weather[] | null;
+  };
+}
+
 export async function planTrip(payload: TripFormPayload): Promise<PlanTripApiResponse> {
   const response = await fetch(`${API_BASE_URL}/api/trip/plan`, {
     method: 'POST',
@@ -88,4 +120,26 @@ export async function planTrip(payload: TripFormPayload): Promise<PlanTripApiRes
   }
 
   return data as PlanTripApiResponse;
+}
+
+export async function getMyTrips(): Promise<MyTripsApiResponse> {
+  const response = await fetch(`${API_BASE_URL}/api/trip/my-trips`);
+  const data = (await response.json()) as MyTripsApiResponse | { message?: string };
+
+  if (!response.ok) {
+    throw new Error((data as { message?: string }).message ?? 'Failed to load trips');
+  }
+
+  return data as MyTripsApiResponse;
+}
+
+export async function getTripById(id: string): Promise<TripByIdApiResponse> {
+  const response = await fetch(`${API_BASE_URL}/api/trip/${id}`);
+  const data = (await response.json()) as TripByIdApiResponse | { message?: string };
+
+  if (!response.ok) {
+    throw new Error((data as { message?: string }).message ?? 'Failed to load trip');
+  }
+
+  return data as TripByIdApiResponse;
 }

@@ -7,9 +7,6 @@ import Romantic from '../assets/dating.gif';
 import Couples from '../assets/dating.png'
 import family from '../assets/Family-travel.gif';
 import friends from '../assets/friends.gif';
-import Budget from '../assets/Budget.gif'
-import Moderate from '../assets/wallet.gif'
-import Luxury from '../assets/Premium.gif'
 import Travelers from '../assets/group.gif'
 import Sun from '../assets/sun.gif'
 import Cloudy from '../assets/cloudy.gif'
@@ -37,7 +34,7 @@ export interface TripResultData {
   Destination?: string;
   days?: number | string;
   travelers?: number | string;
-  budget?: {min: number; max: number;};
+  budgetRange?: { min: number; max: number };
   startDate?: string;
   endDate?: string;
   type?: string;
@@ -55,6 +52,7 @@ interface TripResultProps {
   /** Parent state may be null until a trip is planned; we guard below. */
   data: TripResultData | null | undefined;
   onEdit: () => void;
+  onViewMyTrips?: () => void;
 }
 
 
@@ -139,12 +137,13 @@ const HARDCODED_PLACES = [
   { name: 'Contemporary arts district', tag: 'Evening', time: 'Flexible' },
 ] as const;
 
-export default function TripResult({ data, onEdit }: TripResultProps) {
+export default function TripResult({ data, onEdit, onViewMyTrips }: TripResultProps) {
   const [activeDay, setActiveDay] = useState(1);
   const [isSigningIn, setIsSigningIn] = useState(false);
   const [authError, setAuthError] = useState<string | undefined>(undefined);
   const [showLoginPrompt, setShowLoginPrompt] = useState(false);
   const [pendingAction, setPendingAction] = useState<'save' | null>(null);
+  const [loginSuccessMessage, setLoginSuccessMessage] = useState<string | null>(null);
 
   async function handleContinueWithGoogle() {
     try {
@@ -160,6 +159,7 @@ export default function TripResult({ data, onEdit }: TripResultProps) {
 
       localStorage.setItem('auth_token', loginData.token);
       localStorage.setItem('auth_user', JSON.stringify(loginData.user));
+      setLoginSuccessMessage(`Logged in as ${loginData.user.email}`);
 
       setShowLoginPrompt(false);
       if (pendingAction === 'save') {
@@ -186,9 +186,24 @@ export default function TripResult({ data, onEdit }: TripResultProps) {
     return null;
   }
 
+  const loggedInUser = (() => {
+    try {
+      const raw = localStorage.getItem('auth_user');
+      return raw ? (JSON.parse(raw) as { email?: string }) : null;
+    } catch {
+      return null;
+    }
+  })();
+
   const travelerCount = Number(data.travelers) || 1;
   const perPersonMin = Math.round((data.totalEstimate?.min ?? 0) / travelerCount);
   const perPersonMax = Math.round((data.totalEstimate?.max ?? 0) / travelerCount);
+  const budgetDisplay =
+    data.budgetRange
+      ? `₹${data.budgetRange.min.toLocaleString()} - ₹${data.budgetRange.max.toLocaleString()}`
+      : data.totalEstimate
+        ? `${data.totalEstimate.currency}${data.totalEstimate.min.toLocaleString()} - ${data.totalEstimate.currency}${data.totalEstimate.max.toLocaleString()}`
+        : '—';
   const destination = data.Destination?.trim() || 'your destination';
   const dayCount = Math.max(1, data.dayPlan?.length || Number(data?.days) || 1);
   const days = Array.from({ length: dayCount }, (_, i) => i + 1);
@@ -197,6 +212,12 @@ export default function TripResult({ data, onEdit }: TripResultProps) {
 
   return (
     <section id="trip-result" className="py-16 md:py-24 bg-slate-50 overflow-hidden relative">
+      {loginSuccessMessage && (
+        <div className="fixed top-6 left-1/2 -translate-x-1/2 z-50 px-5 py-3 bg-emerald-600 text-white rounded-2xl shadow-lg font-semibold">
+          {loginSuccessMessage}
+        </div>
+      )}
+
       {showLoginPrompt && (
         <div className="fixed inset-0 z-50 bg-slate-900/50 backdrop-blur-sm flex items-center justify-center px-4">
           <div className="w-full max-w-md rounded-3xl bg-white p-6 md:p-8 shadow-2xl border border-slate-100">
@@ -276,7 +297,7 @@ export default function TripResult({ data, onEdit }: TripResultProps) {
           {[
             { label: 'Duration', value: `${dayCount} day${dayCount === 1 ? '' : 's'}`, icon: calender },
             { label: 'Group size', value: `${data?.travelers ?? '—'} people`, icon: Travelers },
-            { label: 'Budget', value: data?.budget ? `${data.budget.min.toLocaleString()} - ${data.budget.max.toLocaleString()}` : '—', icon: data?.budget ? Budget : data?.budget ? Moderate : data?.budget ? Luxury : null },
+            { label: 'Budget range', value: budgetDisplay, icon: walletIcon },
             { label: 'Style', value: data?.type ?? '—', icon: data?.type === 'Friends' ? friends : data?.type === 'Family' ? family : data?.type === 'Couple' ? Couples : soloTravel },
           ].map((stat) => (
             <div
@@ -561,7 +582,7 @@ export default function TripResult({ data, onEdit }: TripResultProps) {
                   </h4>
                   <div className="flex items-center gap-4 text-violet-400 mb-10">
                     <div className="h-[2px] w-12 bg-current" />
-                      <span className="text-sm font-bold uppercase tracking-widest">{data?.budget ? `${data.budget.min.toLocaleString()} - ${data.budget.max.toLocaleString()}` : '—'} Style</span>
+                      <span className="text-sm font-bold uppercase tracking-widest">{budgetDisplay}</span>
                   </div>
                 </div>
 
@@ -667,6 +688,11 @@ export default function TripResult({ data, onEdit }: TripResultProps) {
             Adventure is waiting for you…
           </p>
           <div className="flex flex-col md:flex-row justify-center gap-4 md:gap-6">
+          {loggedInUser?.email && (
+            <div className="px-6 py-4 bg-emerald-50 border border-emerald-200 text-emerald-800 rounded-[1.5rem] font-semibold text-sm md:text-base">
+              Logged in as {loggedInUser.email}
+            </div>
+          )}
             <button
               type="button"
               onClick={onClickSaveTrip}
@@ -680,6 +706,15 @@ export default function TripResult({ data, onEdit }: TripResultProps) {
             >
               Share itinerary 🔗
             </button>
+          {onViewMyTrips && (
+            <button
+              type="button"
+              onClick={onViewMyTrips}
+              className="px-8 py-5 bg-white text-violet-700 border-2 border-violet-300 rounded-[2rem] font-black text-lg hover:bg-violet-50 transition-all active:scale-95"
+            >
+              My Trips
+            </button>
+          )}
           </div>
         </div>
       </div>
