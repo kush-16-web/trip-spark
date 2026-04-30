@@ -57,7 +57,7 @@ export default function MyTrips({ onOpenTrip, onBackToPlanner }: MyTripsProps) {
       <div className="max-w-6xl mx-auto px-6">
         <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-10">
           <div>
-            <p className="text-xs font-black uppercase tracking-[0.3em] text-violet-500 mb-2">Dashboard</p>
+            <p className="text-xs font-black uppercase tracking-[0.3em] text-violet-500 mb-2">Profile</p>
             <h2 className="text-4xl md:text-5xl font-black text-slate-900">My Trips</h2>
           </div>
           <button

@@ -8,11 +8,12 @@ interface NavbarProps {
 }
 
 const Navbar: React.FC<NavbarProps> = ({ activeView, onChangeView, userEmail }) => {
-  const navLinks = [
+  const navLinks: Array<{ name: string; href: string; action?: () => void }> = [
     { name: 'Explore', href: '#explore' },
     { name: 'Features', href: '#features' },
     { name: 'Planning', href: '#trip-result' },
     { name: 'Social', href: '#footer' },
+    { name: 'My Trips', href: '#', action: () => onChangeView('myTrips') },
   ];
 
   return (
@@ -35,7 +36,17 @@ const Navbar: React.FC<NavbarProps> = ({ activeView, onChangeView, userEmail }) 
               <a
                 key={link.name}
                 href={link.href}
-                className="hover:text-violet-300 transition-colors"
+                onClick={(e) => {
+                  if (link.action) {
+                    e.preventDefault();
+                    link.action();
+                    return;
+                  }
+                  onChangeView('planner');
+                }}
+                className={`hover:text-violet-300 transition-colors ${
+                  link.name === 'My Trips' && activeView === 'myTrips' ? 'text-violet-300' : ''
+                }`}
               >
                 {link.name}
               </a>
@@ -43,28 +54,6 @@ const Navbar: React.FC<NavbarProps> = ({ activeView, onChangeView, userEmail }) 
           </div>
 
           <div className="flex items-center gap-3">
-            <button
-              type="button"
-              onClick={() => onChangeView('myTrips')}
-              className={`px-4 py-2 rounded-xl font-semibold text-sm transition-all ${
-                activeView === 'myTrips'
-                  ? 'bg-violet-600 text-white'
-                  : 'bg-white/90 text-slate-700 hover:bg-white'
-              }`}
-            >
-              My Trips
-            </button>
-            <button
-              type="button"
-              onClick={() => onChangeView('planner')}
-              className={`px-4 py-2 rounded-xl font-semibold text-sm transition-all ${
-                activeView === 'planner'
-                  ? 'bg-slate-900 text-white'
-                  : 'bg-white/90 text-slate-700 hover:bg-white'
-              }`}
-            >
-              Planner
-            </button>
             <div className="px-3 py-2 rounded-xl bg-white/20 border border-white/20 text-white text-xs max-w-[180px] truncate">
               {userEmail ?? 'Guest account'}
             </div>
@@ -75,20 +64,10 @@ const Navbar: React.FC<NavbarProps> = ({ activeView, onChangeView, userEmail }) 
       {/* Mobile Floating Bottom Dock */}
       <nav className="md:hidden fixed bottom-6 left-1/2 -translate-x-1/2 w-[92%] z-50">
         <div className="bg-black/40 backdrop-blur-2xl border border-white/10 rounded-[2.5rem] p-1 shadow-2xl shadow-black/40">
-          <div className="grid grid-cols-3 gap-2">
-            <button
-              type="button"
-              onClick={() => onChangeView('planner')}
-              className={`py-3 rounded-2xl font-bold text-sm transition-all ${
-                activeView === 'planner'
-                  ? 'bg-white text-slate-900'
-                  : 'text-white/80 hover:bg-white/10'
-              }`}
-            >
-              Planner
-            </button>
+          <div className="grid grid-cols-2 gap-2">
             <a
               href="#explore"
+              onClick={() => onChangeView('planner')}
               className="py-3 rounded-2xl font-bold text-sm text-white/80 hover:bg-white/10 transition-all text-center"
             >
               Explore
