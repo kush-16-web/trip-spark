@@ -120,6 +120,7 @@ export async function googleLogin(
 
     const decoded = await firebaseAdmin.auth().verifyIdToken(idToken);
     const email = decoded.email?.toLowerCase();
+    const picture = decoded.picture;
 
     if (!email) {
       return res.status(400).json({ ok: false, message: 'Google email not available' });
@@ -127,18 +128,21 @@ export async function googleLogin(
 
     const user = await prisma.user.upsert({
       where: { email },
-      update: {},
+      update: {
+        picture: picture ?? undefined,
+      },
       create: {
         email,
+        picture: picture ?? null,
         // Current schema requires passwordHash. For Google-only accounts,
         // we store an unusable placeholder and rely on OAuth login.
         passwordHash: 'GOOGLE_OAUTH_ONLY',
       },
-      select: { id: true, email: true, createdAt: true },
+      select: { id: true, email: true, picture: true, createdAt: true },
     });
 
     const token = jwt.sign(
-      { sub: user.id, email: user.email },
+      { sub: user.id, email: user.email, picture: user.picture },
       JWT_SECRET,
       { expiresIn: JWT_EXPIRATION },
     );

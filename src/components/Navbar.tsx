@@ -1,13 +1,22 @@
-import React from 'react';
+import React, { useState } from 'react';
 import logo from "../assets/airplane-flight.png";
+import AuthModal from './AuthModal';
+import { auth, googleProvider, getFriendlyAuthErrorMessage } from '../lib/firebase';
+import { signInWithPopup, signOut } from 'firebase/auth';
+import { loginWithGoogle } from '../services/authApi';
 
 interface NavbarProps {
   activeView: 'planner' | 'myTrips';
   onChangeView: (view: 'planner' | 'myTrips') => void;
   userEmail?: string;
+  userPicture?: string;
 }
 
-const Navbar: React.FC<NavbarProps> = ({ activeView, onChangeView, userEmail }) => {
+const Navbar: React.FC<NavbarProps> = ({ activeView, onChangeView, userEmail, userPicture }) => {
+  const [showAuthModal, setShowAuthModal] = useState(false);
+  const [isSigningIn, setIsSigningIn] = useState(false);
+  const [authError, setAuthError] = useState<string | null>(null);
+
   const navLinks: Array<{ name: string; href: string; action?: () => void }> = [
     { name: 'Explore', href: '#explore' },
     { name: 'Features', href: '#features' },
@@ -15,6 +24,46 @@ const Navbar: React.FC<NavbarProps> = ({ activeView, onChangeView, userEmail }) 
     { name: 'Social', href: '#footer' },
     { name: 'My Trips', href: '#', action: () => onChangeView('myTrips') },
   ];
+
+  const filteredLinks = navLinks.filter(link => 
+    link.name !== 'My Trips' || userEmail
+  );
+
+  const handleGoogleLogin = async () => {
+    try {
+      setIsSigningIn(true);
+      setAuthError(null);
+      const result = await signInWithPopup(auth, googleProvider);
+      const idToken = await result.user.getIdToken();
+      const res = await loginWithGoogle(idToken);
+      
+      if (res.ok) {
+        localStorage.setItem('auth_token', res.token!);
+        localStorage.setItem('auth_user', JSON.stringify(res.user));
+        setShowAuthModal(false);
+        window.location.reload();
+      }
+    } catch (error: any) {
+      console.error('Login failed:', error);
+      const friendlyMessage = getFriendlyAuthErrorMessage(error.code);
+      if (friendlyMessage) {
+        setAuthError(friendlyMessage);
+      }
+    } finally {
+      setIsSigningIn(false);
+    }
+  };
+
+  const handleSignOut = async () => {
+    try {
+      await signOut(auth);
+      localStorage.removeItem('auth_user');
+      localStorage.removeItem('auth_token');
+      window.location.reload();
+    } catch (error) {
+      console.error('Sign out failed:', error);
+    }
+  };
 
   return (
     <>
@@ -32,7 +81,7 @@ const Navbar: React.FC<NavbarProps> = ({ activeView, onChangeView, userEmail }) 
           </a>
 
           <div className="flex items-center gap-7 text-white/90 font-semibold">
-            {navLinks.map((link) => (
+            {filteredLinks.map((link) => (
               <a
                 key={link.name}
                 href={link.href}
@@ -54,9 +103,33 @@ const Navbar: React.FC<NavbarProps> = ({ activeView, onChangeView, userEmail }) 
           </div>
 
           <div className="flex items-center gap-3">
-            <div className="px-3 py-2 rounded-xl bg-white/20 border border-white/20 text-white text-xs max-w-[180px] truncate">
-              {userEmail ?? 'Guest account'}
-            </div>
+            {/* {userEmail && (
+              <div className="hidden lg:flex flex-col items-end mr-2">
+                <span className="text-[10px] text-white/50 font-bold uppercase tracking-widest">Logged in as</span>
+                <span className="text-xs text-white font-medium truncate max-w-[120px]">{userEmail}</span>
+              </div>
+            )} */}
+            <button 
+              onClick={userEmail ? handleSignOut : () => setShowAuthModal(true)}
+              className="flex items-center gap-2 pl-2 pr-4 py-1.5 rounded-xl bg-white/10 border border-white/10 text-white text-xs hover:bg-white/20 transition-all group"
+            >
+              {userEmail ? (
+                <>
+                  <div className="w-7 h-7 rounded-lg overflow-hidden border border-white/20">
+                    {userPicture ? (
+                      <img src={userPicture} alt="Profile" className="w-full h-full object-cover" />
+                    ) : (
+                      <div className="w-full h-full bg-violet-500 flex items-center justify-center text-[10px] font-bold">
+                        {userEmail[0].toUpperCase()}
+                      </div>
+                    )}
+                  </div>
+                  <span className="font-bold">Sign Out</span>
+                </>
+              ) : (
+                <span className="px-2 py-1 font-bold">Log In</span>
+              )}
+            </button>
           </div>
         </div>
       </nav>
@@ -64,28 +137,64 @@ const Navbar: React.FC<NavbarProps> = ({ activeView, onChangeView, userEmail }) 
       {/* Mobile Floating Bottom Dock */}
       <nav className="md:hidden fixed bottom-6 left-1/2 -translate-x-1/2 w-[92%] z-50">
         <div className="bg-black/40 backdrop-blur-2xl border border-white/10 rounded-[2.5rem] p-1 shadow-2xl shadow-black/40">
-          <div className="grid grid-cols-2 gap-2">
+          <div className="grid grid-cols-2 gap-2 relative">
+            {/* Sliding Background Highlight */}
+            <div 
+              className="absolute inset-y-0 w-[calc(50%-4px)] bg-black/60 rounded-3xl transition-transform duration-300 ease-out"
+              style={{ 
+                transform: activeView === 'myTrips' ? 'translateX(calc(100% + 8px))' : 'translateX(0)' 
+              }}
+            />
+            
             <a
               href="#explore"
-              onClick={() => onChangeView('planner')}
-              className="py-3 rounded-2xl font-bold text-sm text-white/80 hover:bg-white/10 transition-all text-center"
+              onClick={(e) => {
+                e.preventDefault();
+                onChangeView('planner');
+              }}
+              className={`relative z-10 py-3 rounded-3xl font-bold text-sm transition-all text-center ${
+                activeView === 'planner' ? 'text-white' : 'text-white/80'
+              }`}
             >
               Explore
             </a>
-            <button
-              type="button"
-              onClick={() => onChangeView('myTrips')}
-              className={`py-3 rounded-2xl font-bold text-sm transition-all ${
-                activeView === 'myTrips'
-                  ? 'bg-violet-500 text-white'
-                  : 'text-white/80 hover:bg-white/10'
-              }`}
-            >
-              My Trips
-            </button>
+            {
+              userEmail ? (
+                <button
+                  type="button"
+                  onClick={() => onChangeView('myTrips')}
+                  className={`relative z-10 py-3 rounded-3xl font-bold text-sm transition-all ${
+                    activeView === 'myTrips'
+                      ? 'text-white'
+                      : 'text-white/80'
+                  }`}
+                >
+                  My Trips
+                </button>
+              ) : (
+                <button 
+                  onClick={() => setShowAuthModal(true)}
+                  className={`relative z-10 py-3 rounded-3xl font-bold text-sm transition-all ${
+                    activeView === 'myTrips'
+                      ? 'text-white'
+                      : 'text-white/80'
+                  }`}
+                >
+                  Log In
+                </button>
+              )
+            }
           </div>
         </div>
       </nav>
+
+      <AuthModal 
+        isOpen={showAuthModal}
+        onClose={() => setShowAuthModal(false)}
+        onGoogleLogin={handleGoogleLogin}
+        isSigningIn={isSigningIn}
+        error={authError}
+      />
 
       {/* Mobile Branding (Top Left) */}
       <div className="md:hidden fixed top-2 left-[50%] -translate-x-1/2 justify-center z-50 flex items-center gap-2 bg-black/30 backdrop-blur-lg px-4 py-2 rounded-2xl border border-white/10 shadow-lg">

@@ -1,13 +1,14 @@
-import type { Request, Response } from 'express';
+import type { Response } from 'express';
 import type { TripPlanRequest } from '../types/trip.types';
 import { Prisma } from '../generated/prisma/client';
 import { tripPlanRequestSchema } from '../validators/trip.validator';
 import { generateTripPlan } from '../services/ai.service';
 import { getWeatherForecast } from '../services/weather.service';
 import { prisma } from '../lib/prisma';
+import { AuthRequest } from '../middlewares/auth.middleware';
 
 export const planTrip = async (
-  req: Request<unknown, unknown, TripPlanRequest>,
+  req: AuthRequest,
   res: Response,
 )=> {
   try {
@@ -47,6 +48,7 @@ export const planTrip = async (
             ? Prisma.JsonNull
             : (weather as unknown as Prisma.InputJsonValue),
         isPublic: true,
+        ownerId: req.userId || null,
       },
     });
 
@@ -68,9 +70,11 @@ export const planTrip = async (
   }
 };
 
-export const getMyTrips = async (_req: Request, res: Response) => {
+export const getMyTrips = async (req: AuthRequest, res: Response) => {
   try{
+    const userId = req.userId;
     const trips = await prisma.tripPlan.findMany({
+      where: { ownerId: userId },
       orderBy: {createdAt: 'desc'},
       select: {
         id: true,

@@ -1,7 +1,8 @@
 import { useState } from 'react';
 import { signInWithPopup } from 'firebase/auth';
-import { auth, googleProvider } from '../lib/firebase';
+import { auth, googleProvider, getFriendlyAuthErrorMessage } from '../lib/firebase';
 import { loginWithGoogle } from '../services/authApi';
+import AuthModal from './AuthModal';
 import soloTravel from '../assets/solo-traveller.gif';
 import Romantic from '../assets/dating.gif';
 import Couples from '../assets/dating.png'
@@ -165,8 +166,14 @@ export default function TripResult({ data, onEdit, onViewMyTrips }: TripResultPr
       if (pendingAction === 'save') {
         setPendingAction(null);
       }
-    } catch (err) {
-      setAuthError(err instanceof Error ? err.message : 'Google sign-in failed. Please try again.');
+    } catch (err: any) {
+      console.error('Login failed:', err);
+      const friendlyMessage = getFriendlyAuthErrorMessage(err.code);
+      if (friendlyMessage) {
+        setAuthError(friendlyMessage);
+      } else {
+        setAuthError('Google sign-in failed. Please try again.');
+      }
     } finally {
       setIsSigningIn(false);
     }
@@ -189,7 +196,7 @@ export default function TripResult({ data, onEdit, onViewMyTrips }: TripResultPr
   const loggedInUser = (() => {
     try {
       const raw = localStorage.getItem('auth_user');
-      return raw ? (JSON.parse(raw) as { email?: string }) : null;
+      return raw ? (JSON.parse(raw) as { email?: string; picture?: string }) : null;
     } catch {
       return null;
     }
@@ -219,37 +226,13 @@ export default function TripResult({ data, onEdit, onViewMyTrips }: TripResultPr
       )}
 
       {showLoginPrompt && (
-        <div className="fixed inset-0 z-50 bg-slate-900/50 backdrop-blur-sm flex items-center justify-center px-4">
-          <div className="w-full max-w-md rounded-3xl bg-white p-6 md:p-8 shadow-2xl border border-slate-100">
-            <h3 className="text-2xl font-black text-slate-900 mb-2">Login to save this trip</h3>
-            <p className="text-slate-600 text-sm mb-6">
-              Continue with Google and we will keep this itinerary in your account.
-            </p>
-
-            {authError && (
-              <p className="text-sm text-red-600 bg-red-50 border border-red-200 rounded-xl px-3 py-2 mb-4">
-                {authError}
-              </p>
-            )}
-
-            <button
-              type="button"
-              onClick={handleContinueWithGoogle}
-              disabled={isSigningIn}
-              className="w-full px-6 py-3.5 bg-slate-900 text-white rounded-2xl font-bold hover:bg-violet-600 transition-all disabled:opacity-70"
-            >
-              {isSigningIn ? 'Signing in...' : 'Continue with Google'}
-            </button>
-
-            <button
-              type="button"
-              onClick={() => setShowLoginPrompt(false)}
-              className="w-full mt-3 px-6 py-3.5 bg-white text-slate-700 border border-slate-200 rounded-2xl font-semibold hover:bg-slate-50 transition-all"
-            >
-              Cancel
-            </button>
-          </div>
-        </div>
+        <AuthModal
+         isOpen={showLoginPrompt}
+         onClose={() => setShowLoginPrompt(false)}
+         onGoogleLogin={handleContinueWithGoogle}
+         isSigningIn={isSigningIn}
+         error={authError}
+        />
       )}
 
       <div className="absolute top-0 left-0 w-full h-96 bg-gradient-to-b from-indigo-50 to-transparent -z-10" />

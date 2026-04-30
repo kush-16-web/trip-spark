@@ -53,7 +53,7 @@ export default function MyTrips({ onOpenTrip, onBackToPlanner }: MyTripsProps) {
   }, []);
 
   return (
-    <section className="py-20 bg-slate-50 min-h-screen">
+    <section className="pt-32 pb-20 bg-slate-50 min-h-screen animate-in fade-in duration-700">
       <div className="max-w-6xl mx-auto px-6">
         <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-10">
           <div>

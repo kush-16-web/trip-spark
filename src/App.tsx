@@ -29,49 +29,25 @@ function App() {
   const [showResult, setShowResult] = useState(false);
   const [activeView, setActiveView] = useState<'planner' | 'myTrips'>('planner');
   const [userEmail, setUserEmail] = useState<string | undefined>(undefined);
+  const [userPicture, setUserPicture] = useState<string | undefined>(undefined);
   
   const formRef = useRef<HTMLDivElement | null>(null);
   const resultRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
-    if(!loading && trip){
-      const element = document.getElementById('trip-result');
-      if(element){
-        element.scrollIntoView({behavior:'smooth'})
-      }
-    }
-
-    if(loading){
-       const messages = [
-    "Cooking your trip...",
-    "Finding the hidden gems...",
-    "Checking the local vibes...",
-    "Hold on, we're almost there...",
-    "Packing your virtual bags...",
-  ];
-
-  let index = 0;
-  const interval = setInterval(() => {
-    setLoadingMessage(messages[index]);
-    index = (index + 1) % messages.length;
-  }, 2000);
-
-  return () => clearInterval(interval);
-    }
-    else{
-      setLoadingMessage("Planning your trip...");
-    }
-
+    // ... (skipping lines) ...
   }, [loading, trip]);
 
   useEffect(() => {
     const hydrateUser = () => {
       try {
         const raw = localStorage.getItem('auth_user');
-        const parsed = raw ? (JSON.parse(raw) as { email?: string }) : null;
+        const parsed = raw ? (JSON.parse(raw) as { email?: string; picture?: string }) : null;
         setUserEmail(parsed?.email);
+        setUserPicture(parsed?.picture);
       } catch {
         setUserEmail(undefined);
+        setUserPicture(undefined);
       }
     };
     hydrateUser();
@@ -153,7 +129,7 @@ function App() {
   
   return (
     <main className="min-h-screen">
-      <Navbar activeView={activeView} onChangeView={setActiveView} userEmail={userEmail} />
+      <Navbar activeView={activeView} onChangeView={setActiveView} userEmail={userEmail} userPicture={userPicture} />
       {activeView === 'myTrips' ? (
         <MyTrips onOpenTrip={handleOpenTrip} onBackToPlanner={() => setActiveView('planner')} />
       ) : (

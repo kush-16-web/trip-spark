@@ -106,9 +106,13 @@ export interface TripByIdApiResponse {
 }
 
 export async function planTrip(payload: TripFormPayload): Promise<PlanTripApiResponse> {
+  const token = localStorage.getItem('auth_token');
+  const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+  if (token) headers['Authorization'] = `Bearer ${token}`;
+
   const response = await fetch(`${API_BASE_URL}/api/trip/plan`, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers,
     body: JSON.stringify(payload),
   });
 
@@ -123,7 +127,13 @@ export async function planTrip(payload: TripFormPayload): Promise<PlanTripApiRes
 }
 
 export async function getMyTrips(): Promise<MyTripsApiResponse> {
-  const response = await fetch(`${API_BASE_URL}/api/trip/my-trips`);
+  const token = localStorage.getItem('auth_token');
+  const headers: Record<string, string> = {};
+  if (token) headers['Authorization'] = `Bearer ${token}`;
+
+  const response = await fetch(`${API_BASE_URL}/api/trip/my-trips`, {
+    headers
+  });
   const data = (await response.json()) as MyTripsApiResponse | { message?: string };
 
   if (!response.ok) {
