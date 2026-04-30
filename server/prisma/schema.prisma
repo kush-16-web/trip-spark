@@ -10,6 +10,14 @@ datasource db {
   provider = "postgresql"
 }
 
+model User {
+  id           String     @id @default(cuid())
+  email        String     @unique
+  passwordHash String
+  createdAt    DateTime   @default(now())
+  trips        TripPlan[]
+}
+
 /// One row = one generated trip (destination, dates, full plan JSON, optional weather JSON).
 model TripPlan {
   id          String   @id @default(cuid())
@@ -19,8 +27,9 @@ model TripPlan {
   endDate     String
   plan        Json
   weather     Json?
-  shareId   String   @unique @default(cuid())
-  isPublic  Boolean  @default(true)
-  ownerId   String?
-  updatedAt DateTime @updatedAt 
+  shareId     String   @unique @default(cuid())
+  isPublic    Boolean  @default(true)
+  ownerId     String?
+  owner       User?    @relation(fields: [ownerId], references: [id])
+  updatedAt   DateTime @updatedAt
 }

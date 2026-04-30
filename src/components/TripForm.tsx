@@ -3,9 +3,6 @@ import soloTravel from '../assets/solo-traveller.gif';
 import Romantic from '../assets/dating.gif'
 import family from '../assets/Family-travel.gif'
 import friends from '../assets/friends.gif'
-import Budget from '../assets/Budget.gif'
-import Moderate from '../assets/wallet.gif'
-import Luxury from '../assets/Premium.gif'
 import hiddenGems from '../assets/hiddenGems.gif'
 import balanced from '../assets/balanced.gif'
 import mustSee from '../assets/mustSee.gif'
@@ -14,7 +11,8 @@ interface TripFormProps {
   trip: {
     Destination: string;
     days: string | number;
-    budget: string;
+    /** Optional; hero flow may omit; form defaults to Moderate. */
+    budget?: string;
     travelers: string | number;
     placeStyle?: string;
     startDate: string;
@@ -25,7 +23,6 @@ interface TripFormProps {
 
 export default function TripForm({ trip, onComplete }: TripFormProps) {
   const [selectedType, setSelectedType] = useState('Solo');
-  const [selectedBudget, setSelectedBudget] = useState('Moderate');
   const [days, setDays] = useState(Number(trip.days) || 1);
   const [travelers, setTravelers] = useState(1);
   const [selectedPlaceStyle, setSelectedPlaceStyle] = useState(trip.placeStyle || 'balanced');
@@ -72,7 +69,8 @@ const today = toDateInputValue(new Date());
 
 
   const [isTypeOpen, setIsTypeOpen] = useState(false);
-  const [isBudgetOpen, setIsBudgetOpen] = useState(false);
+  const [isDraggingMin, setIsDraggingMin] = useState(false);
+  const [isDraggingMax, setIsDraggingMax] = useState(false);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -230,58 +228,195 @@ const today = toDateInputValue(new Date());
             </div>
 
             {/* Budget Range Slider */}
-            <div className="space-y-8">
+            {/* Budget Range Slider */}
+            <div className="space-y-8"> 
               <div className="flex items-center justify-between">
-                <label className="text-[9px] font-black uppercase tracking-widest text-slate-400 ml-1">What's the budget range?</label>
-                <div className="px-4 py-2 bg-violet-100 text-violet-700 rounded-xl font-black text-sm">
+                <div className="flex items-center gap-3">
+                  <div className="w-1.5 h-6 bg-violet-600 rounded-full" />
+                  <label className="text-sm md:text-base font-black uppercase tracking-widest text-slate-800">Budget Strategy</label>
+                </div>
+                <div className="px-6 py-2.5 bg-slate-900 text-white rounded-2xl font-black text-sm shadow-xl shadow-slate-200">
                   ₹{minBudget.toLocaleString()} - ₹{maxBudget.toLocaleString()}
                 </div>
               </div>
               
-              <div className="relative pt-6 pb-2 px-2 bg-white/40 backdrop-blur-sm rounded-3xl border-2 border-slate-100 p-8">
-                <div className="flex flex-col gap-6">
-                   <div className="space-y-4">
-                    <div className="flex justify-between text-xs font-bold text-slate-400 uppercase tracking-widest">
-                      <span>Min Budget</span>
-                      <span>₹{minBudget.toLocaleString()}</span>
+              <div className="relative pt-12 pb-6 px-6 md:px-10 bg-white border border-slate-100 rounded-[3rem] shadow-2xl shadow-slate-200/50 group/container">
+                <div className="flex flex-col gap-12">
+                   {/* Min Budget Slider */}
+                   <div className="space-y-6">
+                    <div className="flex justify-between text-[11px] font-black text-slate-400 uppercase tracking-[0.4em]">
+                      <span className="flex items-center gap-2">
+                        <div className="w-1 h-1 rounded-full bg-violet-400" />
+                        Minimum Base
+                      </span>
+                      <span className="text-slate-900 bg-slate-50 px-3 py-1 rounded-lg border border-slate-100">₹{minBudget.toLocaleString()}</span>
                     </div>
-                    <input 
-                      type="range" 
-                      min="5000" 
-                      max="100000" 
-                      step="5000"
-                      value={minBudget}
-                      onChange={(e) => {
-                        const val = Number(e.target.value);
-                        if (val < maxBudget) setMinBudget(val);
+                    <div 
+                      className="relative h-8 flex items-center group/slider cursor-crosshair"
+                      onMouseMove={(e) => {
+                        if (isDraggingMin) return;
+                        const rect = e.currentTarget.getBoundingClientRect();
+                        const percent = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
+                        const currentPercent = (minBudget - 5000) / (100000 - 5000);
+                        
+                        const rawVal = 5000 + percent * (100000 - 5000);
+                        const steppedVal = Math.round(rawVal / 5000) * 5000;
+                        const tooltip = e.currentTarget.querySelector('.hover-tooltip') as HTMLElement;
+                        
+                        if (tooltip) {
+                          tooltip.style.left = `${percent * 100}%`;
+                          tooltip.innerText = `₹${steppedVal.toLocaleString()}`;
+                          // Hide if too close to the main thumb (within 8% range)
+                          if (Math.abs(percent - currentPercent) < 0.08) {
+                            tooltip.style.opacity = '0';
+                          } else {
+                            tooltip.style.opacity = '1';
+                          }
+                        }
                       }}
-                      className="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-violet-600"
-                    />
+                      onMouseLeave={(e) => {
+                        const tooltip = e.currentTarget.querySelector('.hover-tooltip') as HTMLElement;
+                        if (tooltip) tooltip.style.opacity = '0';
+                      }}
+                    >
+                      {/* Hover Preview Tooltip (Ghost) */}
+                      <div className="hover-tooltip absolute -top-4 -translate-y-full px-2 py-1 bg-violet-100 text-violet-600 text-[10px] font-black rounded-lg opacity-0 transition-opacity pointer-events-none z-10 whitespace-nowrap shadow-sm border border-violet-200" style={{ transform: 'translate(-50%, -10px)' }}>
+                        ₹0
+                      </div>
+
+                      {/* Main Value Tooltip */}
+                      <div 
+                        className={`absolute -top-10 transition-all duration-300 pointer-events-none z-30 ${isDraggingMin ? 'scale-125' : ''}`}
+                        style={{ left: `calc(${(minBudget - 5000) / (100000 - 5000) * 100}% - 35px)` }}
+                      >
+                        <div className="bg-slate-900 text-white text-[10px] font-black px-3 py-2 rounded-xl shadow-2xl whitespace-nowrap">
+                          ₹{minBudget.toLocaleString()}
+                          <div className="absolute top-full left-1/2 -translate-x-1/2 w-0 h-0 border-l-[5px] border-l-transparent border-r-[5px] border-r-transparent border-t-[5px] border-t-slate-900"></div>
+                        </div>
+                      </div>
+                      
+                      {/* Bold Custom Track */}
+                      <div className="absolute w-full h-4 bg-slate-100 rounded-full overflow-hidden border border-slate-200/50 shadow-inner">
+                        <div 
+                          className="h-full bg-indigo-600/50 shadow-[0_0_20px_rgba(124,58,237,0.3)] transition-all duration-300" 
+                          style={{ width: `${(minBudget - 5000) / (100000 - 5000) * 100}%` }}
+                        />
+                      </div>
+
+                      <input 
+                        type="range" 
+                        min="5000" 
+                        max="100000" 
+                        step="5000"
+                        value={minBudget}
+                        onMouseDown={() => setIsDraggingMin(true)}
+                        onMouseUp={() => setIsDraggingMin(false)}
+                        onTouchStart={() => setIsDraggingMin(true)}
+                        onTouchEnd={() => setIsDraggingMin(false)}
+                        onChange={(e) => {
+                          const val = Number(e.target.value);
+                          if (val < maxBudget) setMinBudget(val);
+                        }}
+                        className="absolute w-full h-8 bg-transparent appearance-none cursor-pointer z-40 
+                          [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-8 [&::-webkit-slider-thumb]:h-8 
+                          [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-white [&::-webkit-slider-thumb]:border-[5px] 
+                          [&::-webkit-slider-thumb]:border-violet-600 [&::-webkit-slider-thumb]:shadow-2xl [&::-webkit-slider-thumb]:transition-all 
+                          [&::-webkit-slider-thumb]:active:scale-90 hover:[&::-webkit-slider-thumb]:scale-110 hover:[&::-webkit-slider-thumb]:border-[6px]"
+                      />
+                    </div>
                   </div>
 
-                  <div className="space-y-4">
-                    <div className="flex justify-between text-xs font-bold text-slate-400 uppercase tracking-widest">
-                      <span>Max Budget</span>
-                      <span>₹{maxBudget.toLocaleString()}</span>
+                  {/* Max Budget Slider */}
+                  <div className="space-y-6">
+                    <div className="flex justify-between text-[11px] font-black text-slate-400 uppercase tracking-[0.4em]">
+                      <span className="flex items-center gap-2">
+                        <div className="w-1 h-1 rounded-full bg-indigo-400" />
+                        Cap Ceiling
+                      </span>
+                      <span className="text-slate-900 bg-slate-50 px-3 py-1 rounded-lg border border-slate-100">₹{maxBudget.toLocaleString()}</span>
                     </div>
-                    <input 
-                      type="range" 
-                      min="10000" 
-                      max="500000" 
-                      step="5000"
-                      value={maxBudget}
-                      onChange={(e) => {
-                        const val = Number(e.target.value);
-                        if (val > minBudget) setMaxBudget(val);
+                    <div 
+                      className="relative h-8 flex items-center group/slider cursor-crosshair"
+                      onMouseMove={(e) => {
+                        if (isDraggingMax) return;
+                        const rect = e.currentTarget.getBoundingClientRect();
+                        const percent = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
+                        const currentPercent = (maxBudget - 10000) / (500000 - 10000);
+                        
+                        const rawVal = 10000 + percent * (500000 - 10000);
+                        const steppedVal = Math.round(rawVal / 5000) * 5000;
+                        const tooltip = e.currentTarget.querySelector('.hover-tooltip-max') as HTMLElement;
+                        
+                        if (tooltip) {
+                          tooltip.style.left = `${percent * 100}%`;
+                          tooltip.innerText = `₹${steppedVal.toLocaleString()}`;
+                          // Hide if too close to the main thumb (within 8% range)
+                          if (Math.abs(percent - currentPercent) < 0.08) {
+                            tooltip.style.opacity = '0';
+                          } else {
+                            tooltip.style.opacity = '1';
+                          }
+                        }
                       }}
-                      className="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-indigo-600"
-                    />
+                      onMouseLeave={(e) => {
+                        const tooltip = e.currentTarget.querySelector('.hover-tooltip-max') as HTMLElement;
+                        if (tooltip) tooltip.style.opacity = '0';
+                      }}
+                    >
+                      {/* Hover Preview Tooltip (Ghost) */}
+                      <div className="hover-tooltip-max absolute -top-4 -translate-y-full px-2 py-1 bg-indigo-100 text-indigo-600 text-[10px] font-black rounded-lg opacity-0 transition-opacity pointer-events-none z-10 whitespace-nowrap shadow-sm border border-indigo-200" style={{ transform: 'translate(-50%, -10px)' }}>
+                        ₹0
+                      </div>
+
+                      {/* Main Value Tooltip */}
+                      <div 
+                        className={`absolute -top-10 transition-all duration-300 pointer-events-none z-30 ${isDraggingMax ? 'scale-125' : ''}`}
+                        style={{ left: `calc(${(maxBudget - 10000) / (500000 - 10000) * 100}% - 35px)` }}
+                      >
+                        <div className="bg-slate-900 text-white text-[10px] font-black px-3 py-2 rounded-xl shadow-2xl whitespace-nowrap">
+                          ₹{maxBudget.toLocaleString()}
+                          <div className="absolute top-full left-1/2 -translate-x-1/2 w-0 h-0 border-l-[5px] border-l-transparent border-r-[5px] border-r-transparent border-t-[5px] border-t-slate-900"></div>
+                        </div>
+                      </div>
+
+                      {/* Bold Custom Track */}
+                      <div className="absolute w-full h-4 bg-slate-100 rounded-full overflow-hidden border border-slate-200/50 shadow-inner">
+                        <div 
+                          className="h-full bg-indigo-600/50 shadow-[0_0_20px_rgba(124,58,237,0.3)] transition-all duration-300" 
+                          style={{ width: `${(maxBudget - 10000) / (500000 - 10000) * 100}%` }}
+                        />
+                      </div>
+
+                      <input 
+                        type="range" 
+                        min="10000" 
+                        max="500000" 
+                        step="5000"
+                        value={maxBudget}
+                        onMouseDown={() => setIsDraggingMax(true)}
+                        onMouseUp={() => setIsDraggingMax(false)}
+                        onTouchStart={() => setIsDraggingMax(true)}
+                        onTouchEnd={() => setIsDraggingMax(false)}
+                        onChange={(e) => {
+                          const val = Number(e.target.value);
+                          if (val > minBudget) setMaxBudget(val);
+                        }}
+                        className="absolute w-full h-8 bg-transparent appearance-none cursor-pointer z-40 
+                          [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-8 [&::-webkit-slider-thumb]:h-8 
+                          [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-white [&::-webkit-slider-thumb]:border-[5px] 
+                          [&::-webkit-slider-thumb]:border-indigo-600 [&::-webkit-slider-thumb]:shadow-2xl [&::-webkit-slider-thumb]:transition-all 
+                          [&::-webkit-slider-thumb]:active:scale-90 hover:[&::-webkit-slider-thumb]:scale-110 hover:[&::-webkit-slider-thumb]:border-[6px]"
+                      />
+                    </div>
                   </div>
                 </div>
                 
-                <p className="mt-6 text-center text-slate-400 text-sm font-medium italic">
-                  AI will suggest stays and activities within this total budget.
-                </p>
+                <div className="mt-10 flex items-center justify-center gap-3 py-3 px-6 rounded-2xl">
+                  <span className="text-xl">💡</span>
+                  <p className="text-slate-500 text-xs font-bold italic">
+                    AI will suggest stays and activities within this total budget.
+                  </p>
+                </div>
               </div>
             </div>
 

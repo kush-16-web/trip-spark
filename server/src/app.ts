@@ -1,6 +1,7 @@
 import cors from 'cors';
 import express, { type NextFunction, type Request, type Response } from 'express';
 import { env } from './config/env';
+import { authRouter } from './routes/auth.routes';
 import { tripRouter } from './routes/trip.routes';
 
 export const app = express();
@@ -50,6 +51,7 @@ app.get('/api/health', (_req: Request, res: Response) => {
  * Trip logic will be added by you in trip.routes/controller later.
  */
 app.use('/api/trip', tripRouter);
+app.use('/api/auth', authRouter);
 
 /**
  * 404 handler for unknown routes.

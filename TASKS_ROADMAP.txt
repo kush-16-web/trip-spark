@@ -1,0 +1,83 @@
+================================================================================
+TRIP SPARK — TASK ROADMAP (do in order; check off as you go)
+================================================================================
+Last updated: use git history if this file drifts from the codebase.
+
+--------------------------------------------------------------------------------
+PHASE A — LOGIN & IDENTITY (do FIRST; blocks save / edit / share properly)
+--------------------------------------------------------------------------------
+[ ] A1. Prisma: add `User` model (id, email unique, passwordHash, createdAt, …).
+[ ] A2. Prisma: `TripPlan.ownerId` → relation to User (keep optional during
+      migration OR backfill nulls, then enforce for new trips).
+[ ] A3. Auth API: register + login (hash passwords with bcrypt).
+[ ] A4. Auth API: issue JWT (or session cookie); document expiry + refresh if
+      you add refresh later.
+[ ] A5. Express middleware: `requireAuth` — attach `req.userId` from token.
+[ ] A6. Frontend: login + register pages/modals; store token (httpOnly cookie
+      preferred, or memory + refresh; avoid localStorage if you care XSS).
+[ ] A7. Frontend: send `Authorization: Bearer <token>` (or cookie) on API
+      calls; handle 401 → redirect to login.
+
+--------------------------------------------------------------------------------
+PHASE B — SAVE TRIP (already partially there; tie to user)
+--------------------------------------------------------------------------------
+[ ] B1. `POST /api/trip/plan`: after AI + DB create, set `ownerId` from
+      `requireAuth` (anonymous planning either disabled OR keep guest trips
+      with ownerId null — pick one product rule).
+[ ] B2. Frontend: after successful plan, show “Saved” (or confirm save) when
+      logged in; if guest, prompt login to save.
+[ ] B3. Optional: explicit `POST /api/trip/:id/save` only if you split
+      “generate” vs “persist” — not required if plan always persists.
+
+--------------------------------------------------------------------------------
+PHASE C — MY TRIPS & EDIT
+--------------------------------------------------------------------------------
+[ ] C1. Wire `GET /api/trip/my-trips` in routes (if missing); protect with
+      `requireAuth`; filter `where: { ownerId: req.userId }`.
+[ ] C2. Wire `GET /api/trip/:id` (getTripById exists in controller — confirm
+      route + auth: owner OR …).
+[ ] C3. Edit product rule: (i) edit metadata only (dates, title), or (ii)
+      edit JSON plan client-side + PATCH, or (iii) “Regenerate” new AI plan.
+      Implement `PATCH /api/trip/:id` owner-only for chosen rule.
+[ ] C4. Frontend: “My trips” list → open trip → TripResult with edit UI.
+[ ] C5. Frontend: loading/error states for list + patch.
+
+--------------------------------------------------------------------------------
+PHASE D — SHARE TRIP
+--------------------------------------------------------------------------------
+[ ] D1. `TripPlan.shareId` already unique — add `GET /api/trip/share/:shareId`
+      public, returns plan only if `isPublic` (or always for link, your call).
+[ ] D2. Frontend: “Copy link” → `${origin}/trip/${shareId}` (or `/s/:shareId`).
+[ ] D3. Frontend: public route reads shareId, fetches share endpoint, read-only
+      TripResult (no edit).
+[ ] D4. Optional: “Make private” toggles `isPublic`; share link stops working
+      when private (return 404).
+
+--------------------------------------------------------------------------------
+PHASE E — SMARTER FOOD / FILTERS (later; product differentiator)
+--------------------------------------------------------------------------------
+[ ] E1. TripForm (or TripResult filters): chips — Veg only, Non-veg, Vegan,
+      Local cuisine, Budget / Mid / Premium.
+[ ] E2. Extend AI prompt + types so itinerary includes food blocks per day
+      near that day’s stops (context-aware).
+[ ] E3. TripResult UI: group food under “Day N” with map-style context copy.
+[ ] E4. Optional v2: Google Places / Foursquare for ratings, distance, hours,
+      price — replace or enrich AI-only venues.
+
+--------------------------------------------------------------------------------
+PHASE F — POLISH (optional near launch)
+--------------------------------------------------------------------------------
+[ ] F1. Replace GIF loader with glassmorphism skeleton + rotating status lines
+      (“Mapping your days…”, etc.) tied to real steps if possible.
+[ ] F2. Destinations / marketing sections: wire cards to prefilled hero (if not
+      done).
+
+================================================================================
+NOTES (current codebase hints)
+================================================================================
+- `server/prisma/schema.prisma`: TripPlan has shareId, isPublic, ownerId (nullable).
+- `planTrip` creates rows but does not set ownerId yet.
+- `getMyTrips` returns all trips — must filter by user after auth.
+- `getTripById` in controller — verify it is mounted in `trip.routes.ts`.
+
+================================================================================
