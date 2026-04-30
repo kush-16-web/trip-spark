@@ -20,7 +20,7 @@ import tripIcon from '../assets/trip.gif';
 import walletIcon from '../assets/wallet.gif';
 import compassIcon from '../assets/compass.gif';
 import mustSeeIcon from '../assets/mustSee.gif';
-import hiddenGemsIcon from '../assets/hiddenGems.gif';
+import stayIcon from '../assets/stay.gif';
 
 import type {
   BudgetEstimateRow,
@@ -386,7 +386,7 @@ export default function TripResult({ data, onEdit, onViewMyTrips }: TripResultPr
             {/* Horizontal Tabs - Refined sliding mechanism */}
             <div className="relative mb-12 md:mb-16">
               <div 
-                className="relative flex bg-white p-2 rounded-[2.5rem] shadow-xl shadow-slate-200/40 border border-slate-100 overflow-x-auto snap-x no-scrollbar"
+                className="relative flex bg-white w-fit p-2 rounded-[2.5rem] shadow-xl shadow-slate-200/40 border border-slate-100 overflow-x-auto snap-x no-scrollbar"
                 style={{
                   '--tab-w': '110px',
                   '--tab-gap': '8px',
@@ -610,8 +610,8 @@ export default function TripResult({ data, onEdit, onViewMyTrips }: TripResultPr
           <div className="grid lg:grid-cols-2 gap-12 lg:gap-16">
             <div className="relative">
               <div className="flex items-center gap-4 mb-8">
-                <div className="w-12 h-12 rounded-2xl bg-violet-50 flex items-center justify-center">
-                  <img src={hiddenGemsIcon} className="w-8 h-8 object-contain" alt="" />
+                <div className="w-12 h-12 rounded-2xl bg-indigo-50 flex items-center justify-center">
+                  <img src={stayIcon} className="w-10 h-10 rounded-lg object-contain" alt="" />
                 </div>
                 <h4 className="text-2xl font-black text-slate-900 tracking-tight uppercase tracking-widest">Where to stay</h4>
               </div>
@@ -651,11 +651,9 @@ export default function TripResult({ data, onEdit, onViewMyTrips }: TripResultPr
                     <div className="w-14 h-14 rounded-2xl bg-indigo-50 text-indigo-600 font-black text-xl flex items-center justify-center shrink-0 group-hover:bg-indigo-600 group-hover:text-white transition-colors">
                       {index + 1}
                     </div>
-                    <div className="flex-1">
-                      <div className="flex items-center justify-between gap-4 mb-1">
+                    <div className="flex-1 space-y-2">
                         <p className="font-black text-slate-900 text-xl tracking-tight">{place.name}</p>
-                        <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{place.time}</span>
-                      </div>
+                        <span className="text-[9px] bg-black/20 rounded-lg text-black px-2 py-1 font-bold uppercase tracking-widest">{place.time}</span>
                       <p className="text-sm text-indigo-600 font-bold tracking-wide uppercase">{place.tag}</p>
                     </div>
                   </li>
@@ -665,39 +663,72 @@ export default function TripResult({ data, onEdit, onViewMyTrips }: TripResultPr
           </div>
         </section>
 
-        {/* Footer actions */}
-        <div className="mt-12 md:mt-16 text-center">
-          <p className="text-slate-400 font-bold uppercase tracking-widest text-[10px] md:text-sm mb-8 italic">
-            Adventure is waiting for you…
-          </p>
-          <div className="flex flex-col md:flex-row justify-center gap-4 md:gap-6">
-          {loggedInUser?.email && (
-            <div className="px-6 py-4 bg-emerald-50 border border-emerald-200 text-emerald-800 rounded-[1.5rem] font-semibold text-sm md:text-base">
-              Logged in as {loggedInUser.email}
+        {/* Footer actions - Redesigned for Premium Feel */}
+        <div className="mt-20 md:mt-32 pb-20 max-w-4xl mx-auto px-6">
+          <div className="relative p-8 md:p-12 rounded-[3rem] bg-white border border-slate-100 shadow-2xl shadow-slate-200/50 overflow-hidden text-center">
+            {/* Background Accent */}
+            <div className="absolute -top-24 -right-24 w-64 h-64 bg-violet-50 rounded-full blur-3xl opacity-50" />
+            <div className="absolute -bottom-24 -left-24 w-64 h-64 bg-blue-50 rounded-full blur-3xl opacity-50" />
+
+            <div className="relative z-10">
+              <p className="text-violet-500 font-black uppercase tracking-[0.3em] text-[10px] md:text-xs mb-4">
+                Your next story starts here
+              </p>
+              <h3 className="text-3xl md:text-4xl font-black text-slate-900 mb-8">
+                Ready for the adventure?
+              </h3>
+              
+              <div className="flex flex-col items-center gap-6">
+                <div className="flex flex-col md:flex-row justify-center items-center gap-4 w-full">
+                  <button
+                    type="button"
+                    onClick={onClickSaveTrip}
+                    className="w-full md:w-auto px-10 py-5 bg-slate-900 text-white rounded-2xl font-bold text-lg hover:translate-y-[-2px] transition-all duration-300 shadow-xl shadow-slate-900/10 active:scale-95 flex items-center justify-center gap-2"
+                  >
+                    Save to My Trips 
+                    <span className="text-xl">✈️</span>
+                  </button>
+                  
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (navigator.share) {
+                        navigator.share({
+                          title: `Trip to ${data.Destination}`,
+                          text: `Check out my itinerary for ${data.Destination}!`,
+                          url: window.location.href,
+                        });
+                      } else {
+                        navigator.clipboard.writeText(window.location.href);
+                        alert('Link copied to clipboard!');
+                      }
+                    }}
+                    className="w-full md:w-auto px-10 py-5 bg-white text-slate-900 border-2 border-slate-200 rounded-2xl font-bold text-lg hover:border-violet-400 hover:text-violet-600 hover:translate-y-[-2px] transition-all duration-300 active:scale-95 flex items-center justify-center gap-2"
+                  >
+                    Share Itinerary
+                    <span className="text-xl">🔗</span>
+                  </button>
+                </div>
+
+                <div className="flex flex-wrap justify-center gap-3 mt-4">
+                  {onViewMyTrips && (
+                    <button
+                      type="button"
+                      onClick={onViewMyTrips}
+                      className="px-6 py-3 text-slate-500 font-bold text-sm hover:text-violet-600 bg-violet-50 rounded-xl transition-all"
+                    >
+                      View all my trips
+                    </button>
+                  )}
+                  {loggedInUser?.email && (
+                    <div className="px-4 py-3 bg-slate-50 border border-slate-100 rounded-xl flex items-center gap-2">
+                      <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                      <span className="text-xs text-slate-500 font-medium">Logged in as {loggedInUser.email}</span>
+                    </div>
+                  )}
+                </div>
+              </div>
             </div>
-          )}
-            <button
-              type="button"
-              onClick={onClickSaveTrip}
-              className="px-8 py-5 bg-violet-600 text-white rounded-[2rem] font-black text-lg hover:bg-violet-700 shadow-2xl shadow-violet-200 transition-all active:scale-95"
-            >
-              Save this trip ✈️
-            </button>
-            <button
-              type="button"
-              className="px-8 py-5 bg-white text-slate-900 border-2 border-slate-900 rounded-[2rem] font-black text-lg hover:bg-slate-50 transition-all active:scale-95"
-            >
-              Share itinerary 🔗
-            </button>
-          {onViewMyTrips && (
-            <button
-              type="button"
-              onClick={onViewMyTrips}
-              className="px-8 py-5 bg-white text-violet-700 border-2 border-violet-300 rounded-[2rem] font-black text-lg hover:bg-violet-50 transition-all active:scale-95"
-            >
-              My Trips
-            </button>
-          )}
           </div>
         </div>
       </div>
