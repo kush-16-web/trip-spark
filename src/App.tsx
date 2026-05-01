@@ -1,4 +1,5 @@
 import { Routes, Route, useNavigate } from 'react-router-dom';
+import toast, { Toaster } from 'react-hot-toast';
 import Navbar from './components/Navbar'
 import Hero from './components/Hero'
 import TripForm from './components/TripForm'
@@ -166,6 +167,29 @@ function App() {
   
   return (
     <main className="min-h-screen">
+      <Toaster 
+        position="top-center" 
+        containerClassName="hidden md:block"
+        containerStyle={{top: 12}}
+        toastOptions={{
+          duration: 3000,
+          style: {
+            background: 'rgba(0, 0, 0, 0.6)',
+            color: '#fff',
+            backdropFilter: 'blur(12px)',
+            WebkitBackdropFilter: 'blur(12px)',
+            border: '1px solid rgba(255, 255, 255, 0.1)',
+            padding: '8px 8px',
+            borderRadius: '9999px',
+            fontWeight: '600',
+            fontSize: '13px',
+            fontFamily: 'Outfit, sans-serif',
+          },
+        }}
+      />
+
+
+
       <Navbar 
         userEmail={userEmail} 
         userPicture={userPicture} 
@@ -190,6 +214,7 @@ function App() {
                 {!loading && showResult && (
                   <TripResult
                     data={trip}
+                    onCopyLink={() => toast('Link copied! 🔗')}
                     onEdit={() => setShowResult(false)}
                     onViewMyTrips={() => navigate('/my-trips')}
                   />

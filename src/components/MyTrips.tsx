@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import type { MyTripListItem } from '../services/tripApi';
 import { getMyTrips } from '../services/tripApi';
+import toast from 'react-hot-toast';
 
 interface MyTripsProps {
   onOpenTrip: (tripId: string) => void;
@@ -123,8 +124,9 @@ export default function MyTrips({ onOpenTrip, onBackToPlanner }: MyTripsProps) {
                   <button
                     type="button"
                     onClick={() => {
-                      const shareUrl = `${window.location.origin}/trip/${trip.shareId}`;
+                      const shareUrl = `${window.location.origin}/share/${trip.shareId}`;
                       void navigator.clipboard.writeText(shareUrl);
+                      toast('Link copied! 🔗');
                     }}
                     className="px-4 py-2.5 bg-white border border-slate-200 text-slate-700 rounded-xl font-semibold hover:bg-slate-100 transition-all"
                   >

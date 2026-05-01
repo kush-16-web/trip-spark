@@ -55,6 +55,7 @@ interface TripResultProps {
   data: TripResultData | null | undefined;
   onEdit?: () => void;
   onViewMyTrips?: () => void;
+  onCopyLink?: () => void;
 }
 
 
