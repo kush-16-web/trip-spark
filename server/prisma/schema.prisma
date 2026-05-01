@@ -24,6 +24,9 @@ model TripPlan {
   id          String   @id @default(cuid())
   createdAt   DateTime @default(now())
   destination String
+  days        Int?
+  travelers   Int?
+  type        String?
   startDate   String
   endDate     String
   plan        Json

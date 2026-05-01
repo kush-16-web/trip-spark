@@ -14,32 +14,21 @@ export default function MyTrips({ onOpenTrip, onBackToPlanner }: MyTripsProps) {
   const [error, setError] = useState<string | null>(null);
   const [userEmail, setUserEmail] = useState<string>('Guest');
 
+  const fetchTrips = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      const response = await getMyTrips();
+      setTrips(response.trips);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Unable to load trips');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
-    let cancelled = false;
-
-    const loadTrips = async () => {
-      try {
-        setLoading(true);
-        setError(null);
-        const response = await getMyTrips();
-        if (!cancelled) {
-          setTrips(response.trips);
-        }
-      } catch (err) {
-        if (!cancelled) {
-          setError(err instanceof Error ? err.message : 'Unable to load trips');
-        }
-      } finally {
-        if (!cancelled) {
-          setLoading(false);
-        }
-      }
-    };
-
-    loadTrips();
-    return () => {
-      cancelled = true;
-    };
+    fetchTrips();
   }, []);
 
   useEffect(() => {
@@ -54,90 +43,127 @@ export default function MyTrips({ onOpenTrip, onBackToPlanner }: MyTripsProps) {
   }, []);
 
   return (
-    <section className="pt-32 pb-20 bg-slate-50 min-h-screen animate-in fade-in duration-700">
-      <div className="max-w-6xl mx-auto px-6">
-        <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-10">
+    <div className="min-h-screen bg-slate-50 pt-28 pb-20 px-6">
+      <div className="max-w-7xl mx-auto">
+        
+        {/* Header Section */}
+        <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-12">
           <div>
-            <p className="text-xs font-black uppercase tracking-[0.3em] text-violet-500 mb-2">Profile</p>
-            <h2 className="text-4xl md:text-5xl font-black text-slate-900">My Trips</h2>
+            <h1 className="text-4xl md:text-5xl font-black text-slate-900 mb-4 tracking-tight">
+              My <span className="text-violet-600">Adventures</span>
+            </h1>
+            <p className="text-slate-500 font-medium text-lg">
+              {loading ? 'Fetching your itineraries...' : `You have planned ${trips.length} amazing journeys.`}
+            </p>
           </div>
           <button
-            type="button"
             onClick={onBackToPlanner}
-            className="px-5 py-3 bg-white border border-slate-200 text-slate-700 rounded-2xl font-semibold hover:bg-slate-100 transition-all"
+            className="w-fit px-8 py-3.5 bg-white border border-slate-200 text-slate-700 rounded-2xl font-bold hover:bg-slate-50 transition-all shadow-sm flex items-center gap-2"
           >
-            Back to planner
+            <span>←</span> Back to Planner
           </button>
         </div>
 
-        <div className="grid md:grid-cols-2 gap-4 mb-8">
-          <div className="p-5 rounded-2xl bg-white border border-slate-100 shadow-sm">
-            <p className="text-xs uppercase tracking-[0.2em] font-bold text-slate-400 mb-2">Account</p>
-            <p className="text-lg font-black text-slate-900">{userEmail}</p>
+        {/* Loading State */}
+        {loading ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            {[1, 2, 3].map((i) => (
+              <div key={i} className="h-64 bg-slate-200 rounded-[2.5rem] animate-pulse" />
+            ))}
           </div>
-          <div className="p-5 rounded-2xl bg-white border border-slate-100 shadow-sm">
-            <p className="text-xs uppercase tracking-[0.2em] font-bold text-slate-400 mb-2">Total trips</p>
-            <p className="text-lg font-black text-violet-700">{trips.length}</p>
+        ) : error ? (
+          <div className="text-center py-24 bg-white rounded-[3rem] border border-slate-100 shadow-xl shadow-slate-200/50 px-6 max-w-2xl mx-auto">
+            <div className="w-20 h-20 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-6 text-3xl">
+              ⚠️
+            </div>
+            <h2 className="text-2xl font-black text-slate-900 mb-3">Oops! Something went wrong</h2>
+            <p className="text-slate-500 font-medium mb-8 max-w-md mx-auto">
+              {error}
+            </p>
+            <button
+              onClick={() => fetchTrips()}
+              disabled={loading}
+              className="px-8 py-3.5 bg-slate-900 text-white rounded-2xl font-bold hover:bg-slate-800 transition-all shadow-lg shadow-slate-900/20 active:scale-95 flex items-center gap-2 mx-auto disabled:opacity-70 disabled:cursor-not-allowed"
+            >
+              <span className={`inline-block ${loading ? 'animate-spin' : ''}`}>↻</span> 
+              {loading ? 'Refreshing...' : 'Refresh Page'}
+            </button>
           </div>
-        </div>
-
-        {loading && <p className="text-slate-500 font-semibold">Loading your trips...</p>}
-
-        {error && !loading && (
-          <div className="p-4 rounded-2xl bg-red-50 border border-red-200 text-red-700 font-medium">
-            {error}
+        ) : trips.length === 0 ? (
+          /* Empty State */
+          <div className="text-center py-32 bg-white rounded-[3rem] border border-slate-100 shadow-xl shadow-slate-200/50 px-6">
+            <div className="text-6xl mb-6">🌎</div>
+            <h2 className="text-3xl font-black text-slate-900 mb-4">No adventures yet?</h2>
+            <p className="text-slate-500 mb-8 max-w-md mx-auto text-lg font-medium">
+              Your future memories are waiting to be planned. Let's create your first dream itinerary right now.
+            </p>
+            <button
+              onClick={onBackToPlanner}
+              className="px-10 py-4 bg-violet-600 text-white rounded-2xl font-black text-lg hover:bg-violet-700 hover:scale-105 transition-all shadow-lg shadow-violet-500/25 active:scale-95"
+            >
+              Start Planning
+            </button>
           </div>
-        )}
-
-        {!loading && !error && trips.length === 0 && (
-          <div className="p-8 rounded-3xl bg-white border border-slate-100 shadow-sm">
-            <p className="text-slate-700 font-semibold">No saved trips yet.</p>
-            <p className="text-slate-500 mt-1">Generate a trip and save it to see it here.</p>
-          </div>
-        )}
-
-        {!loading && !error && trips.length > 0 && (
-          <div className="grid md:grid-cols-2 gap-6">
+        ) : (
+          /* Trip Grid */
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             {trips.map((trip) => (
               <article
                 key={trip.id}
-                className="p-6 rounded-3xl bg-white border border-slate-100 shadow-sm hover:shadow-md transition-all"
+                className="group bg-white rounded-[2.5rem] border border-slate-100 p-8 shadow-xl shadow-slate-200/40 hover:shadow-2xl hover:shadow-violet-200/40 transition-all duration-500 hover:-translate-y-2 relative overflow-hidden"
               >
-                <p className="text-xs font-bold uppercase tracking-[0.2em] text-violet-500 mb-2">Saved trip</p>
-                <h3 className="text-2xl font-black text-slate-900 mb-4">{trip.destination}</h3>
+                {/* Decorative background glow */}
+                <div className="absolute -top-20 -right-20 w-40 h-40 bg-violet-50 rounded-full blur-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
 
-                <div className="space-y-1 text-sm text-slate-600 mb-5">
-                  <p>
-                    {trip.startDate} - {trip.endDate}
+                <div className="relative z-10">
+                  <div className="flex justify-between items-start mb-6">
+                    <div className="w-14 h-14 bg-violet-100 rounded-2xl flex items-center justify-center text-2xl">
+                      📍
+                    </div>
+                    <span className="px-4 py-1.5 bg-slate-50 text-slate-500 rounded-full text-xs font-black uppercase tracking-widest border border-slate-100">
+                      {trip.days || 'Multi'} Days
+                    </span>
+                  </div>
+
+                  <h3 className="text-2xl font-black text-slate-900 mb-2 group-hover:text-violet-600 transition-colors line-clamp-1">
+                    {trip.destination}
+                  </h3>
+                  
+                  <p className="text-slate-400 font-bold text-sm mb-8 flex items-center gap-2">
+                    <span className="w-1.5 h-1.5 bg-slate-300 rounded-full" />
+                    Planned for {trip.travelers || 'multiple'} Travelers
                   </p>
-                  <p>Created: {new Date(trip.createdAt).toLocaleDateString()}</p>
-                </div>
 
-                <div className="flex gap-3">
-                  <button
-                    type="button"
-                    onClick={() => onOpenTrip(trip.id)}
-                    className="px-4 py-2.5 bg-violet-600 text-white rounded-xl font-bold hover:bg-violet-700 transition-all"
-                  >
-                    Open Trip
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      const shareUrl = `${window.location.origin}/share/${trip.shareId}`;
-                      void navigator.clipboard.writeText(shareUrl);
-                      toast('Link copied! 🔗');
-                    }}
-                    className="px-4 py-2.5 bg-white border border-slate-200 text-slate-700 rounded-xl font-semibold hover:bg-slate-100 transition-all"
-                  >
-                    Copy Share Link
-                  </button>
+                  <div className="flex flex-col gap-3">
+                    <button
+                      onClick={() => onOpenTrip(trip.id)}
+                      className="w-full py-4 bg-violet-600 text-white rounded-2xl font-black hover:bg-violet-700 transition-all flex items-center justify-center gap-2 group/btn shadow-lg shadow-violet-500/20"
+                    >
+                      View Itinerary
+                      <span className="group-hover:translate-x-1 transition-transform">→</span>
+                    </button>
+                    
+                    <button
+                      onClick={() => {
+                        const shareUrl = `${window.location.origin}/share/${trip.shareId}`;
+                        void navigator.clipboard.writeText(shareUrl);
+                        toast.custom((t) => (
+                          <div className="fixed top-10 left-1/2 -translate-x-1/2 z-[9999] w-max backdrop-blur-xl bg-black/80 border border-white/10 text-white px-6 py-3 rounded-full shadow-2xl font-bold text-sm flex items-center gap-2 animate-in fade-in zoom-in slide-in-from-top-4 duration-300">
+                            Link copied! 🔗
+                          </div>
+                        ));
+                      }}
+                      className="w-full py-4 bg-white border border-slate-200 text-slate-700 rounded-2xl font-bold hover:bg-slate-50 transition-all text-sm flex items-center justify-center gap-2"
+                    >
+                      Copy Share Link
+                    </button>
+                  </div>
                 </div>
               </article>
             ))}
           </div>
         )}
       </div>
-    </section>
+    </div>
   );
 }

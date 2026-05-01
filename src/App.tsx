@@ -122,8 +122,9 @@ function App() {
 
       setTrip({
         Destination: plannedTrip.destination,
-        days: plan.dayPlan?.length ?? 1,
-        travelers: 1,
+        days: plannedTrip.days ?? plan.dayPlan?.length ?? 1,
+        travelers: plannedTrip.travelers ?? 1,
+        type: plannedTrip.type,
         budgetRange: undefined,
         startDate: plannedTrip.startDate,
         endDate: plannedTrip.endDate,
@@ -148,8 +149,9 @@ function App() {
       const plan = plannedTrip.plan;
       setTrip({
         Destination: plannedTrip.destination,
-        days: plan.dayPlan?.length ?? 1,
-        travelers: 1,
+        days: plannedTrip.days ?? plan.dayPlan?.length ?? 1,
+        travelers: plannedTrip.travelers ?? 1,
+        type: plannedTrip.type,
         ...plan,
         budgetRange: undefined,
         startDate: plannedTrip.startDate,

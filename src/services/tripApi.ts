@@ -78,6 +78,8 @@ export interface MyTripListItem {
   id: string;
   shareId: string;
   destination: string;
+  days?: number;
+  travelers?: number;
   startDate: string;
   endDate: string;
   createdAt: string;
@@ -96,6 +98,9 @@ export interface TripByIdApiResponse {
     id: string;
     shareId: string;
     destination: string;
+    type?: string;
+    days?: number;
+    travelers?: number;
     startDate: string;
     endDate: string;
     createdAt: string;

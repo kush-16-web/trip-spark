@@ -252,29 +252,8 @@ export default function TripResult({ data, onEdit, onViewMyTrips }: TripResultPr
             </div>
             <div className='flex md:flex-col justify-between items-center'>
             <h2 className="text-5xl md:text-8xl font-black text-slate-900 leading-none tracking-tight">{destination}</h2>
-             <button
-            type="button"
-            onClick={onEdit}
-            className="group flex px-4 py-3 bg-slate-900 text-white rounded-3xl md:rounded-[2rem] font-bold text-[12px] md:text-lg hover:bg-violet-600 transition-all duration-300 shadow-xl shadow-slate-200 md:hidden items-center gap-3 active:scale-95"
-          >
-            <span>Edit preferences</span>
-            <span className="group-hover:rotate-180 transition-transform duration-500" aria-hidden>
-              ⚙️
-            </span>
-          </button>
             </div>
           </div>
-
-          <button
-            type="button"
-            onClick={onEdit}
-            className="group hidden  px-6 py-4 md:px-8 md:py-5 bg-slate-900 text-white rounded-3xl md:rounded-[2rem] font-bold text-base md:text-lg hover:bg-violet-600 transition-all duration-300 shadow-xl shadow-slate-200 md:flex items-center gap-3 active:scale-95"
-          >
-            <span>Edit preferences</span>
-            <span className="group-hover:rotate-180 transition-transform duration-500" aria-hidden>
-              ⚙️
-            </span>
-          </button>
         </div>
 
         {/* At-a-glance (feeds into summary context) */}
@@ -341,8 +320,8 @@ export default function TripResult({ data, onEdit, onViewMyTrips }: TripResultPr
                 <div className="w-2 h-2 rounded-full bg-violet-400 animate-pulse" />
                 <span className="text-[10px] text-white font-black tracking-[0.2em] uppercase">Overview</span>
               </div>
-              <h3 id="trip-summary-heading" className="text-4xl md:text-6xl font-black text-slate-900 leading-[1.1] tracking-tighter mb-6">
-                The <br />Experience
+              <h3 id="trip-summary-heading" className="text-4xl md:text-6xl font-black text-slate-900  tracking-tighter mb-6">
+                The Experience
               </h3>
               <div className="w-20 h-2 bg-violet-600 rounded-full" />
             </div>
@@ -355,7 +334,7 @@ export default function TripResult({ data, onEdit, onViewMyTrips }: TripResultPr
                 <div className="bg-white/40 backdrop-blur-md border border-white/60 p-8 md:p-12 rounded-[3rem] shadow-xl shadow-slate-200/50 relative overflow-hidden group">
                   <img src={tripIcon} className="absolute -right-4 -top-4 w-24 h-24 opacity-10 group-hover:opacity-20 transition-opacity" alt="" />
                   
-                  <p className="text-2xl md:text-3xl text-slate-900 font-bold leading-snug mb-16 relative">
+                  <p className="text-lg md:text-3xl text-slate-900 font-bold leading-snug mb-16 relative">
                     <span className="text-6xl text-violet-200 absolute -top-8 -left-6 font-serif">“</span>
                     {data.summary ?? `An curated journey through ${destination}.`}
                   </p>
@@ -673,32 +652,21 @@ export default function TripResult({ data, onEdit, onViewMyTrips }: TripResultPr
             <div className="absolute -bottom-24 -left-24 w-64 h-64 bg-blue-50 rounded-full blur-3xl opacity-50" />
 
             <div className="relative z-10">
-              <p className="text-violet-500 font-black uppercase tracking-[0.3em] text-[10px] md:text-xs mb-4">
+              <p className="text-violet-500 font-black uppercase tracking-[0.3em] text-[8px] sm:text-[10px] md:text-xs mb-4">
                 Your next story starts here
               </p>
-              <h3 className="text-3xl md:text-4xl font-black text-slate-900 mb-8">
+              <h3 className="text-xl sm:text-2xl md:text-4xl font-black text-slate-900 mb-8">
                 Ready for the adventure?
               </h3>
               
               <div className="flex flex-col items-center gap-6">
                 <div className="flex flex-col md:flex-row justify-center items-center gap-4 w-full">
-                  {onEdit && (
-                    <button
-                      type="button"
-                      onClick={onEdit}
-                      className="w-full md:w-auto px-10 py-5 bg-violet-500 text-white rounded-2xl font-bold text-lg hover:bg-violet-600 hover:translate-y-[-2px] transition-all duration-300 shadow-lg shadow-violet-500/25 active:scale-95 flex items-center justify-center gap-2"
-                    >
-                      Edit & Refine
-                      <span className="text-xl">✏️</span>
-                    </button>
-                  )}
                   <button
                     type="button"
                     onClick={onClickSaveTrip}
-                    className="w-full md:w-auto px-10 py-5 bg-slate-900 text-white rounded-2xl font-bold text-lg hover:translate-y-[-2px] transition-all duration-300 shadow-xl shadow-slate-900/10 active:scale-95 flex items-center justify-center gap-2"
+                    className="w-full md:w-auto py-2.5 sm:px-10 sm:py-5 bg-slate-900 text-white rounded-2xl font-bold text-sm sm:text-lg hover:translate-y-[-2px] transition-all duration-300 shadow-xl shadow-slate-900/10 active:scale-95 flex items-center justify-center gap-2"
                   >
-                    Save to My Trips 
-                    <span className="text-xl">✈️</span>
+                    Save Trip <span className="text-xl">✈️</span>
                   </button>
                   
                   <button
@@ -715,7 +683,7 @@ export default function TripResult({ data, onEdit, onViewMyTrips }: TripResultPr
                         alert('Link copied to clipboard!');
                       }
                     }}
-                    className="w-full md:w-auto px-10 py-5 bg-white text-slate-900 border-2 border-slate-200 rounded-2xl font-bold text-lg hover:border-violet-400 hover:text-violet-600 hover:translate-y-[-2px] transition-all duration-300 active:scale-95 flex items-center justify-center gap-2"
+                    className="w-full md:w-auto py-2.5 sm:px-6 sm:py-5 bg-white text-slate-900 border-2 border-slate-200 rounded-2xl font-bold text-sm sm:text-lg hover:border-violet-400 hover:text-violet-600 hover:translate-y-[-2px] transition-all duration-300 active:scale-95 flex items-center justify-center gap-2"
                   >
                     Share Itinerary
                     <span className="text-xl">🔗</span>
