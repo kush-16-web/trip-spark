@@ -69,6 +69,7 @@ export interface PlanTripApiResponse {
   plan: TripPlanModel;
   /** Present when Open-Meteo succeeds; null if geocode/forecast failed (plan still valid). */
   weather: Weather[] | null;
+  shareId: string;
 }
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080';
@@ -151,5 +152,14 @@ export async function getTripById(id: string): Promise<TripByIdApiResponse> {
     throw new Error((data as { message?: string }).message ?? 'Failed to load trip');
   }
 
+  return data as TripByIdApiResponse;
+}
+
+export async function getSharedTrip(shareId: string):Promise<TripByIdApiResponse>{
+  const response = await fetch(`${API_BASE_URL}/api/trip/share/${shareId}`);
+  const data = (await response.json() as TripByIdApiResponse | {message?: string});
+  if(!response.ok){
+    throw new Error((data as {message?: string}).message ?? 'Failed to get shared trip');
+  }
   return data as TripByIdApiResponse;
 }

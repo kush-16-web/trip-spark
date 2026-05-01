@@ -1,3 +1,4 @@
+import { Routes, Route, useNavigate } from 'react-router-dom';
 import Navbar from './components/Navbar'
 import Hero from './components/Hero'
 import TripForm from './components/TripForm'
@@ -9,7 +10,7 @@ import { useState, useEffect, useRef } from 'react'
 // import compass from './assets/compass.gif'
 import finder from './assets/finder.gif'
 import TripResult from './components/TripResult'
-import { getTripById, planTrip, type TripFormPayload, type TripPlanModel } from './services/tripApi'
+import { getTripById, planTrip, type TripFormPayload, type TripPlanModel, getSharedTrip } from './services/tripApi'
 
 interface TripState extends Partial<TripPlanModel> {
   Destination: string;
@@ -21,13 +22,14 @@ interface TripState extends Partial<TripPlanModel> {
   startDate: string;
   endDate: string;
   vibe?: string;
+  shareId?: string;
 }
 
 function App() {
+  const navigate = useNavigate();
   const [trip, setTrip] = useState<TripState | null>(null);
   const [loading, setLoading] = useState(false);
   const [showResult, setShowResult] = useState(false);
-  const [activeView, setActiveView] = useState<'planner' | 'myTrips'>('planner');
   const [userEmail, setUserEmail] = useState<string | undefined>(undefined);
   const [userPicture, setUserPicture] = useState<string | undefined>(undefined);
   
@@ -55,6 +57,16 @@ function App() {
     return () => window.removeEventListener('focus', hydrateUser);
   }, []);
 
+  useEffect(() => {
+    const path = window.location.pathname;
+    if(path.startsWith('/share/')){
+      const shareId = path.split('/').pop();
+      if(shareId){
+        handleOpenSharedTrip(shareId);
+      }
+    }
+  },[])
+
   const handleFormSubmit = async (formData: TripFormPayload) => {
     try {
       setLoading(true);
@@ -66,9 +78,10 @@ function App() {
         ...formData,
         ...response.plan,
         weather: response.weather,
+        shareId: response.shareId,
       } as TripState);
       setShowResult(true);
-      setActiveView('planner');
+      navigate('/'); // Ensure we are on the planner view
 
       setTimeout(() => {
         resultRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -81,7 +94,6 @@ function App() {
   }
 
   const handlePlanTrip = (Destination: string) => {
-    setActiveView('planner');
     setShowResult(false);
     setLoading(true);
     formRef.current?.scrollIntoView({behavior:'smooth'});
@@ -98,7 +110,7 @@ function App() {
     }, 2500);
   }
 
-  const [loadingMessage, setLoadingMessage] = useState("Planning your trip...");
+  const [loadingMessage] = useState("Planning your trip...");
 
   const handleOpenTrip = async (tripId: string) => {
     try {
@@ -116,9 +128,10 @@ function App() {
         endDate: plannedTrip.endDate,
         ...plan,
         weather: plannedTrip.weather,
+        shareId: plannedTrip.shareId,
       } as TripState);
       setShowResult(true);
-      setActiveView('planner');
+      navigate('/'); // Go back to planner to show the result
     } catch (error) {
       console.error('Failed to open trip by id:', error);
     } finally {
@@ -126,42 +139,100 @@ function App() {
     }
   };
 
+  const handleOpenSharedTrip = async (shareId: string) => {
+    try {
+      setLoading(true);
+      const response = await getSharedTrip(shareId);
+      const plannedTrip = response.trip;
+      const plan = plannedTrip.plan;
+      setTrip({
+        Destination: plannedTrip.destination,
+        days: plan.dayPlan?.length ?? 1,
+        travelers: 1,
+        ...plan,
+        budgetRange: undefined,
+        startDate: plannedTrip.startDate,
+        endDate: plannedTrip.endDate,
+        weather: plannedTrip.weather,
+        shareId: plannedTrip.shareId,
+      } as TripState);
+      setShowResult(true);
+    } catch (error) {
+      console.error('Failed to open shared trip:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
   
   return (
     <main className="min-h-screen">
-      <Navbar activeView={activeView} onChangeView={setActiveView} userEmail={userEmail} userPicture={userPicture} />
-      {activeView === 'myTrips' ? (
-        <MyTrips onOpenTrip={handleOpenTrip} onBackToPlanner={() => setActiveView('planner')} />
-      ) : (
-        <>
-      <Hero onPlanTrip={handlePlanTrip} />
-      {/* <Features /> */}
-      <div ref={formRef} className="">
-  {loading &&  
-    <div className="flex flex-col justify-center bg-white items-center h-screen">
-      <img src={finder} alt="trip-icon" className="w-24 h-24 ease-out"/>
-      <p className="font-lexend text-xl font-semibold mt-4">{loadingMessage}</p>
-    </div>
-  }
+      <Navbar 
+        userEmail={userEmail} 
+        userPicture={userPicture} 
+      />
+      
+      <Routes>
+        {/* Main Planner Route */}
+        <Route path="/" element={
+          <>
+            <Hero onPlanTrip={handlePlanTrip} />
+            <div ref={formRef} className="scroll-mt-24">
+              {loading && (
+                <div className="flex flex-col justify-center bg-white items-center h-screen">
+                  <img src={finder} alt="trip-icon" className="w-24 h-24 ease-out"/>
+                  <p className="font-lexend text-xl font-semibold mt-4">{loadingMessage}</p>
+                </div>
+              )}
 
-  {!loading && trip && !showResult && <TripForm trip={trip} onComplete={handleFormSubmit} />}
-  <div ref={resultRef}>
-   {!loading && showResult && (
-     <TripResult
-       data={trip}
-       onEdit={() => setShowResult(false)}
-       onViewMyTrips={() => setActiveView('myTrips')}
-     />
-   )}
-</div>
+              {!loading && trip && !showResult && <TripForm trip={trip} onComplete={handleFormSubmit} />}
+              
+              <div ref={resultRef} className="scroll-mt-24">
+                {!loading && showResult && (
+                  <TripResult
+                    data={trip}
+                    onEdit={() => setShowResult(false)}
+                    onViewMyTrips={() => navigate('/my-trips')}
+                  />
+                )}
+              </div>
+            </div>
+            <Destinations />
+            <Footer />
+          </>
+        } />
 
-</div>
-      <Destinations />
-      <Footer />
-      </>
-      )}
+        {/* My Trips Route */}
+        <Route path="/my-trips" element={
+          <div className="pt-20">
+             <MyTrips onOpenTrip={handleOpenTrip} onBackToPlanner={() => navigate('/')} />
+          </div>
+        } />
+
+        {/* Shared Trip Route (handled by the useEffect we wrote earlier or directly here) */}
+        <Route path="/share/:shareId" element={
+          <div className="pt-24 min-h-screen bg-slate-50">
+             {loading && (
+                <div className="flex flex-col justify-center items-center py-20">
+                  <img src={finder} alt="loading" className="w-16 h-16 opacity-50" />
+                  <p className="text-slate-400 mt-4">Fetching shared itinerary...</p>
+                </div>
+             )}
+             {!loading && showResult && (
+                <div className="max-w-7xl mx-auto px-6">
+                  <TripResult data={trip} />
+                </div>
+             )}
+             {!loading && !showResult && (
+                <div className="text-center py-20">
+                  <h2 className="text-2xl font-bold text-slate-800">Trip not found</h2>
+                  <button onClick={() => navigate('/')} className="mt-4 text-violet-600 font-bold underline">Go to Planner</button>
+                </div>
+             )}
+          </div>
+        } />
+      </Routes>
     </main>
-  )
+  );
 }
 
 export default App

@@ -47,12 +47,13 @@ export interface TripResultData {
   suggestedStays?: StaySuggestion[];
   suggestedPlaces?: PlaceSuggestion[];
   weather?: Weather[] | null;
+  shareId?: string;
 }
 
 interface TripResultProps {
   /** Parent state may be null until a trip is planned; we guard below. */
   data: TripResultData | null | undefined;
-  onEdit: () => void;
+  onEdit?: () => void;
   onViewMyTrips?: () => void;
 }
 
@@ -680,6 +681,16 @@ export default function TripResult({ data, onEdit, onViewMyTrips }: TripResultPr
               
               <div className="flex flex-col items-center gap-6">
                 <div className="flex flex-col md:flex-row justify-center items-center gap-4 w-full">
+                  {onEdit && (
+                    <button
+                      type="button"
+                      onClick={onEdit}
+                      className="w-full md:w-auto px-10 py-5 bg-violet-500 text-white rounded-2xl font-bold text-lg hover:bg-violet-600 hover:translate-y-[-2px] transition-all duration-300 shadow-lg shadow-violet-500/25 active:scale-95 flex items-center justify-center gap-2"
+                    >
+                      Edit & Refine
+                      <span className="text-xl">✏️</span>
+                    </button>
+                  )}
                   <button
                     type="button"
                     onClick={onClickSaveTrip}
@@ -696,10 +707,10 @@ export default function TripResult({ data, onEdit, onViewMyTrips }: TripResultPr
                         navigator.share({
                           title: `Trip to ${data.Destination}`,
                           text: `Check out my itinerary for ${data.Destination}!`,
-                          url: window.location.href,
+                          url: `${window.location.origin}/share/${data.shareId}`,
                         });
                       } else {
-                        navigator.clipboard.writeText(window.location.href);
+                        navigator.clipboard.writeText(`${window.location.origin}/share/${data.shareId}`);
                         alert('Link copied to clipboard!');
                       }
                     }}

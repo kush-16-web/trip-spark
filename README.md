@@ -1,139 +1,92 @@
-# React + TypeScript + Vite
+# ✈️ Trip Spark: AI-Powered Travel Architect
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+**Trip Spark** is a premium, full-stack travel planning application that leverages state-of-the-art Generative AI to craft personalized, high-intent itineraries in seconds. Designed with a mobile-first, editorial aesthetic, it simplifies complex travel logistics into beautiful, actionable plans.
 
-Currently, two official plugins are available:
+---
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+## 🌟 Key Features
 
-## React Compiler
+- **🤖 Intelligent Itinerary Generation**: Powered by **Google Gemini Pro**, the app generates detailed, day-by-day travel plans including activities, suggested stays, and budget estimates based on user preferences.
+- **🌤️ Live Weather Integration**: Real-time forecast fetching via **Open-Meteo API** to help travelers prepare for actual conditions at their destination.
+- **🔐 Secure Authentication**: Integrated with **Firebase Auth** and **Google OAuth** for seamless, secure user onboarding and profile management.
+- **📱 Responsive Bento UI**: An asymmetrical, modern "Bento Grid" design that looks stunning on everything from high-res desktops to mobile devices.
+- **📁 Personal Travel Vault**: Users can save, manage, and revisit their generated trips through a dedicated "My Trips" dashboard.
+- **🔗 Shareable Plans**: Unique sharing IDs for every trip, allowing users to share their AI-generated adventures with friends.
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+---
 
-## Expanding the ESLint configuration
+## 🛠️ Tech Stack
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+### Frontend
+- **Framework**: React 18 with TypeScript
+- **Build Tool**: Vite
+- **Styling**: Tailwind CSS (Custom Design System)
+- **Icons/Assets**: Google Fonts (Outfit), Custom Animated GIFs
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+### Backend
+- **Runtime**: Node.js
+- **Framework**: Express.js
+- **Database**: PostgreSQL
+- **ORM**: Prisma
+- **Validation**: Zod (Schema-first validation)
 
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
+### Services & APIs
+- **LLM**: Google Gemini Pro API (`@google/generative-ai`)
+- **Auth**: Firebase Admin SDK
+- **Weather**: Open-Meteo Geocoding & Forecast API
+- **Deployment**: Configured for Cloudflare Tunneling (Local Dev)
 
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-```
+---
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+## 🚀 Getting Started
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+### Prerequisites
+- Node.js (v18+)
+- PostgreSQL instance
+- Google Gemini API Key
+- Firebase Project Credentials
 
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-```
+### Installation
 
-## PostgreSQL (local dev)
-
-Use this when you clone the repo on another machine (for example your Windows laptop at home) so you do not miss a step.
-
-### Ubuntu (e.g. 24.04)
-
-1. **Install** (only if Postgres is not installed yet):
-
+1. **Clone the repository**
    ```bash
-   sudo apt update
-   sudo apt install -y postgresql postgresql-contrib
-   sudo systemctl start postgresql
-   sudo systemctl enable postgresql
+   git clone https://github.com/your-username/trip-spark.git
+   cd trip-spark
    ```
 
-2. **Check the umbrella service** (often shows `active (exited)` — that is normal):
-
+2. **Setup Backend**
    ```bash
-   sudo systemctl status postgresql
+   cd server
+   npm install
+   # Create a .env file and add your DATABASE_URL, GEMINI_API_KEY, and FIREBASE_CONFIG
+   npx prisma generate
+   npm run dev
    ```
 
-3. **See the real cluster** (name may differ; example for 18 / main):
-
+3. **Setup Frontend**
    ```bash
-   pg_lsclusters
-   sudo systemctl status postgresql@18-main
+   cd ..
+   npm install
+   npm run dev
    ```
 
-   Adjust `18-main` to match `pg_lsclusters` output.
+---
 
-4. **Verify the server answers:**
+## 🧠 Why Trip Spark?
 
-   ```bash
-   psql --version
-   sudo -u postgres psql -c "SELECT version();"
-   ```
+Traditional travel planning is fragmented—users jump between maps, weather apps, and blogs. **Trip Spark** consolidates this into a single, cohesive experience. By utilizing LLMs, we don't just search for data; we **synthesize** it into a narrative that respects the user's budget, vibe, and schedule.
 
-   You should see a version string in the query result. If something fails, note the error text.
+---
 
-5. Later, your app will use a **connection URL** (host, port, database, user, password) in server environment variables — that comes after you create a database and user (next phase in your setup guide).
+## 📸 Design Philosophy
 
-### Windows (home laptop)
+The project follows a **"Magazine Editorial"** aesthetic. Unlike standard utility apps, Trip Spark focuses on:
+- **Asymmetrical Layouts**: Breaking the 12-column grid for a more dynamic feel.
+- **Glassmorphism**: Using backdrop blurs and subtle borders for a premium depth effect.
+- **Micro-interactions**: High-frequency feedback on buttons and cards to improve perceived performance.
 
-1. **Install:** Download the official Windows installer from [postgresql.org/download/windows](https://www.postgresql.org/download/windows/) and run it. Remember the password you set for the `postgres` superuser and the port (default **5432**).
+---
 
-2. **Check the service:** Press **Win + R**, type `services.msc`, find **postgresql** (name includes the version), and confirm it is **Running**.
-
-3. **Verify client:** Open **Command Prompt** or **PowerShell**. If the installer added `psql` to your PATH:
-
-   ```text
-   psql --version
-   ```
-
-4. **Test connection** (use the password you chose during install):
-
-   ```text
-   psql -U postgres -h localhost -c "SELECT version();"
-   ```
-
-5. Same as Ubuntu: later you will put a **connection URL** in the server `.env` when you wire Prisma (or another client) to this database.
-
-### Notes
-
-- Install and `systemctl` commands apply to **that machine only**; they are not tied to the Trip Spark project folder.
-- The **frontend** never connects to Postgres directly; only the **Node server** does.
+<p align="center">
+  Built with ❤️ by the Trip Spark
+</p>

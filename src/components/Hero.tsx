@@ -85,7 +85,7 @@ export default function Hero({ onPlanTrip }: HeroProps) {
             </div>
           </div>
           <button 
-            className="w-full sm:w-auto flex items-center justify-center gap-3 shadow-lg bg-violet-500 font-semibold text-black py-3 px-6 sm:px-8 rounded-full whitespace-nowrap transition-transform active:scale-[0.98]"
+            className={`w-full sm:w-auto flex items-center justify-center gap-3 shadow-lg ${Destination ? "bg-violet-500" : "bg-violet-500/60"} font-semibold text-white py-3 px-6 sm:px-8 rounded-full whitespace-nowrap transition-transform active:scale-[0.98]`}
             onClick={handlePlanTrip}
             disabled={!Destination}
           >

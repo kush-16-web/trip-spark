@@ -1,4 +1,4 @@
-import type { Response } from 'express';
+import type { Response, Request } from 'express';
 import type { TripPlanRequest } from '../types/trip.types';
 import { Prisma } from '../generated/prisma/client';
 import { tripPlanRequestSchema } from '../validators/trip.validator';
@@ -43,10 +43,7 @@ export const planTrip = async (
         startDate: validatedInput.startDate,
         endDate: validatedInput.endDate,
         plan: plan as unknown as Prisma.InputJsonValue,
-        weather:
-          weather === null
-            ? Prisma.JsonNull
-            : (weather as unknown as Prisma.InputJsonValue),
+        weather: weather ? (weather as unknown as Prisma.InputJsonValue) : undefined,
         isPublic: true,
         ownerId: req.userId || null,
       },
@@ -140,4 +137,48 @@ export const getTripById = async (req: Request<{ id: string }>, res: Response) =
       message: 'Unable to get trip right now. Please try again.',
     });
   }
+}
+
+export const getTripByShareId = async (req: Request<{ shareId: string }>, res: Response) =>{
+try {
+  const {shareId} = req.params;
+  const trip = await prisma.tripPlan.findUnique({
+    where: { shareId },
+    select: {
+      id: true,
+      shareId: true,
+      destination: true,
+      startDate: true,
+      endDate: true,
+      createdAt: true,
+      updatedAt: true,
+      isPublic: true,
+      plan: true,
+      weather: true,
+    },
+  })
+  if(!trip){
+    return res.status(404).json({
+      ok: false, message: 'Trip not found',
+    })
+  }
+
+  if(!trip.isPublic){
+    return res.status(403).json({
+      ok: false, message: 'Trip is not public',
+    })
+  }
+
+  return res.status(200).json({
+    ok: true,
+    message: 'Trip fetched successfully',
+    trip,
+  })
+} catch (error) {
+  console.error('[trip.controller] Failed to get trip:', error);
+    return res.status(500).json({
+      ok: false,
+      message: 'Unable to get trip right now. Please try again.',
+    });
+}
 }

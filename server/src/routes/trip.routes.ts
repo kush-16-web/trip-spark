@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { planTrip, getMyTrips, getTripById } from '../controllers/trip.controller';
+import { planTrip, getMyTrips, getTripById, getTripByShareId } from '../controllers/trip.controller';
 import { authenticate, optionalAuthenticate } from '../middlewares/auth.middleware';
 
 export const tripRouter = Router();
@@ -11,3 +11,4 @@ tripRouter.get('/ping', (_req, res) => {
 tripRouter.post('/plan', optionalAuthenticate, planTrip);
 tripRouter.get('/my-trips', authenticate, getMyTrips);
 tripRouter.get('/:id', getTripById);
+tripRouter.get('/share/:shareId', getTripByShareId);

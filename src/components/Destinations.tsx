@@ -79,23 +79,25 @@ const moreDestinations: DestinationEntry[] = [
 function DestinationCard({
   dest,
   compact,
+  className = "",
 }: {
   dest: DestinationEntry;
   compact?: boolean;
+  className?: string;
 }) {
-  const height = compact ? 'min-h-[280px] md:min-h-[300px]' : 'h-[450px]';
-  const titleClass = compact ? 'text-2xl' : 'text-3xl';
+  const height = compact ? 'h-[300px]' : 'h-full min-h-[400px] md:min-h-[500px]';
+  const titleClass = compact ? 'text-2xl' : 'text-3xl md:text-5xl';
 
   return (
     <article
-      className={`group relative ${height} rounded-[2rem] overflow-hidden shadow-xl ring-1 ring-black/5`}
+      className={`group relative ${height} ${className} rounded-[2.5rem] overflow-hidden shadow-2xl transition-all duration-500 hover:shadow-violet-500/10 hover:-translate-y-1`}
     >
       {dest.image ? (
         <img
           src={dest.image}
           alt={`${dest.name}, ${dest.country}`}
           loading="lazy"
-          className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 motion-safe:group-hover:scale-110"
+          className="absolute inset-0 w-full h-full object-cover transition-transform duration-1000 ease-out group-hover:scale-110"
         />
       ) : (
         <div
@@ -103,17 +105,44 @@ function DestinationCard({
           aria-hidden
         />
       )}
-      <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/25 to-transparent" />
-      <div className="absolute top-6 left-6 right-6 flex flex-wrap gap-2">
-        <span className="bg-black/40 backdrop-blur-md px-2 py-2 rounded-xl text-xs font-bold uppercase tracking-wider text-white flex items-center gap-2">
-          {dest.tag}
-          {dest.tagIcon && <img src={dest.tagIcon} alt="" className="w-6 h-6 rounded-md" />}
-        </span>
+
+      {/* Dynamic Overlay */}
+      <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent opacity-80 group-hover:opacity-100 transition-opacity duration-500" />
+
+      {/* Top Badge */}
+      <div className="absolute top-6 left-6 z-20">
+        <div className="bg-white/10 backdrop-blur-xl border border-white/20 px-4 py-2 rounded-2xl flex items-center gap-2 group-hover:bg-white/20 transition-all duration-300">
+          <span className="text-[10px] font-black uppercase tracking-[0.2em] text-white/90">
+            {dest.tag}
+          </span>
+          {dest.tagIcon && <img src={dest.tagIcon} alt="" className="w-5 h-5 rounded-lg object-contain" />}
+        </div>
       </div>
-      <div className="absolute bottom-8 left-8 right-8 text-white">
-        <h3 className={`${titleClass} font-bold mb-1`}>{dest.name}</h3>
-        <p className="text-slate-200 mb-2">{dest.country}</p>
-        <p className="text-sm text-slate-300/95 leading-snug max-w-prose">{dest.blurb}</p>
+
+      {/* Content Area */}
+      <div className="absolute bottom-0 left-0 right-0 p-8 z-20 transform transition-transform duration-500 group-hover:translate-y-[-8px]">
+        <div className="flex flex-col gap-2">
+          <div className="flex items-end gap-3 mb-1">
+            <h3 className={`${titleClass} font-black text-white leading-none tracking-tight`}>
+              {dest.name}
+            </h3>
+            <div className="h-[2px] flex-grow bg-violet-500/50 rounded-full mb-2 origin-left scale-x-0 group-hover:scale-x-100 transition-transform duration-700 delay-100" />
+          </div>
+
+          <div className="flex items-center gap-2 text-violet-300 font-bold text-xs uppercase tracking-widest mb-2">
+            <span className="w-4 h-[1px] bg-violet-400" />
+            {dest.country}
+          </div>
+
+          <p className="text-sm md:text-base text-white/70 leading-relaxed max-w-md line-clamp-2 group-hover:line-clamp-none transition-all duration-500">
+            {dest.blurb}
+          </p>
+
+          {/* Hidden "Explore" hint that appears on hover */}
+          <div className="mt-4 flex items-center gap-2 text-white font-bold text-xs opacity-0 -translate-x-4 group-hover:opacity-100 group-hover:translate-x-0 transition-all duration-500 delay-200">
+            Plan this trip <span className="text-violet-400">→</span>
+          </div>
+        </div>
       </div>
     </article>
   );
@@ -126,23 +155,36 @@ const Destinations: React.FC = () => {
   return (
     <section className="py-24 bg-white" aria-labelledby="destinations-heading">
       <div className="max-w-7xl mx-auto px-6">
-        <div className="flex flex-col md:flex-row justify-between items-end mb-12 gap-6">
-          <div>
+        <div className="flex flex-col md:flex-row justify-between items-end mb-16 gap-8">
+          <div className="max-w-3xl">
+            <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-violet-50 border border-violet-100 text-violet-600 text-xs font-black uppercase tracking-[0.2em] mb-4">
+              <span className="relative flex h-2 w-2">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-violet-400 opacity-75"></span>
+                <span className="relative inline-flex rounded-full h-2 w-2 bg-violet-500"></span>
+              </span>
+              Top Picks
+            </div>
             <h2
               id="destinations-heading"
-              className="text-4xl md:text-5xl font-bold mb-4"
+              className="text-5xl md:text-7xl font-black text-slate-900 mb-6 tracking-tight leading-[0.9]"
             >
-              Trending in India
+              Trending in <span className="text-transparent bg-clip-text bg-gradient-to-r from-violet-600 to-indigo-500">India</span>
             </h2>
-            <p className="text-slate-600 text-lg max-w-2xl">
-              Top three Indian destinations travelers are flocking to right now — with seasonal tips to help you plan.
+            <p className="text-slate-500 text-lg md:text-xl font-medium leading-relaxed">
+              Hand-picked escapes for every vibe. From high-altitude adventures to serene backwaters, find your next story here.
             </p>
           </div>
         </div>
-        <div className="grid md:grid-cols-3 gap-8 mb-12">
-          {trendingDestinations.map((dest) => (
-            <DestinationCard key={dest.name} dest={dest} />
-          ))}
+
+        {/* Asymmetrical Bento Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-12 gap-6 md:h-[700px] mb-16">
+          <div className="md:col-span-8 h-full">
+            <DestinationCard dest={trendingDestinations[0]} />
+          </div>
+          <div className="md:col-span-4 grid grid-cols-1 gap-6 h-full">
+            <DestinationCard dest={trendingDestinations[1]} compact className="h-full" />
+            <DestinationCard dest={trendingDestinations[2]} compact className="h-full" />
+          </div>
         </div>
 
         {!showMore && (
@@ -174,38 +216,64 @@ const Destinations: React.FC = () => {
           role="region"
           aria-label="More popular destinations"
           hidden={!showMore}
-          className={showMore ? 'mt-16 border-t border-slate-100 pt-16 motion-safe:animate-in motion-safe:slide-in-from-bottom-8 motion-safe:fade-in motion-safe:duration-700' : ''}
+          className={showMore ? 'mt-24 border-t border-slate-100 pt-20 motion-safe:animate-in motion-safe:slide-in-from-bottom-12 motion-safe:fade-in motion-safe:duration-1000' : ''}
         >
           {showMore && (
             <>
-              <div className="flex justify-between items-end mb-10">
+              <div className="flex flex-col md:flex-row justify-between items-start md:items-end mb-12 gap-6">
                 <div>
-                  <h3 className="text-3xl font-bold text-slate-900 mb-2">Also Trending</h3>
-                  <p className="text-slate-600 max-w-2xl">
-                    Other incredible Indian destinations that are perfect for your next escape.
+                  <div className="text-violet-500 font-black text-sm uppercase tracking-[0.3em] mb-2">Discovery</div>
+                  <h3 className="text-4xl font-black text-slate-900 tracking-tight">Also Trending</h3>
+                  <p className="text-slate-500 mt-2 font-medium">
+                    Hidden gems and royal escapes that are currently rising in popularity.
                   </p>
                 </div>
                 <button
                   type="button"
-                  className="text-slate-400 hover:text-slate-600 font-semibold flex items-center gap-2 transition-colors"
+                  className="group flex items-center gap-2 text-slate-400 hover:text-violet-600 font-bold transition-all"
                   onClick={() => setShowMore(false)}
                 >
-                  Show Less
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
-                    <path fillRule="evenodd" d="M14.707 12.707a1 1 0 01-1.414 0L10 9.414l-3.293 3.293a1 1 0 01-1.414-1.414l4-4a1 1 0 011.414 0l4 4a1 1 0 010 1.414z" clipRule="evenodd" />
-                  </svg>
+                  <span className="text-xs uppercase tracking-widest">Collapse</span>
+                  <div className="w-8 h-8 rounded-full border border-slate-200 flex items-center justify-center group-hover:border-violet-200 group-hover:bg-violet-50 transition-all">
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 group-hover:-translate-y-0.5 transition-transform" viewBox="0 0 20 20" fill="currentColor">
+                      <path fillRule="evenodd" d="M14.707 12.707a1 1 0 01-1.414 0L10 9.414l-3.293 3.293a1 1 0 01-1.414-1.414l4-4a1 1 0 011.414 0l4 4a1 1 0 010 1.414z" clipRule="evenodd" />
+                    </svg>
+                  </div>
                 </button>
               </div>
-              <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
-                {moreDestinations.map((dest) => (
-                  <DestinationCard key={dest.name} dest={dest} compact />
-                ))}
+
+              {/* Mosaic Mosaic Grid */}
+              <div className="grid grid-cols-1 md:grid-cols-12 gap-6">
+                <div className="md:col-span-4">
+                  <div className="relative">
+                    <span className="absolute -top-4 -left-4 z-30 text-6xl font-black text-slate-900/5 select-none italic">04</span>
+                    <DestinationCard dest={moreDestinations[0]} compact />
+                  </div>
+                </div>
+                <div className="md:col-span-8">
+                  <div className="relative h-full">
+                    <span className="absolute -top-4 -left-4 z-30 text-6xl font-black text-slate-900/5 select-none italic">05</span>
+                    <DestinationCard dest={moreDestinations[1]} compact className="md:h-full" />
+                  </div>
+                </div>
+                <div className="md:col-span-7">
+                  <div className="relative h-full">
+                    <span className="absolute -top-4 -left-4 z-30 text-6xl font-black text-slate-900/5 select-none italic">06</span>
+                    <DestinationCard dest={moreDestinations[2]} compact className="md:h-full" />
+                  </div>
+                </div>
+                <div className="md:col-span-5">
+                  <div className="relative h-full">
+                    <span className="absolute -top-4 -left-4 z-30 text-6xl font-black text-slate-900/5 select-none italic">07</span>
+                    <DestinationCard dest={moreDestinations[3]} compact className="md:h-full" />
+                  </div>
+                </div>
               </div>
             </>
           )}
         </div>
       </div>
-      
+
     </section>
   );
 };
