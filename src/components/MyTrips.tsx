@@ -1,7 +1,9 @@
 import { useEffect, useState } from 'react';
 import type { MyTripListItem } from '../services/tripApi';
-import { getMyTrips } from '../services/tripApi';
+import { deletetrip, getMyTrips } from '../services/tripApi';
 import toast from 'react-hot-toast';
+import deleteIcon from '../assets/bin.gif';
+import editIcon from '../assets/pencil.gif';
 
 interface MyTripsProps {
   onOpenTrip: (tripId: string) => void;
@@ -41,6 +43,20 @@ export default function MyTrips({ onOpenTrip, onBackToPlanner }: MyTripsProps) {
       // ignore parse issues and keep Guest label
     }
   }, []);
+
+  const handleDeleteTrip = async (id: string) => {
+   if(!window.confirm("are u sure to delete this trip")){return;}
+
+   try{
+      await deletetrip(id);
+      setTrips(prev => prev.filter(t => t.id !== id));
+      toast.success("Trip deleted!");
+   }
+   catch(err){
+    console.error(err)
+    toast.error("failed to delete trip")
+   }
+  };
 
   return (
     <div className="min-h-screen bg-slate-50 pt-28 pb-20 px-6">
@@ -116,9 +132,15 @@ export default function MyTrips({ onOpenTrip, onBackToPlanner }: MyTripsProps) {
                 <div className="absolute -top-20 -right-20 w-40 h-40 bg-violet-50 rounded-full blur-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
 
                 <div className="relative z-10">
+                  <div className="flex justify-between items-center mb-4">
+                    <button onClick={() => handleDeleteTrip(trip.id)} className='bg-transparent border-none cursor-pointer font-semibold flex items-center gap-2'><img className="w-8 h-8" src={deleteIcon} alt="" /></button>
+                    <button onClick={() => {onOpenTrip(trip.id)}} className='text-slate-400 font-semibold'><img className="w-8 h-8" src={editIcon} alt="" /></button>
+                  </div>
                   <div className="flex justify-between items-start mb-6">
                     <div className="w-14 h-14 bg-violet-100 rounded-2xl flex items-center justify-center text-2xl">
-                      📍
+                      {trip.type === 'solo' ? '🧑' : 
+                      trip.type === 'couple' ? '💑' : 
+                      trip.type === 'family' ? '👨‍👩‍👧‍👦' : '👥'}
                     </div>
                     <span className="px-4 py-1.5 bg-slate-50 text-slate-500 rounded-full text-xs font-black uppercase tracking-widest border border-slate-100">
                       {trip.days || 'Multi'} Days
@@ -147,11 +169,7 @@ export default function MyTrips({ onOpenTrip, onBackToPlanner }: MyTripsProps) {
                       onClick={() => {
                         const shareUrl = `${window.location.origin}/share/${trip.shareId}`;
                         void navigator.clipboard.writeText(shareUrl);
-                        toast.custom((t) => (
-                          <div className="fixed top-10 left-1/2 -translate-x-1/2 z-[9999] w-max backdrop-blur-xl bg-black/80 border border-white/10 text-white px-6 py-3 rounded-full shadow-2xl font-bold text-sm flex items-center gap-2 animate-in fade-in zoom-in slide-in-from-top-4 duration-300">
-                            Link copied! 🔗
-                          </div>
-                        ));
+                        toast('Link copied! 🔗');
                       }}
                       className="w-full py-4 bg-white border border-slate-200 text-slate-700 rounded-2xl font-bold hover:bg-slate-50 transition-all text-sm flex items-center justify-center gap-2"
                     >

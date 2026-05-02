@@ -78,6 +78,7 @@ export interface MyTripListItem {
   id: string;
   shareId: string;
   destination: string;
+  type?: string;
   days?: number;
   travelers?: number;
   startDate: string;
@@ -167,4 +168,45 @@ export async function getSharedTrip(shareId: string):Promise<TripByIdApiResponse
     throw new Error((data as {message?: string}).message ?? 'Failed to get shared trip');
   }
   return data as TripByIdApiResponse;
+}
+
+export async function deletetrip(id: string){
+  const token = localStorage.getItem('auth_token');
+  const response = await fetch(`${API_BASE_URL}/api/trip/${id}`,{
+    method : 'DELETE',
+    headers : {
+      'Authorization' : `Bearer ${token}`,
+    }
+  });
+  if(!response.ok) throw new Error('Failed to delete trip');
+  return response.json();
+}
+
+export async function updatetrip(id: string, update: any){
+  const token = localStorage.getItem('auth_token');
+  const response = await fetch(`${API_BASE_URL}/api/trip/update/${id}`,{
+    method : 'PUT',
+    headers : {
+      'Authorization' : `Bearer ${token}`,
+      'Content-Type' : 'application/json',
+    },
+    body: JSON.stringify(update)
+  });
+  if(!response.ok) throw new Error('failed to update trip');
+  return response.json();
+}
+
+export async function refineTrip(id: string, instruction: string){
+  const token = localStorage.getItem('auth_token');
+  const response = await fetch(`${API_BASE_URL}/api/trip/refine`, {
+    method : 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${token}`,
+    },
+    body: JSON.stringify({ id, instruction })
+  })
+  const data = (await response.json()) as { ok: boolean; message: string; plan: TripPlanModel };
+  if(!response.ok) throw new Error(data.message);
+  return data;
 }

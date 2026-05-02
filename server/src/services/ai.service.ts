@@ -142,3 +142,53 @@ export async function generateTripPlan(input: TripPlanRequest): Promise<TripPlan
     throw error;
   }
 }
+
+export async function refineTripWithAI(currentPlan: any, instruction: string): Promise<TripPlanResponse> {
+  try {
+    const prompt = `
+      You are an expert travel itinerary editor.
+      
+      CURRENT ITINERARY (JSON):
+      ${JSON.stringify(currentPlan)}
+      
+      USER INSTRUCTION FOR MODIFICATION:
+      "${instruction}"
+      
+      CRITICAL RULES:
+      1. Modify ONLY the parts of the itinerary requested by the user.
+      2. If the user wants to change a specific day, update that day's activities.
+      3. If the user wants to change the budget style, update the budgetEstimate and suggestedStays.
+      4. You MUST return the response in the EXACT same JSON schema as the input.
+      5. Return ONLY the valid JSON object. No conversation, no markdown blocks, no explanations.
+      
+      JSON SCHEMA TO FOLLOW:
+      {
+        "summary": "string",
+        "summaryBullets": ["string", "string", "string"],
+        "totalEstimate": { "min": number, "max": number, "currency": "string", "note": "string" },
+        "dayPlan": [{ "day": number, "activities": [{ "time": "string", "title": "string", "desc": "string" }] }],
+        "budgetEstimate": [{ "label": "string", "amount": "string", "note": "string" }],
+        "suggestedStays": [{ "name": "string", "tag": "string", "blurb": "string" }],
+        "suggestedPlaces": [{ "name": "string", "tag": "string", "time": "string" }]
+      }
+    `;
+
+    console.info('[ai.service] Requesting AI trip refinement', { instruction });
+
+    const response = await model.generateContent(prompt);
+    const rawText = response.response.text() ?? '';
+    
+    const jsonText = extractJson(rawText);
+    const parsed = JSON.parse(jsonText) as unknown;
+    
+    // This ensures the AI didn't miss any fields required by your UI
+    const plan = assertTripPlanShape(parsed);
+
+    console.info('[ai.service] AI trip refinement complete');
+    return plan;
+  } catch (error) {
+    console.error('[ai.service] Error refining trip plan:', error);
+    throw error;
+  }
+}
+

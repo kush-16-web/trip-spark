@@ -166,6 +166,17 @@ function App() {
       setLoading(false);
     }
   };
+
+  const handleHomeClick = () => {
+  setTrip(null);       // Clear the current trip
+  setShowResult(false); // Hide the results
+  navigate('/');        // Go home
+};
+ 
+  
+  const handleUpdateTripData  = (newPlan: any) => {
+      setTrip(prev => prev ? { ...prev, ...newPlan } : null);
+  }
   
   return (
     <main className="min-h-screen">
@@ -195,6 +206,7 @@ function App() {
       <Navbar 
         userEmail={userEmail} 
         userPicture={userPicture} 
+        onLogoClick={handleHomeClick}
       />
       
       <Routes>
@@ -219,6 +231,7 @@ function App() {
                     onCopyLink={() => toast('Link copied! 🔗')}
                     onEdit={() => setShowResult(false)}
                     onViewMyTrips={() => navigate('/my-trips')}
+                    onUpdateTripData={handleUpdateTripData}
                   />
                 )}
               </div>
@@ -246,7 +259,7 @@ function App() {
              )}
              {!loading && showResult && (
                 <div className="max-w-7xl mx-auto px-6">
-                  <TripResult data={trip} />
+                  <TripResult data={trip} onUpdateTripData={handleUpdateTripData} />
                 </div>
              )}
              {!loading && !showResult && (

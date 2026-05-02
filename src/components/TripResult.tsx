@@ -3,33 +3,38 @@ import { signInWithPopup } from 'firebase/auth';
 import { auth, googleProvider, getFriendlyAuthErrorMessage } from '../lib/firebase';
 import { loginWithGoogle } from '../services/authApi';
 import AuthModal from './AuthModal';
+import { 
+  refineTrip, 
+  type BudgetEstimateRow,
+  type DayPlan,
+  type PlaceSuggestion,
+  type StaySuggestion,
+  type TotalEstimate,
+  type Weather,
+} from '../services/tripApi';
+import toast from 'react-hot-toast';
+
+// Asset Imports
+import friends from '../assets/friends.gif';
+import family from '../assets/Family-travel.gif';
 import soloTravel from '../assets/solo-traveller.gif';
 import Romantic from '../assets/dating.gif';
-import Couples from '../assets/dating.png'
-import family from '../assets/Family-travel.gif';
-import friends from '../assets/friends.gif';
-import Travelers from '../assets/group.gif'
-import Sun from '../assets/sun.gif'
-import Cloudy from '../assets/cloudy.gif'
-import Fog from '../assets/foggy.gif'
-import Raining from '../assets/raining.gif'
-import Snowing from '../assets/snowing.gif'
-import Thunderstorm from '../assets/thunderstorm.gif'
-import calender from '../assets/calendar-time.gif';
+import Couples from '../assets/dating.png';
+import Travelers from '../assets/group.gif';
+import Sun from '../assets/sun.gif';
+import Cloudy from '../assets/cloudy.gif';
+import Fog from '../assets/foggy.gif';
+import Raining from '../assets/raining.gif';
+import Snowing from '../assets/snowing.gif';
+import Thunderstorm from '../assets/thunderstorm.gif';
 import tripIcon from '../assets/trip.gif';
 import walletIcon from '../assets/wallet.gif';
 import compassIcon from '../assets/compass.gif';
 import mustSeeIcon from '../assets/mustSee.gif';
 import stayIcon from '../assets/stay.gif';
-
-import type {
-  BudgetEstimateRow,
-  DayPlan,
-  PlaceSuggestion,
-  StaySuggestion,
-  TotalEstimate,
-  Weather,
-} from '../services/tripApi';
+import finder from '../assets/finder.gif';
+import budget from '../assets/Budget.gif';
+import calender from '../assets/calendar-time.gif';
 
 export interface TripResultData {
   Destination?: string;
@@ -56,6 +61,7 @@ interface TripResultProps {
   onEdit?: () => void;
   onViewMyTrips?: () => void;
   onCopyLink?: () => void;
+  onUpdateTripData?: (newPlan: any) => void;
 }
 
 
@@ -140,13 +146,44 @@ const HARDCODED_PLACES = [
   { name: 'Contemporary arts district', tag: 'Evening', time: 'Flexible' },
 ] as const;
 
-export default function TripResult({ data, onEdit, onViewMyTrips }: TripResultProps) {
+export default function TripResult({ 
+  data, 
+  onEdit, 
+  onViewMyTrips, 
+  onUpdateTripData 
+}: TripResultProps) {
   const [activeDay, setActiveDay] = useState(1);
   const [isSigningIn, setIsSigningIn] = useState(false);
   const [authError, setAuthError] = useState<string | undefined>(undefined);
   const [showLoginPrompt, setShowLoginPrompt] = useState(false);
   const [pendingAction, setPendingAction] = useState<'save' | null>(null);
   const [loginSuccessMessage, setLoginSuccessMessage] = useState<string | null>(null);
+  const [isSaved, setIsSaved] = useState(false);
+  const [refineInstruction, setRefineInstruction] = useState("")
+  const [isRefining, setIsRefining] = useState(false);
+
+const handleRefine = async () => {
+  if(!refineInstruction.trim()) return;
+  try{
+    setIsRefining(true);
+    // 1. Call the API
+    const result = await refineTrip(data?.shareId || '', refineInstruction);
+    
+    // 2. Use the "Tool" from the parent to update the screen
+    if (onUpdateTripData) {
+      onUpdateTripData(result.plan);
+    }
+    
+    toast.success("AI has refined your trip!");
+    setRefineInstruction("");
+  } catch(error) {
+    console.error("Error refining trip", error);
+    toast.error("Failed to refine trip.");
+  } finally {
+    setIsRefining(false);
+  }
+}
+
 
   async function handleContinueWithGoogle() {
     try {
@@ -166,6 +203,7 @@ export default function TripResult({ data, onEdit, onViewMyTrips }: TripResultPr
 
       setShowLoginPrompt(false);
       if (pendingAction === 'save') {
+        setIsSaved(true);
         setPendingAction(null);
       }
     } catch (err: any) {
@@ -188,6 +226,7 @@ export default function TripResult({ data, onEdit, onViewMyTrips }: TripResultPr
       setShowLoginPrompt(true);
       return;
     }
+    setIsSaved(true);
     setAuthError(undefined);
   }
 
@@ -255,6 +294,18 @@ export default function TripResult({ data, onEdit, onViewMyTrips }: TripResultPr
             </div>
           </div>
         </div>
+
+        {/* SHOW THIS ONLY IF WE ARE IN EDIT MODE */}
+<div className="inline-flex items-center gap-2 px-4 py-2 bg-amber-50 border border-amber-200 rounded-full mb-6">
+  <span className="relative flex h-2 w-2">
+    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75"></span>
+    <span className="relative inline-flex rounded-full h-2 w-2 bg-amber-500"></span>
+  </span>
+  <span className="text-[10px] font-black text-amber-700 uppercase tracking-widest">
+    AI Refinement Active
+  </span>
+</div>
+
 
         {/* At-a-glance (feeds into summary context) */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6 mb-12 md:mb-16">
@@ -640,6 +691,7 @@ export default function TripResult({ data, onEdit, onViewMyTrips }: TripResultPr
                   </li>
                 ))}
               </div>
+             
             </div>
           </div>
         </section>
@@ -664,9 +716,10 @@ export default function TripResult({ data, onEdit, onViewMyTrips }: TripResultPr
                   <button
                     type="button"
                     onClick={onClickSaveTrip}
-                    className="w-full md:w-auto py-2.5 sm:px-10 sm:py-5 bg-slate-900 text-white rounded-2xl font-bold text-sm sm:text-lg hover:translate-y-[-2px] transition-all duration-300 shadow-xl shadow-slate-900/10 active:scale-95 flex items-center justify-center gap-2"
+                    disabled={isSaved}
+                    className={`w-full md:w-auto py-2.5 sm:px-10 sm:py-5 ${isSaved ? 'bg-slate-400 cursor-not-allowed' : 'bg-slate-900 hover:bg-slate-800'} text-white rounded-2xl font-bold text-sm sm:text-lg hover:translate-y-[-2px] transition-all duration-300 shadow-xl shadow-slate-900/10 active:scale-95 flex items-center justify-center gap-2`}
                   >
-                    Save Trip <span className="text-xl">✈️</span>
+                    {isSaved ? 'Saved!' : 'Save Trip'} <span className="text-xl">✈️</span>
                   </button>
                   
                   <button

@@ -11,9 +11,10 @@ import { useToaster } from 'react-hot-toast';
 interface NavbarProps {
   userEmail?: string;
   userPicture?: string;
+  onLogoClick?: () => void;
 }
 
-const Navbar: React.FC<NavbarProps> = ({ userEmail, userPicture }) => {
+const Navbar: React.FC<NavbarProps> = ({ userEmail, userPicture, onLogoClick }) => {
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
   const [isSigningIn, setIsSigningIn] = useState(false);
@@ -82,8 +83,6 @@ const Navbar: React.FC<NavbarProps> = ({ userEmail, userPicture }) => {
     }
   };
 
-  const {toasts} = useToaster();
-  const hasToast = toasts.length > 0;
 
   return (
     <>
@@ -108,7 +107,7 @@ const Navbar: React.FC<NavbarProps> = ({ userEmail, userPicture }) => {
   ${isScrolled ? 'w-[98%] lg:w-[95%] xl:w-[70%]' : 'w-[95%] lg:w-[90%] xl:w-[60%]'}
 `}>
         <div className="max-w-7xl mx-auto px-6 flex justify-between items-center">
-          <Link to='/' className="flex items-center gap-2 group shrink-0">
+          <Link to='/' onClick={onLogoClick} className="flex items-center gap-2 group shrink-0">
             <div className="w-10 h-10 rounded-xl flex items-center justify-center bg-white/10 p-1 group-hover:bg-white/20 transition-all">
               <img src={logo} alt="Logo" className="w-full h-full object-contain" />
             </div>
@@ -270,20 +269,9 @@ const Navbar: React.FC<NavbarProps> = ({ userEmail, userPicture }) => {
           <div className="relative h-6 flex items-center justify-center">
             
             {/* 1. The Normal State (Logo + Text) */}
-            <div className={`flex items-center gap-2 transition-all duration-500 absolute ${
-              hasToast ? 'opacity-0 -translate-y-10 scale-90' : 'opacity-100 translate-y-0 scale-100'
-            }`}>
+            <div className="flex items-center gap-2 transition-all duration-500 absolute opacity-100 translate-y-0 scale-100" onClick={onLogoClick}>
               <img src={logo} alt="Logo" className="w-5 h-5" />
               <span className="font-['Outfit'] text-base font-black text-white">TripSpark</span>
-            </div>
-
-            {/* 2. The Notification State (The Message) */}
-            <div className={`flex items-center gap-2 transition-all duration-500 absolute whitespace-nowrap ${
-              hasToast ? 'opacity-100 translate-y-0 scale-100' : 'opacity-0 translate-y-10 scale-90'
-            }`}>
-              <span className="text-white font-bold text-sm">
-                {toasts[0]?.message as string}
-              </span>
             </div>
 
           </div>
