@@ -233,7 +233,6 @@ export const updatetrip = async (req: AuthRequest<{id: string}>, res:Response) =
   try{
     const {id} = req.params;
     const userId = req.userId;
-    const updateData = req.body;
 
     const trip = await prisma.tripPlan.findUnique({
       where: {id},
@@ -246,9 +245,11 @@ export const updatetrip = async (req: AuthRequest<{id: string}>, res:Response) =
       });
     }
 
+    const {id: _id, ownerId: _ownerId, ...safeData} = req.body;
+    
     const updated = await prisma.tripPlan.update({
       where: {id},
-      data: {...updateData}
+      data: {...safeData}
     });
     
     return res.status(200).json({

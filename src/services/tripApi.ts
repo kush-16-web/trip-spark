@@ -172,7 +172,7 @@ export async function getSharedTrip(shareId: string):Promise<TripByIdApiResponse
 
 export async function deletetrip(id: string){
   const token = localStorage.getItem('auth_token');
-  const response = await fetch(`${API_BASE_URL}/api/trip/${id}`,{
+  const response = await fetch(`${API_BASE_URL}/api/trip/delete/${id}`,{
     method : 'DELETE',
     headers : {
       'Authorization' : `Bearer ${token}`,

@@ -12,9 +12,10 @@ interface NavbarProps {
   userEmail?: string;
   userPicture?: string;
   onLogoClick?: () => void;
+  isEditMode?: boolean;
 }
 
-const Navbar: React.FC<NavbarProps> = ({ userEmail, userPicture, onLogoClick }) => {
+const Navbar: React.FC<NavbarProps> = ({ userEmail, userPicture, onLogoClick, isEditMode }) => {
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
   const [isSigningIn, setIsSigningIn] = useState(false);
@@ -163,7 +164,9 @@ const Navbar: React.FC<NavbarProps> = ({ userEmail, userPicture, onLogoClick }) 
       </nav>
 
       {/* Mobile Floating Bottom Dock */}
-      <nav className="md:hidden fixed bottom-6 left-1/2 -translate-x-1/2 w-[92%] z-50">
+      <nav className={`md:hidden fixed bottom-6 left-1/2 -translate-x-1/2 w-[92%] z-50 transition-all duration-700 ease-in-out ${
+        isEditMode ? 'opacity-0 translate-y-32 pointer-events-none' : 'opacity-100 translate-y-0'
+      }`}>
         <div className="bg-black/40 backdrop-blur-2xl border border-white/10 rounded-[2.5rem] p-1 shadow-2xl shadow-black/40">
           <div className="grid grid-cols-2 gap-2 relative">
             {/* Sliding Background Highlight */}

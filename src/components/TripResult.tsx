@@ -1,10 +1,9 @@
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { signInWithPopup } from 'firebase/auth';
 import { auth, googleProvider, getFriendlyAuthErrorMessage } from '../lib/firebase';
 import { loginWithGoogle } from '../services/authApi';
 import AuthModal from './AuthModal';
 import { 
-  refineTrip, 
   type BudgetEstimateRow,
   type DayPlan,
   type PlaceSuggestion,
@@ -12,31 +11,24 @@ import {
   type TotalEstimate,
   type Weather,
 } from '../services/tripApi';
-import toast from 'react-hot-toast';
 
-// Asset Imports
+import tripIcon from '../assets/trip.gif';
+import walletIcon from '../assets/wallet.gif';
+import compassIcon from '../assets/compass.gif';
+import calender from '../assets/calendar-time.gif';
 import friends from '../assets/friends.gif';
 import family from '../assets/Family-travel.gif';
 import soloTravel from '../assets/solo-traveller.gif';
 import Romantic from '../assets/dating.gif';
-import Couples from '../assets/dating.png';
-import Travelers from '../assets/group.gif';
-import Sun from '../assets/sun.gif';
-import Cloudy from '../assets/cloudy.gif';
-import Fog from '../assets/foggy.gif';
-import Raining from '../assets/raining.gif';
-import Snowing from '../assets/snowing.gif';
-import Thunderstorm from '../assets/thunderstorm.gif';
-import tripIcon from '../assets/trip.gif';
-import walletIcon from '../assets/wallet.gif';
-import compassIcon from '../assets/compass.gif';
-import mustSeeIcon from '../assets/mustSee.gif';
-import stayIcon from '../assets/stay.gif';
-import finder from '../assets/finder.gif';
-import budget from '../assets/Budget.gif';
-import calender from '../assets/calendar-time.gif';
+import TripStats from './trip-result/TripStats';
+import HotelSection from './trip-result/HotelSection';
+import MustVisitSection from './trip-result/MustVisitSection';
+import ItineraryDay from './trip-result/ItineraryDay';
+import EditModeToggle from './trip-result/EditModeToggle';
 
 export interface TripResultData {
+  id?: string;
+  shareId?: string;
   Destination?: string;
   days?: number | string;
   travelers?: number | string;
@@ -52,16 +44,16 @@ export interface TripResultData {
   suggestedStays?: StaySuggestion[];
   suggestedPlaces?: PlaceSuggestion[];
   weather?: Weather[] | null;
-  shareId?: string;
 }
 
 interface TripResultProps {
   /** Parent state may be null until a trip is planned; we guard below. */
   data: TripResultData | null | undefined;
-  onEdit?: () => void;
   onViewMyTrips?: () => void;
   onCopyLink?: () => void;
   onUpdateTripData?: (newPlan: any) => void;
+  isEditMode: boolean;
+  setIsEditMode: (val: boolean) => void;
 }
 
 
@@ -148,9 +140,9 @@ const HARDCODED_PLACES = [
 
 export default function TripResult({ 
   data, 
-  onEdit, 
-  onViewMyTrips, 
-  onUpdateTripData 
+  onViewMyTrips,
+  isEditMode,
+  setIsEditMode
 }: TripResultProps) {
   const [activeDay, setActiveDay] = useState(1);
   const [isSigningIn, setIsSigningIn] = useState(false);
@@ -159,31 +151,19 @@ export default function TripResult({
   const [pendingAction, setPendingAction] = useState<'save' | null>(null);
   const [loginSuccessMessage, setLoginSuccessMessage] = useState<string | null>(null);
   const [isSaved, setIsSaved] = useState(false);
-  const [refineInstruction, setRefineInstruction] = useState("")
-  const [isRefining, setIsRefining] = useState(false);
 
-const handleRefine = async () => {
-  if(!refineInstruction.trim()) return;
-  try{
-    setIsRefining(true);
-    // 1. Call the API
-    const result = await refineTrip(data?.shareId || '', refineInstruction);
-    
-    // 2. Use the "Tool" from the parent to update the screen
-    if (onUpdateTripData) {
-      onUpdateTripData(result.plan);
+  const dayRefs = useRef<{ [key: number]: HTMLButtonElement | null }>({});
+  const prevDay = useRef(activeDay);
+
+  useEffect(() => {
+    if (prevDay.current !== activeDay) {
+      const activeTab = dayRefs.current[activeDay];
+      if (activeTab) {
+        activeTab.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
+      }
+      prevDay.current = activeDay;
     }
-    
-    toast.success("AI has refined your trip!");
-    setRefineInstruction("");
-  } catch(error) {
-    console.error("Error refining trip", error);
-    toast.error("Failed to refine trip.");
-  } finally {
-    setIsRefining(false);
-  }
-}
-
+  }, [activeDay]);
 
   async function handleContinueWithGoogle() {
     try {
@@ -220,6 +200,10 @@ const handleRefine = async () => {
   }
 
   function onClickSaveTrip() {
+    if(isSaved && onViewMyTrips){
+      onViewMyTrips();
+      return;
+    }
     const token = localStorage.getItem('auth_token');
     if (!token) {
       setPendingAction('save');
@@ -256,10 +240,15 @@ const handleRefine = async () => {
   const dayCount = Math.max(1, data.dayPlan?.length || Number(data?.days) || 1);
   const days = Array.from({ length: dayCount }, (_, i) => i + 1);
   const activeDayPlan = data.dayPlan?.find((item) => item.day === activeDay);
-  const weatherForDay = data.weather?.[activeDay - 1];
+  // Header animations and logic
 
   return (
-    <section id="trip-result" className="py-16 md:py-24 bg-slate-50 overflow-hidden relative">
+    <section id="trip-result" className={`py-16 md:py-24 bg-slate-50 overflow-hidden relative transition-colors duration-500 ${isEditMode ? 'bg-violet-50/30' : ''}`}>
+      {/* Blueprint Grid Overlay (Only in Edit Mode) */}
+      {isEditMode && (
+        <div className="absolute inset-0 z-0 opacity-[0.03] pointer-events-none" 
+             style={{ backgroundImage: 'radial-gradient(#4f46e5 1px, transparent 1px)', backgroundSize: '30px 30px' }} />
+      )}
       {loginSuccessMessage && (
         <div className="fixed top-6 left-1/2 -translate-x-1/2 z-50 px-5 py-3 bg-emerald-600 text-white rounded-2xl shadow-lg font-semibold">
           {loginSuccessMessage}
@@ -283,6 +272,12 @@ const handleRefine = async () => {
         {/* Header */}
         <div className="flex flex-col md:flex-row justify-between items-start md:items-end mb-12 md:mb-16 gap-8">
           <div className="w-full md:w-auto">
+            {data?.id && (
+              <EditModeToggle 
+                isActive={isEditMode} 
+                onToggle={() => setIsEditMode(!isEditMode)} 
+              />
+            )}
             <div className="flex items-center gap-3 mb-6">
               <span className="px-4 py-3 bg-violet-100 text-violet-700 rounded-full text-[9px] md:text-sm font-bold tracking-wide uppercase">
                 Your adventure is ready
@@ -295,40 +290,14 @@ const handleRefine = async () => {
           </div>
         </div>
 
-        {/* SHOW THIS ONLY IF WE ARE IN EDIT MODE */}
-<div className="inline-flex items-center gap-2 px-4 py-2 bg-amber-50 border border-amber-200 rounded-full mb-6">
-  <span className="relative flex h-2 w-2">
-    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75"></span>
-    <span className="relative inline-flex rounded-full h-2 w-2 bg-amber-500"></span>
-  </span>
-  <span className="text-[10px] font-black text-amber-700 uppercase tracking-widest">
-    AI Refinement Active
-  </span>
-</div>
 
-
-        {/* At-a-glance (feeds into summary context) */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6 mb-12 md:mb-16">
-          {[
-            { label: 'Duration', value: `${dayCount} day${dayCount === 1 ? '' : 's'}`, icon: calender },
-            { label: 'Group size', value: `${data?.travelers ?? '—'} people`, icon: Travelers },
-            { label: 'Budget range', value: budgetDisplay, icon: walletIcon },
-            { label: 'Style', value: data?.type ?? '—', icon: data?.type === 'Friends' ? friends : data?.type === 'Family' ? family : data?.type === 'Couple' ? Couples : soloTravel },
-          ].map((stat) => (
-            <div
-              key={stat.label}
-              className="p-6 md:p-8 rounded-[2rem] bg-white/80 backdrop-blur-sm border border-white/40 shadow-[0_8px_30px_rgb(0,0,0,0.04)] hover:shadow-[0_20px_50px_rgba(79,70,229,0.1)] transition-all duration-500 group"
-            >
-              <div className="flex items-center gap-4 mb-4">
-                <div className=" bg-slate-50 rounded-2xl group-hover:bg-violet-50 transition-colors duration-500">
-                  <img src={stat.icon} alt={stat.label} className='h-10 w-10' />
-                </div>
-              </div>
-              <p className="text-[10px] md:text-xs font-bold text-slate-400 uppercase tracking-[0.2em] mb-1.5">{stat.label}</p>
-              <p className="text-xl md:text-2xl font-extrabold text-slate-900 tracking-tight">{stat.value}</p>
-            </div>
-          ))}
-        </div>
+        <TripStats 
+          location={data?.Destination ?? '—'}
+          budget={budgetDisplay}
+          travelers={`${data?.travelers ?? '—'} people`}
+          days={dayCount}
+          tripType={data?.type ?? '—'}
+        />
 
         {data.totalEstimate && (
           <div className="relative overflow-hidden rounded-[2rem] md:rounded-[2.5rem] bg-gradient-to-br from-slate-900 via-slate-900 to-indigo-950 text-white p-8 md:p-12 mb-12 md:mb-16 shadow-2xl shadow-indigo-100">
@@ -418,9 +387,9 @@ const handleRefine = async () => {
             {/* Horizontal Tabs - Refined sliding mechanism */}
             <div className="relative mb-12 md:mb-16">
               <div 
-                className="relative flex bg-white w-fit p-2 rounded-[2.5rem] shadow-xl shadow-slate-200/40 border border-slate-100 overflow-x-auto snap-x no-scrollbar"
+                className="relative flex bg-white w-full md:w-fit p-2 rounded-[2.5rem] shadow-xl shadow-slate-200/40 border border-slate-100 overflow-x-auto snap-x no-scrollbar"
                 style={{
-                  '--tab-w': '110px',
+                  '--tab-w': '85px',
                   '--tab-gap': '8px',
                   '--md-tab-w': '140px'
                 } as any}
@@ -448,8 +417,9 @@ const handleRefine = async () => {
                   {days.map((day) => (
                     <button
                       key={day}
+                      ref={(el) => {dayRefs.current[day] = el}}
                       onClick={() => setActiveDay(day)}
-                      className={`relative z-10 shrink-0 snap-start min-w-[110px] md:min-w-[140px] py-4 px-6 rounded-[2rem] font-bold text-sm md:text-base transition-all duration-500 flex flex-col items-center justify-center gap-1 ${
+                      className={`relative z-10 shrink-0 snap-start min-w-[85px] md:min-w-[140px] py-4 px-6 rounded-[2rem] font-bold text-sm md:text-base transition-all duration-500 flex flex-col items-center justify-center gap-1 ${
                         activeDay === day ? 'text-white' : 'text-slate-400 hover:text-slate-600'
                       }`}
                     >
@@ -461,123 +431,23 @@ const handleRefine = async () => {
               </div>
             </div>
 
-            {/* Active Day Content */}
-            <div className="relative group">
-              {/* Card Decoration */}
-              <div className="absolute -inset-1 bg-gradient-to-r from-violet-600 to-indigo-600 rounded-[3.5rem] blur opacity-5 group-hover:opacity-10 transition duration-1000"></div>
-              
-              <div className="relative p-8 md:p-14 rounded-[3rem] bg-white border border-slate-100 shadow-2xl shadow-slate-200/50 transition-all overflow-hidden">
-                <div className="absolute top-0 right-0 w-64 h-64 bg-violet-50/50 rounded-bl-[10rem] -z-10" />
-                
-                <div className="flex flex-col md:flex-row md:items-center justify-between gap-8 mb-12 border-b border-slate-50 pb-10">
-                  <div className="flex flex-col gap-4">
-                    <div className="flex items-center gap-4">
-                      <h4 className="text-3xl md:text-5xl font-black text-slate-900 tracking-tighter">
-                        Day {activeDay}
-                      </h4>
-                      <div className="px-4 py-1.5 bg-violet-100 text-violet-700 rounded-full text-[10px] font-black uppercase tracking-widest">
-                        AI Plan
-                      </div>
-                    </div>
-                    {data.startDate && (
-                      <div className="flex items-center gap-2 text-slate-400 font-bold text-sm md:text-lg">
-                        <span className="w-6 h-[2px] bg-slate-200" />
-                        {(() => {
-                          const start = new Date(data.startDate);
-                          const dayDate = new Date(start);
-                          dayDate.setDate(start.getDate() + (activeDay - 1));
-                          return dayDate.toLocaleDateString(undefined, {
-                            weekday: 'long',
-                            month: 'long',
-                            day: 'numeric',
-                            year: 'numeric'
-                          });
-                        })()}
-                      </div>
-                    )}
-                  </div>
-
-                  <div className="flex items-center gap-4">
-                    <div className="bg-slate-50 px-6 py-3 rounded-2xl border border-slate-100 flex flex-col items-center">
-                      <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Stops</span>
-                      <span className="text-2xl font-black text-slate-900">
-                        {(activeDayPlan?.activities.length ? activeDayPlan.activities.length : HARDCODED_DAY_ACTIVITIES.length)}
-                      </span>
-                    </div>
-
-                    {/* Weather Logic - Preserved but Styled */}
-                    {weatherForDay && (
-                      <div className="flex items-center gap-4 bg-white border border-violet-100 rounded-[2rem] p-2 pr-6 shadow-lg shadow-violet-100/50">
-                        <div className="w-16 h-16 rounded-[1.5rem] bg-white flex items-center justify-center shrink-0">
-                          {weatherForDay.weatherCode === 0 ? <img src={Sun} alt="Sun" className='w-12 h-12' /> : 
-                          weatherForDay.weatherCode === 1 || weatherForDay.weatherCode === 2 ? <img src={Cloudy} alt="Cloudy" className='w-12 h-12' /> : 
-                          weatherForDay.weatherCode === 3 ? <img src={Cloudy} alt="Cloudy" className='w-12 h-12' /> : 
-                          weatherForDay.weatherCode === 45 || weatherForDay.weatherCode === 48 ? <img src={Fog} alt="Fog" className='w-12 h-12' /> : 
-                          weatherForDay.weatherCode === 51 || weatherForDay.weatherCode === 53 || weatherForDay.weatherCode === 55 ? <img src={Raining} alt="Raining" className='w-12 h-12' /> : 
-                          weatherForDay.weatherCode === 56 || weatherForDay.weatherCode === 57 ? <img src={Raining} alt="Raining" className='w-12 h-12' /> : 
-                          weatherForDay.weatherCode === 61 || weatherForDay.weatherCode === 63 || weatherForDay.weatherCode === 65 ? <img src={Raining} alt="Raining" className='w-12 h-12' /> : 
-                          weatherForDay.weatherCode === 66 || weatherForDay.weatherCode === 67 ? <img src={Raining} alt="Raining" className='w-12 h-12' /> : 
-                          weatherForDay.weatherCode === 71 || weatherForDay.weatherCode === 73 || weatherForDay.weatherCode === 75 ? <img src={Snowing} alt="Snowing" className='w-12 h-12' /> : 
-                          weatherForDay.weatherCode === 77 ? <img src={Snowing} alt="Snowing" className='w-12 h-12' /> : 
-                          weatherForDay.weatherCode === 80 || weatherForDay.weatherCode === 81 || weatherForDay.weatherCode === 82 ? <img src={Raining} alt="Raining" className='w-12 h-12' /> : 
-                          weatherForDay.weatherCode === 85 || weatherForDay.weatherCode === 86 ? <img src={Snowing} alt="Snowing" className='w-12 h-12' /> : 
-                          weatherForDay.weatherCode === 95 ? <img src={Thunderstorm} alt="Thunderstorm" className='w-12 h-12' /> : 
-                          weatherForDay.weatherCode === 96 || weatherForDay.weatherCode === 99 ? <img src={Thunderstorm} alt="Thunderstorm" className='w-12 h-12' /> : ''}
-                        </div>
-                        <div className="flex flex-col">
-                          <span className="text-xl font-black text-slate-900 leading-none mb-1">
-                            {weatherForDay.tempMax}° / {weatherForDay.tempMin}°
-                          </span>
-                          <span className="text-[10px] font-bold text-violet-500 uppercase tracking-wider italic">
-                            {weatherForDay.weatherCode === 0 ? "Perfect Sun" :
-                            weatherForDay.weatherCode >= 1 && weatherForDay.weatherCode <= 3 ? "Mild & Nice" :
-                            weatherForDay.weatherCode >= 51 && weatherForDay.weatherCode <= 67 ? "Rainy Outlook" :
-                            weatherForDay.weatherCode >= 80 && weatherForDay.weatherCode <= 82 ? "Showers Expected" :
-                            weatherForDay.weatherCode >= 95 ? "Storm Risk" : "Variable Sky"}
-                          </span>
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                </div>
-
-                <div className="space-y-6">
-                  {(activeDayPlan?.activities.length ? activeDayPlan.activities : HARDCODED_DAY_ACTIVITIES).map((item, idx) => (
-                    <details
-                      key={`${item.title}-${idx}`}
-                      open={idx === 0}
-                      className="group/details border-b border-slate-100 last:border-0 pb-6 last:pb-0"
-                    >
-                      <summary className="list-none cursor-pointer flex items-center gap-6">
-                        <div className="w-14 h-14 rounded-2xl bg-slate-900 text-white font-black text-lg flex items-center justify-center shrink-0 shadow-lg shadow-slate-200 transition-transform group-hover/details:scale-105">
-                          {idx + 1}
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-center gap-3 mb-1">
-                            <span className="text-[10px] font-black text-violet-600 uppercase tracking-widest px-2 py-0.5 bg-violet-50 rounded-md">
-                              {item.time}
-                            </span>
-                          </div>
-                          <h5 className="text-xl md:text-2xl font-black text-slate-900 tracking-tight group-hover/details:text-violet-600 transition-colors">
-                            {item.title}
-                          </h5>
-                        </div>
-                        <div className="w-10 h-10 rounded-full border border-slate-100 flex items-center justify-center group-open/details:bg-slate-50 transition-colors">
-                          <svg className="w-5 h-5 text-slate-400 group-open/details:rotate-180 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M19 9l-7 7-7-7" />
-                          </svg>
-                        </div>
-                      </summary>
-                      <div className="mt-4 pl-20 pr-10">
-                        <p className="text-slate-600 leading-relaxed text-base md:text-lg font-medium bg-slate-50/50 p-6 rounded-3xl border border-slate-100/50">
-                          {item.desc}
-                        </p>
-                      </div>
-                    </details>
-                  ))}
-                </div>
-              </div>
-            </div>
+            <ItineraryDay 
+              dayNumber={activeDay}
+              activities={activeDayPlan?.activities.length ? activeDayPlan.activities : HARDCODED_DAY_ACTIVITIES}
+              isEditMode={isEditMode}
+              weather={data.weather?.[activeDay - 1]}
+              date={data.startDate ? (() => {
+                const start = new Date(data.startDate);
+                const dayDate = new Date(start);
+                dayDate.setDate(start.getDate() + (activeDay - 1));
+                return dayDate.toLocaleDateString(undefined, {
+                  weekday: 'long',
+                  month: 'long',
+                  day: 'numeric',
+                  year: 'numeric'
+                });
+              })() : undefined}
+            />
           </div>
         </section>
 
@@ -640,59 +510,9 @@ const handleRefine = async () => {
           <SectionHeading id="suggestions-heading" eyebrow="Discovery" title="Curated Suggestions" icon={compassIcon} />
           
           <div className="grid lg:grid-cols-2 gap-12 lg:gap-16">
-            <div className="relative">
-              <div className="flex items-center gap-4 mb-8">
-                <div className="w-12 h-12 rounded-2xl bg-indigo-50 flex items-center justify-center">
-                  <img src={stayIcon} className="w-10 h-10 rounded-lg object-contain" alt="" />
-                </div>
-                <h4 className="text-2xl font-black text-slate-900 tracking-tight uppercase tracking-widest">Where to stay</h4>
-              </div>
-              
-              <div className="space-y-6">
-                {(data.suggestedStays?.length ? data.suggestedStays : HARDCODED_STAYS).map((stay) => (
-                  <article
-                    key={stay.name}
-                    className="group relative p-8 rounded-[2.5rem] bg-white border border-slate-100 shadow-xl shadow-slate-200/40 hover:border-violet-200 transition-all"
-                  >
-                    <div className="flex flex-wrap items-center justify-between gap-4 mb-4">
-                      <h5 className="text-2xl font-black text-slate-900 tracking-tight">{stay.name}</h5>
-                      <span className="text-[10px] font-black uppercase tracking-[0.2em] px-3 py-1.5 rounded-full bg-slate-900 text-white">
-                        {stay.tag}
-                      </span>
-                    </div>
-                    <p className="text-slate-600 text-base leading-relaxed font-medium">{stay.blurb}</p>
-                  </article>
-                ))}
-              </div>
-            </div>
+            <HotelSection hotels={data.suggestedStays?.length ? data.suggestedStays : HARDCODED_STAYS} />
 
-            <div className="relative">
-              <div className="flex items-center gap-4 mb-8">
-                <div className="w-12 h-12 rounded-2xl bg-indigo-50 flex items-center justify-center">
-                  <img src={mustSeeIcon} className="w-8 h-8 object-contain" alt="" />
-                </div>
-                <h4 className="text-2xl font-black text-slate-900 tracking-tight uppercase tracking-widest">Must Visit</h4>
-              </div>
-
-              <div className="space-y-4">
-                {(data.suggestedPlaces?.length ? data.suggestedPlaces : HARDCODED_PLACES).map((place, index) => (
-                  <li
-                    key={`${place.name}-${index}`}
-                    className="list-none p-6 md:p-8 rounded-[2.5rem] bg-white border border-slate-100 shadow-xl shadow-slate-200/40 hover:border-indigo-200 transition-all flex items-center gap-6 group"
-                  >
-                    <div className="w-14 h-14 rounded-2xl bg-indigo-50 text-indigo-600 font-black text-xl flex items-center justify-center shrink-0 group-hover:bg-indigo-600 group-hover:text-white transition-colors">
-                      {index + 1}
-                    </div>
-                    <div className="flex-1 space-y-2">
-                        <p className="font-black text-slate-900 text-xl tracking-tight">{place.name}</p>
-                        <span className="text-[9px] bg-black/20 rounded-lg text-black px-2 py-1 font-bold uppercase tracking-widest">{place.time}</span>
-                      <p className="text-sm text-indigo-600 font-bold tracking-wide uppercase">{place.tag}</p>
-                    </div>
-                  </li>
-                ))}
-              </div>
-             
-            </div>
+            <MustVisitSection places={data.suggestedPlaces?.length ? data.suggestedPlaces : HARDCODED_PLACES} />
           </div>
         </section>
 
@@ -716,10 +536,9 @@ const handleRefine = async () => {
                   <button
                     type="button"
                     onClick={onClickSaveTrip}
-                    disabled={isSaved}
-                    className={`w-full md:w-auto py-2.5 sm:px-10 sm:py-5 ${isSaved ? 'bg-slate-400 cursor-not-allowed' : 'bg-slate-900 hover:bg-slate-800'} text-white rounded-2xl font-bold text-sm sm:text-lg hover:translate-y-[-2px] transition-all duration-300 shadow-xl shadow-slate-900/10 active:scale-95 flex items-center justify-center gap-2`}
+                    className={`w-full md:w-auto py-2.5 sm:px-10 sm:py-5 ${isSaved ? 'bg-white text-black border border-black' : 'bg-slate-900 hover:bg-slate-800 text-white'} rounded-2xl font-bold text-sm sm:text-lg hover:translate-y-[-2px] transition-all duration-300 shadow-xl shadow-slate-900/10 active:scale-95 flex items-center justify-center gap-2`}
                   >
-                    {isSaved ? 'Saved!' : 'Save Trip'} <span className="text-xl">✈️</span>
+                    {isSaved ? 'See trip!' : 'Save Trip'} <span className="text-xl">✈️</span>
                   </button>
                   
                   <button
@@ -764,6 +583,37 @@ const handleRefine = async () => {
             </div>
           </div>
         </div>
+
+        {/* Editor HUD - Premium Floating Controls */}
+        {isEditMode && (
+          <div className="fixed bottom-8 left-1/2 -translate-x-1/2 z-[100] w-[calc(100%-3rem)] max-w-2xl animate-in fade-in slide-in-from-bottom-8 duration-500">
+            <div className="bg-slate-900/90 backdrop-blur-2xl border border-white/10 rounded-[2.5rem] p-4 pr-6 flex items-center justify-between shadow-2xl shadow-violet-500/20">
+              <div className="flex items-center gap-4">
+                <div className="w-12 h-12 rounded-2xl bg-violet-600 flex items-center justify-center shadow-lg shadow-violet-600/30">
+                  <span className="relative flex h-3 w-3">
+                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-violet-400 opacity-75"></span>
+                    <span className="relative inline-flex rounded-full h-3 w-3 bg-violet-300"></span>
+                  </span>
+                </div>
+                <div className="hidden sm:block">
+                  <p className="text-white font-black text-sm uppercase tracking-widest leading-none mb-1">Itinerary Studio</p>
+                  <p className="text-slate-400 text-[10px] font-bold uppercase tracking-tighter">Refining your journey in real-time</p>
+                </div>
+              </div>
+              <div className="flex items-center gap-4">
+                <div className="px-4 py-2 bg-white/5 rounded-xl border border-white/10 hidden md:block">
+                  <span className="text-[10px] font-black text-violet-400 uppercase tracking-widest">Saved to cloud</span>
+                </div>
+                <button 
+                  onClick={() => setIsEditMode(false)}
+                  className="px-6 py-3 bg-white text-slate-900 rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-slate-100 transition-colors shadow-lg active:scale-95"
+                >
+                  Finish Editing
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </section>
   );

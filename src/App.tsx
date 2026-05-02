@@ -11,7 +11,7 @@ import { useState, useEffect, useRef } from 'react'
 // import compass from './assets/compass.gif'
 import finder from './assets/finder.gif'
 import TripResult from './components/TripResult'
-import { getTripById, planTrip, type TripFormPayload, type TripPlanModel, getSharedTrip } from './services/tripApi'
+import { getTripById, planTrip, type TripFormPayload, type TripPlanModel, getSharedTrip, updatetrip } from './services/tripApi'
 
 interface TripState extends Partial<TripPlanModel> {
   Destination: string;
@@ -24,6 +24,7 @@ interface TripState extends Partial<TripPlanModel> {
   endDate: string;
   vibe?: string;
   shareId?: string;
+  id?: string;
 }
 
 function App() {
@@ -33,6 +34,7 @@ function App() {
   const [showResult, setShowResult] = useState(false);
   const [userEmail, setUserEmail] = useState<string | undefined>(undefined);
   const [userPicture, setUserPicture] = useState<string | undefined>(undefined);
+  const [isEditMode, setIsEditMode] = useState(false);
   
   const formRef = useRef<HTMLDivElement | null>(null);
   const resultRef = useRef<HTMLDivElement | null>(null);
@@ -121,6 +123,7 @@ function App() {
       const plan = plannedTrip.plan;
 
       setTrip({
+        id: plannedTrip.id,
         Destination: plannedTrip.destination,
         days: plannedTrip.days ?? plan.dayPlan?.length ?? 1,
         travelers: plannedTrip.travelers ?? 1,
@@ -148,6 +151,7 @@ function App() {
       const plannedTrip = response.trip;
       const plan = plannedTrip.plan;
       setTrip({
+        id: plannedTrip.id,
         Destination: plannedTrip.destination,
         days: plannedTrip.days ?? plan.dayPlan?.length ?? 1,
         travelers: plannedTrip.travelers ?? 1,
@@ -176,6 +180,32 @@ function App() {
   
   const handleUpdateTripData  = (newPlan: any) => {
       setTrip(prev => prev ? { ...prev, ...newPlan } : null);
+  }
+
+  const handleTripDeleted = (deletedId: string) => {
+    console.log('Trip deleted:', deletedId, 'Current trip ID:', trip?.id);
+    setTrip(prev => {
+      if (prev?.id === deletedId) {
+        setShowResult(false);
+        setIsEditMode(false);
+        return null;
+      }
+      return prev;
+    });
+  };
+
+  const handleSaveTripUpdates = async () => {
+      if(!trip?.id) return;
+    try {
+      setLoading(true);
+      await updatetrip(trip.id,{...trip, plan: {dayPlan: trip.dayPlan}});
+      toast.success("Changes saved to cloud! ☁️");
+      setIsEditMode(false);
+    } catch (error) {
+      toast.error("Failed to save changes");
+    } finally{
+      setLoading(false);
+    }
   }
   
   return (
@@ -207,6 +237,7 @@ function App() {
         userEmail={userEmail} 
         userPicture={userPicture} 
         onLogoClick={handleHomeClick}
+        isEditMode={isEditMode}
       />
       
       <Routes>
@@ -229,9 +260,10 @@ function App() {
                   <TripResult
                     data={trip}
                     onCopyLink={() => toast('Link copied! 🔗')}
-                    onEdit={() => setShowResult(false)}
                     onViewMyTrips={() => navigate('/my-trips')}
                     onUpdateTripData={handleUpdateTripData}
+                    isEditMode={isEditMode}
+                    setIsEditMode={setIsEditMode}
                   />
                 )}
               </div>
@@ -244,7 +276,11 @@ function App() {
         {/* My Trips Route */}
         <Route path="/my-trips" element={
           <div className="pt-20">
-             <MyTrips onOpenTrip={handleOpenTrip} onBackToPlanner={() => navigate('/')} />
+             <MyTrips 
+               onOpenTrip={handleOpenTrip} 
+               onBackToPlanner={() => navigate('/')} 
+               onTripDeleted={handleTripDeleted}
+             />
           </div>
         } />
 
@@ -259,7 +295,12 @@ function App() {
              )}
              {!loading && showResult && (
                 <div className="max-w-7xl mx-auto px-6">
-                  <TripResult data={trip} onUpdateTripData={handleUpdateTripData} />
+                   <TripResult 
+                     data={trip} 
+                     onUpdateTripData={handleUpdateTripData} 
+                     isEditMode={isEditMode}
+                     setIsEditMode={setIsEditMode}
+                   />
                 </div>
              )}
              {!loading && !showResult && (
