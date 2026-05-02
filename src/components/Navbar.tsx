@@ -20,6 +20,8 @@ const Navbar: React.FC<NavbarProps> = ({ userEmail, userPicture, onLogoClick }) 
   const [isSigningIn, setIsSigningIn] = useState(false);
   const [authError, setAuthError] = useState<string | null>(null);
   const [isScrolled, setIsScrolled] = useState(false);
+  const { toasts } = useToaster();
+  const hasToast = toasts.some(t => t.visible && typeof t.message === 'string');
 
   useEffect(() => {
   const handleScroll = () => {
@@ -269,9 +271,20 @@ const Navbar: React.FC<NavbarProps> = ({ userEmail, userPicture, onLogoClick }) 
           <div className="relative h-6 flex items-center justify-center">
             
             {/* 1. The Normal State (Logo + Text) */}
-            <div className="flex items-center gap-2 transition-all duration-500 absolute opacity-100 translate-y-0 scale-100" onClick={onLogoClick}>
+            <div className={`flex items-center gap-2 transition-all duration-500 absolute ${
+              hasToast ? 'opacity-0 -translate-y-10 scale-90' : 'opacity-100 translate-y-0 scale-100'
+            }`} onClick={onLogoClick}>
               <img src={logo} alt="Logo" className="w-5 h-5" />
               <span className="font-['Outfit'] text-base font-black text-white">TripSpark</span>
+            </div>
+
+            {/* 2. The Notification State (The Message) */}
+            <div className={`flex items-center gap-2 transition-all duration-500 absolute whitespace-nowrap ${
+              hasToast ? 'opacity-100 translate-y-0 scale-100' : 'opacity-0 translate-y-10 scale-90'
+            }`}>
+              <span className="text-white font-bold text-sm">
+                {toasts.find(t => t.visible && typeof t.message === 'string')?.message as string}
+              </span>
             </div>
 
           </div>
