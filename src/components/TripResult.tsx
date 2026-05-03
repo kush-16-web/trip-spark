@@ -88,6 +88,7 @@ interface TripResultProps {
   onUpdateTripData?: (newPlan: any) => void;
   isEditMode: boolean;
   setIsEditMode: (val: boolean) => void;
+  onSaveTripUpdates: (finalTripData: any) => void;
 }
 
 
@@ -218,7 +219,8 @@ export default function TripResult({
   onViewMyTrips,
   onUpdateTripData,
   isEditMode,
-  setIsEditMode
+  setIsEditMode,
+  onSaveTripUpdates
 }: TripResultProps) {
   const [activeDay, setActiveDay] = useState(1);
   const [isSigningIn, setIsSigningIn] = useState(false);
@@ -371,6 +373,21 @@ export default function TripResult({
     }
   };
 
+    const handleFetchNewWeather = async (newStartDate: string, newEndDate: string) => {
+    try {
+      const url = `http://localhost:8080/api/trip/weather?destination=${data.Destination}&startDate=${newStartDate}&endDate=${newEndDate}`;
+      const response = await fetch(url);
+      const result = await response.json();
+      
+      if (result.ok && result.weather) {
+        // Send the new weather array up to your parent component to save it!
+        onUpdateTripData({ weather: result.weather });
+      }
+    } catch (error) {
+      console.error("Failed to update weather", error);
+    }
+  };
+
 
   async function handleContinueWithGoogle() {
     try {
@@ -477,6 +494,10 @@ export default function TripResult({
       if (value.toLowerCase() === 'solo') {
         newData.travelers = 1;
       }
+    }
+
+    if(field === 'dates'){
+      handleFetchNewWeather(value.startDate, value.endDate);
     }
 
     onUpdateTripData(newData);
@@ -911,11 +932,13 @@ export default function TripResult({
                 </div>
                 <button 
                   onClick={() => {
-                    setIsEditMode(false);
-                    // SAVE TO DB: If we have updated data, pass it back to the parent to save
-                    if (onUpdateTripData) {
-                      onUpdateTripData({ ...data, dayPlan: localDayplan });
-                    }
+                    const finalData = {
+                      ...data,
+                      dayPlan: localDayplan,
+                    };
+                    if(onSaveTripUpdates){
+                      onSaveTripUpdates(finalData);
+                      }
                   }}
                   className="px-6 py-3 bg-white text-slate-900 rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-slate-100 transition-colors shadow-lg active:scale-95"
                 >

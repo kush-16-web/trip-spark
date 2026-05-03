@@ -194,11 +194,12 @@ function App() {
     });
   };
 
-  const handleSaveTripUpdates = async () => {
-      if(!trip?.id) return;
+  const handleSaveTripUpdates = async (finalTripData: any) => {
+      if(!finalTripData?.id) return;
     try {
+      setTrip(finalTripData);
       setLoading(true);
-      await updatetrip(trip.id,{...trip, plan: {dayPlan: trip.dayPlan}});
+      await updatetrip(finalTripData.id, { ...finalTripData, plan: { dayPlan: finalTripData.dayPlan } });
       toast.success("Changes saved to cloud! ☁️");
       setIsEditMode(false);
     } catch (error) {
@@ -264,6 +265,7 @@ function App() {
                     onUpdateTripData={handleUpdateTripData}
                     isEditMode={isEditMode}
                     setIsEditMode={setIsEditMode}
+                    onSaveTripUpdates={handleSaveTripUpdates}
                   />
                 )}
               </div>
@@ -300,6 +302,7 @@ function App() {
                      onUpdateTripData={handleUpdateTripData} 
                      isEditMode={isEditMode}
                      setIsEditMode={setIsEditMode}
+                     onSaveTripUpdates={handleSaveTripUpdates}
                    />
                 </div>
              )}

@@ -348,4 +348,19 @@ export const generateSingleDay = async (req: Request, res: Response) => {
     });
   }
 }
+
+export const getTripWeather = async (req: Request,res: Response) => {
+  try{
+    const {destination, startDate,endDate} = req.body;
+
+    const weather = await getWeatherForecast(destination, startDate, endDate);
+
+    return res.status(200).json({ok: true,weather})
+  }catch(error){
+    return res.status(500).json({
+      ok: false,
+      message: 'Failed to get trip weather',
+    });
+  }
+}
   

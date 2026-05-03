@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { planTrip, getMyTrips, getTripById, getTripByShareId, updatetrip, deletetrip,generateSingleDay} from '../controllers/trip.controller';
+import { planTrip, getMyTrips, getTripById, getTripByShareId, updatetrip, deletetrip,generateSingleDay, getTripWeather} from '../controllers/trip.controller';
 import { authenticate, optionalAuthenticate } from '../middlewares/auth.middleware';
 
 export const tripRouter = Router();
@@ -16,3 +16,4 @@ tripRouter.put('/update/:id', authenticate, updatetrip);
 tripRouter.delete('/delete/:id', authenticate, deletetrip);    
 
 tripRouter.post("/generate-day", generateSingleDay);
+tripRouter.get("/weather/:destination/:startDate/:endDate", getTripWeather);
