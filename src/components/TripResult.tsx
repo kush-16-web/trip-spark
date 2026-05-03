@@ -228,6 +228,7 @@ export default function TripResult({
   const [loginSuccessMessage, setLoginSuccessMessage] = useState<string | null>(null);
   const [isSaved, setIsSaved] = useState(false);
   const [localDayplan, setLocalDayplan] = useState<DayPlan[]>(data?.dayPlan || []);
+  const [isGeneratingDay, setIsGeneratingDay] = useState(false);
 
   const dayRefs = useRef<{ [key: number]: HTMLButtonElement | null }>({});
   const prevDay = useRef(activeDay);
@@ -294,6 +295,11 @@ export default function TripResult({
   };
 
   const handleAddActivity = (dayNumber: number) =>{
+    const existingDay = localDayplan.find(dp => dp.day === dayNumber);
+    if(!existingDay) {
+      setLocalDayplan([...localDayplan,{day:dayNumber,activities:[{title:"New Activity",time:"12:00",desc:"Add description here..."}]}])
+      return;
+    }
     const updatePLan = localDayplan.map(dp => {
       if(dp.day === dayNumber){
         return{...dp,activities:[...dp.activities,{ title: "New Activity", time: "12:00", desc: "Add description here..." } ]}
@@ -315,6 +321,56 @@ export default function TripResult({
     });
     setLocalDayplan(updatedPlan);
   };
+
+    const handleGenerateDayAI = async (dayNumber: number, customPrompt: string) => {
+    try {
+      setIsGeneratingDay(true);
+      
+      // 1. Gather all existing activities so the AI doesn't repeat them
+      const existingActivities = localDayplan.flatMap(dp => dp.activities.map(a => a.title));
+      
+      // 2. Call your new backend endpoint
+      // Adjust the URL if your backend runs on a different port!
+      const response = await fetch('http://localhost:8080/api/trip/generate-day', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          destination: data?.Destination || destination,
+          type: data?.type || 'Solo',
+          daynumber: dayNumber,
+          customPrompt,
+          existingActivities
+        })
+      });
+
+      if (!response.ok) throw new Error('Failed to generate day from AI');
+      
+      const result = await response.json();
+      
+      // 3. Push the new activities directly into the frontend state!
+      setLocalDayplan(prev => {
+        const existingDay = prev.find(dp => dp.day === dayNumber);
+        if (!existingDay) {
+          // If the day tab was completely empty, create it
+          return [...prev, { day: dayNumber, activities: result.activities }];
+        }
+        // If the day existed, replace the activities with the new AI ones
+        return prev.map(dp => {
+          if (dp.day === dayNumber) {
+            return { ...dp, activities: result.activities };
+          }
+          return dp;
+        });
+      });
+
+    } catch (error) {
+      console.error("Error generating day:", error);
+      alert("Failed to generate activities. Please try again.");
+    } finally {
+      setIsGeneratingDay(false);
+    }
+  };
+
 
   async function handleContinueWithGoogle() {
     try {
@@ -388,9 +444,9 @@ export default function TripResult({
         ? `${data.totalEstimate.currency}${data.totalEstimate.min.toLocaleString()} - ${data.totalEstimate.currency}${data.totalEstimate.max.toLocaleString()}`
         : '—';
   const destination = data.Destination?.trim() || 'your destination';
-  const dayCount = Math.max(1, data.dayPlan?.length || Number(data?.days) || 1);
+  const dayCount = Math.max(1, Number(data?.days) || data.dayPlan?.length || 1);
   const days = Array.from({ length: dayCount }, (_, i) => i + 1);
-  const activeDayPlan = data.dayPlan?.find((item) => item.day === activeDay);
+  // const activeDayPlan = data.dayPlan?.find((item) => item.day === activeDay);
   const handleUpdateStats = (field: string, value: any) => {
     if (!onUpdateTripData) return;
     
@@ -682,6 +738,8 @@ export default function TripResult({
               onAddActivity={() => handleAddActivity(activeDay)}
               onReorder={(oldIdx, newIdx) => handleReorderActivity(activeDay, oldIdx, newIdx)}
               isEditMode={isEditMode}
+              onGenerateDayAI={(prompt) => handleGenerateDayAI(activeDay, prompt)}
+              isGeneratingAI={isGeneratingDay}
               weather={data.weather?.[activeDay - 1]}
               date={data.startDate ? (() => {
                 const start = new Date(data.startDate);

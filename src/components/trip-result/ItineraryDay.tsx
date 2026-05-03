@@ -5,6 +5,8 @@ import Fog from '../../assets/foggy.gif';
 import Raining from '../../assets/raining.gif';
 import Snowing from '../../assets/snowing.gif';
 import Thunderstorm from '../../assets/thunderstorm.gif';
+import chair from '../../assets/beach-chair.gif';
+import crystalBall from '../../assets/crystal-ball.gif';
 
 import {
   DndContext, 
@@ -42,6 +44,8 @@ interface ItineraryDayProps {
   onAddActivity: () => void;
   onDeleteActivity: (index: number) => void;
   onUpdateActivity: (index: number, updatedActivity: Activity) => void;
+  onGenerateDayAI?: (prompt: string) => void; 
+  isGeneratingAI?: boolean; 
 }
 
 interface ActivityItemProps {
@@ -219,11 +223,15 @@ const ItineraryDay: React.FC<ItineraryDayProps> = ({
   onAddActivity,
   onDeleteActivity,
   onUpdateActivity,
-  onReorder
+  onReorder,
+  onGenerateDayAI,
+  isGeneratingAI
 }) => {
   const [confirmDeleteIdx, setConfirmDeleteIdx] = useState<number | null>(null);
   const [editingIdx, setEditingIdx] = useState<number | null>(null);
   const sensors = useSensors(useSensor(PointerSensor));
+  const [showAIInput, setShowAIInput] = React.useState(false);
+  const [aiPrompt, setAiPrompt] = React.useState("");
 
   return (
     <div className="relative group">
@@ -294,47 +302,155 @@ const ItineraryDay: React.FC<ItineraryDayProps> = ({
         </div>
 
         <div className="space-y-6">
-          <DndContext
-            sensors={sensors}
-            collisionDetection={closestCenter}
-            onDragEnd={(event) => {
-              const { active, over } = event;
-              if (active && over && active.id !== over.id) {
-                const oldIndex = activities.findIndex((_, i) => `activity-${i}` === active.id);
-                const newIndex = activities.findIndex((_, i) => `activity-${i}` === over.id);
-                onReorder(oldIndex, newIndex);
-              }
-            }}
-          >
-            <SortableContext
-              items={activities.map((_, i) => `activity-${i}`)}
-              strategy={verticalListSortingStrategy}
-            >
-              <div className="space-y-6">
-                {activities.map((item, idx) => (
-                  <ActivityItem
-                    key={`activity-item-${idx}`} // FIXED: Stable key ensures inputs don't reset when editing
-                    id={`activity-${idx}`}
-                    item={item}
-                    idx={idx}
-                    isEditMode={isEditMode}
-                    editingIdx={editingIdx}
-                    setEditingIdx={setEditingIdx}
-                    confirmDeleteIdx={confirmDeleteIdx}
-                    setConfirmDeleteIdx={setConfirmDeleteIdx}
-                    onUpdateActivity={onUpdateActivity}
-                    onDeleteActivity={onDeleteActivity}
-                  />
-                ))}
+          {(!activities || activities.length === 0) ? (
+            <div className="bg-white rounded-[2.5rem] border border-slate-100 p-8 md:p-12 text-center shadow-sm relative overflow-hidden">
+              {isGeneratingAI ? (
+                <div className="flex flex-col items-center justify-center animate-in fade-in zoom-in duration-500 py-8">
+                  <div className="w-24 h-24 md:w-32 md:h-32 bg-indigo-50/50 rounded-full flex items-center justify-center mb-6 shadow-inner relative">
+                    <div className="absolute inset-0 rounded-full border-4 border-indigo-500/20 border-t-indigo-500 animate-spin" />
+                    <img src={crystalBall} alt="Generating..." className="w-16 h-16 md:w-20 md:h-20 object-contain animate-pulse" />
+                  </div>
+                  <h4 className="text-2xl font-black text-slate-900 mb-2">Consulting the Oracle...</h4>
+                  <p className="text-slate-500 font-medium max-w-sm mx-auto">
+                    Crafting the perfect day based on your vibe. Hang tight!
+                  </p>
+                </div>
+              ) : (
+                <div className="animate-in fade-in duration-500">
+                  <div className="w-20 h-20 bg-violet-50 rounded-full flex items-center justify-center mx-auto mb-6">
+                    <img src={chair} alt="Chair" className='w-16 h-16 rounded-full' />
+                  </div>
+                  <h4 className="text-2xl font-black text-slate-900 mb-2">You have a free day!</h4>
+                  <p className="text-slate-500 font-medium mb-8 max-w-sm mx-auto">This day is completely empty. How would you like to plan it?</p>
+                  
+                  {isEditMode ? (
+                    showAIInput ? (
+                  <div className="w-full max-w-lg mx-auto animate-in fade-in slide-in-from-bottom-2 duration-300">
+                    <div className="relative group">
+                      <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                        {/* A sleek lightning bolt icon instead of sparkles */}
+                        <svg className="h-5 w-5 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                        </svg>
+                      </div>
+                      <input 
+                        type="text" 
+                        maxLength={100}
+                        placeholder="E.g., A relaxing morning with local coffee..."
+                        className="w-full pl-12 pr-[120px] py-4 bg-slate-50 hover:bg-slate-100 focus:bg-white border border-slate-200 focus:border-slate-900 rounded-2xl outline-none font-medium text-slate-700 transition-all shadow-sm focus:shadow-md"
+                        value={aiPrompt}
+                        onChange={(e) => setAiPrompt(e.target.value)}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter' && !isGeneratingAI && aiPrompt.trim()) {
+                            onGenerateDayAI?.(aiPrompt);
+                            setShowAIInput(false);
+                          }
+                        }}
+                        autoFocus
+                      />
+                      <div className="absolute inset-y-2 right-2 flex items-center gap-1">
+                        <button 
+                          onClick={() => setShowAIInput(false)}
+                          className="px-3 py-2 text-xs font-bold text-slate-400 hover:text-slate-600 transition-colors"
+                        >
+                          Cancel
+                        </button>
+                        <button 
+                          onClick={() => {
+                            if (!aiPrompt.trim()) return;
+                            onGenerateDayAI?.(aiPrompt);
+                            setShowAIInput(false);
+                          }} 
+                          disabled={isGeneratingAI || !aiPrompt.trim()}
+                          className="w-10 h-10 bg-slate-900 text-white rounded-xl hover:bg-slate-800 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center shadow-md shadow-slate-900/20"
+                        >
+                          {isGeneratingAI ? (
+                            <svg className="animate-spin h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                            </svg>
+                          ) : (
+                            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M14 5l7 7m0 0l-7 7m7-7H3" />
+                            </svg>
+                          )}
+                        </button>
+                      </div>
+                    </div>
+                    <p className="text-[10px] md:text-xs text-slate-400 font-medium mt-3 text-center">
+                      Press <kbd className="font-sans px-1.5 py-0.5 bg-slate-100 border border-slate-200 rounded-md text-slate-500">Enter</kbd> to generate
+                    </p>
+                  </div>
+                ) : (
+                  <div className="flex flex-col md:flex-row gap-4 justify-center animate-in fade-in duration-300">
+                    <button 
+                      onClick={onAddActivity}
+                      className="px-8 py-3.5 bg-white border border-slate-200 text-slate-600 font-bold rounded-full hover:border-slate-400 hover:text-slate-900 transition-all"
+                    >
+                      Add manually
+                    </button>
+                    <button 
+                      onClick={() => setShowAIInput(true)}
+                      className="px-8 py-3.5 bg-slate-900 text-white font-bold rounded-full hover:bg-slate-800 transition-all shadow-lg shadow-slate-900/20 flex items-center justify-center gap-2"
+                    >
+                      <svg className="w-4 h-4 opacity-70" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                      </svg>
+                      Auto-fill schedule
+                    </button>
+                  </div>
+                )
+              ) : (
+                <div className="text-sm font-bold text-slate-400 bg-slate-50 px-4 py-2 rounded-full inline-block">No plans yet. Enter Edit Mode to add some!</div>
+              )}
               </div>
-            </SortableContext>
-          </DndContext>
+            )}
+            </div>
+          ) : (
+            <>
+              <DndContext
+                sensors={sensors}
+                collisionDetection={closestCenter}
+                onDragEnd={(event) => {
+                  const { active, over } = event;
+                  if (active && over && active.id !== over.id) {
+                    const oldIndex = activities.findIndex((_, i) => `activity-${i}` === active.id);
+                    const newIndex = activities.findIndex((_, i) => `activity-${i}` === over.id);
+                    onReorder(oldIndex, newIndex);
+                  }
+                }}
+              >
+                <SortableContext
+                  items={activities.map((_, i) => `activity-${i}`)}
+                  strategy={verticalListSortingStrategy}
+                >
+                  <div className="space-y-6">
+                    {activities.map((item, idx) => (
+                      <ActivityItem
+                        key={`activity-item-${idx}`} 
+                        id={`activity-${idx}`}
+                        item={item}
+                        idx={idx}
+                        isEditMode={isEditMode}
+                        editingIdx={editingIdx}
+                        setEditingIdx={setEditingIdx}
+                        confirmDeleteIdx={confirmDeleteIdx}
+                        setConfirmDeleteIdx={setConfirmDeleteIdx}
+                        onUpdateActivity={onUpdateActivity}
+                        onDeleteActivity={onDeleteActivity}
+                      />
+                    ))}
+                  </div>
+                </SortableContext>
+              </DndContext>
 
-          {isEditMode && (
-            <button onClick={onAddActivity} className="w-full py-4 md:py-6 border-2 border-dashed border-slate-200 rounded-2xl md:rounded-[2rem] text-slate-400 font-bold hover:border-violet-300 hover:text-violet-500 hover:bg-violet-50/50 transition-all flex items-center justify-center gap-2 mt-6 md:mt-8 group text-sm md:text-base">
-              <span className="text-lg md:text-xl group-hover:rotate-90 transition-transform">+</span>
-              Add Activity
-            </button>
+              {isEditMode && (
+                <button onClick={onAddActivity} className="w-full py-4 md:py-6 border-2 border-dashed border-slate-200 rounded-2xl md:rounded-[2rem] text-slate-400 font-bold hover:border-violet-300 hover:text-violet-500 hover:bg-violet-50/50 transition-all flex items-center justify-center gap-2 mt-6 md:mt-8 group text-sm md:text-base">
+                  <span className="text-lg md:text-xl group-hover:rotate-90 transition-transform">+</span>
+                  Add Activity
+                </button>
+              )}
+            </>
           )}
         </div>
       </div>

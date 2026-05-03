@@ -2,7 +2,7 @@ import type { Response, Request } from 'express';
 import type { TripPlanRequest } from '../types/trip.types';
 import { Prisma } from '../generated/prisma/client';
 import { tripPlanRequestSchema } from '../validators/trip.validator';
-import { generateTripPlan, refineTripWithAI } from '../services/ai.service';
+import { generateTripPlan, refineTripWithAI, generateContentFromAI } from '../services/ai.service';
 import { getWeatherForecast } from '../services/weather.service';
 import { prisma } from '../lib/prisma';
 import { AuthRequest } from '../middlewares/auth.middleware';
@@ -288,6 +288,63 @@ export const refineTrip = async (req: AuthRequest, res: Response) => {
     return res.status(500).json({
       ok: false,
       message: 'AI Refinement failed',
+    });
+  }
+}
+
+export const generateSingleDay = async (req: Request, res: Response) => {
+  try{
+    const {
+      destination,
+      type,
+      daynumber,
+      customPrompt,
+      existingActivities
+    } = req.body;
+
+        const aiPrompt = `
+      You are an elite travel planner. I need you to generate exactly ONE day of activities for Day ${daynumber} of a trip to ${destination}.
+      
+      CONTEXT:
+      - The travel group type is: ${type}.
+      
+      CRITICAL RULES:
+      1. Here is a list of places and activities the user is ALREADY doing on other days: ${existingActivities}. 
+         DO NOT suggest any of these places again. Give me fresh, unique ideas.
+      2. The user has provided this specific request for this day: "${customPrompt || 'Just make it an amazing, well-paced day.'}"
+         You MUST prioritize this request in your planning.
+      
+      OUTPUT FORMAT:
+      You must return the response ONLY as a valid JSON array of activities matching this exact structure. Do not include any markdown, backticks, or extra text.
+      
+      [
+        {
+          "time": "String (e.g., '09:00 AM')",
+          "title": "String (Short, catchy title of the activity)",
+          "desc": "String (2-3 sentences explaining what to do and why it fits the user's specific request)"
+        },
+        // ... generate 3 or 4 activities total for the day
+      ]
+    `;
+
+    const aiResponseText = await generateContentFromAI(aiPrompt);
+
+    const cleanedText = aiResponseText.replace(/```json/g, '').replace(/```/g, '').trim();
+
+    const activities = JSON.parse(cleanedText);
+    
+    return res.status(200).json({
+      ok: true,
+      day: daynumber,
+      activities
+    })
+  }catch(error){
+    console.error('[trip.controller] Error generating single day:', error);
+    return res.status(500).json({
+      ok: false,
+      message: "Failed to generate AI day plan", 
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+      error,
     });
   }
 }

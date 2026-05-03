@@ -192,3 +192,13 @@ export async function refineTripWithAI(currentPlan: any, instruction: string): P
   }
 }
 
+
+export async function generateContentFromAI(prompt:string): Promise<string>  {
+  try{
+    const response = await model.generateContent(prompt);
+    return response.response.text() ?? '';
+  } catch (error) {
+    console.error('[ai.service] Error generating content from AI:', error);
+    throw error;
+  }
+}
