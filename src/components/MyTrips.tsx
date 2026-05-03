@@ -63,7 +63,7 @@ export default function MyTrips({ onOpenTrip, onBackToPlanner, onTripDeleted }: 
   return (
     <div className="min-h-screen bg-slate-50 pt-28 pb-20 px-6">
       <div className="max-w-7xl mx-auto">
-        
+
         {/* Header Section */}
         <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-12">
           <div>
@@ -103,7 +103,7 @@ export default function MyTrips({ onOpenTrip, onBackToPlanner, onTripDeleted }: 
               disabled={loading}
               className="px-8 py-3.5 bg-slate-900 text-white rounded-2xl font-bold hover:bg-slate-800 transition-all shadow-lg shadow-slate-900/20 active:scale-95 flex items-center gap-2 mx-auto disabled:opacity-70 disabled:cursor-not-allowed"
             >
-              <span className={`inline-block ${loading ? 'animate-spin' : ''}`}>↻</span> 
+              <span className={`inline-block ${loading ? 'animate-spin' : ''}`}>↻</span>
               {loading ? 'Refreshing...' : 'Refresh Page'}
             </button>
           </div>
@@ -139,10 +139,10 @@ export default function MyTrips({ onOpenTrip, onBackToPlanner, onTripDeleted }: 
                   </div>
                   <div className="flex justify-between items-start mb-6">
                     <div className="w-14 h-14 bg-violet-100 rounded-2xl flex items-center justify-center text-2xl">
-                      {trip.type === 'Solo' ? <img src={solo} alt="Solo" className="w-14 h-14" /> : 
-                      trip.type === 'Couple' ? <img src={couple} alt="Couple" className="w-14 h-14" /> : 
-                      trip.type === 'Family' ? <img src={family} alt="Family" className="w-14 h-14" /> :
-                      trip.type === 'Friends' ? <img src={friends} alt="Friends" className="w-14 h-14" /> : ''}
+                      {trip.type === 'Solo' ? <img src={solo} alt="Solo" className="w-14 h-14" /> :
+                        trip.type === 'Couple' ? <img src={couple} alt="Couple" className="w-14 h-14" /> :
+                          trip.type === 'Family' ? <img src={family} alt="Family" className="w-14 h-14" /> :
+                            trip.type === 'Friends' ? <img src={friends} alt="Friends" className="w-14 h-14" /> : ''}
                     </div>
                     <span className="px-4 py-1.5 bg-slate-50 text-slate-500 rounded-full text-xs font-black uppercase tracking-widest border border-slate-100">
                       {trip.days || 'Multi'} Days
@@ -152,7 +152,7 @@ export default function MyTrips({ onOpenTrip, onBackToPlanner, onTripDeleted }: 
                   <h3 className="text-2xl font-black text-slate-900 mb-2 group-hover:text-violet-600 transition-colors line-clamp-1">
                     {trip.destination}
                   </h3>
-                  
+
                   <p className="text-slate-400 font-bold text-sm mb-8 flex items-center gap-2">
                     <span className="w-1.5 h-1.5 bg-slate-300 rounded-full" />
                     Planned for {trip.travelers || 'multiple'} Travelers
@@ -166,7 +166,7 @@ export default function MyTrips({ onOpenTrip, onBackToPlanner, onTripDeleted }: 
                       View Itinerary
                       <span className="group-hover:translate-x-1 transition-transform">→</span>
                     </button>
-                    
+
                     <button
                       onClick={() => {
                         const shareUrl = `${window.location.origin}/share/${trip.shareId}`;
@@ -188,28 +188,28 @@ export default function MyTrips({ onOpenTrip, onBackToPlanner, onTripDeleted }: 
       {/* Delete Confirmation Modal */}
       {tripToDelete && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 animate-backdrop">
-          <div 
-            className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm" 
+          <div
+            className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm"
             onClick={() => !isDeleting && setTripToDelete(null)}
           />
-          
+
           <div className="relative w-full max-w-md bg-white rounded-[2.5rem] p-10 shadow-2xl animate-modal overflow-hidden">
             {/* Background Decoration */}
             <div className="absolute top-0 right-0 w-32 h-32 bg-red-50 rounded-bl-full -z-10" />
-            
+
             <div className="text-center">
               <div className="w-20 h-20 rounded-3xl flex items-center justify-center mx-auto mb-6 shadow-inner">
                 <img src={deleteIcon} alt="Delete" className="w-12 h-12" />
               </div>
-              
+
               <h3 className="text-2xl font-black text-slate-900 mb-4 tracking-tight">
                 Remove Adventure?
               </h3>
-              
+
               <p className="text-slate-500 font-medium leading-relaxed mb-10">
                 Are you sure you want to delete this itinerary? This action cannot be undone and you'll lose all your plans.
               </p>
-              
+
               <div className="flex flex-col gap-3">
                 <button
                   onClick={confirmDelete}
@@ -218,7 +218,7 @@ export default function MyTrips({ onOpenTrip, onBackToPlanner, onTripDeleted }: 
                 >
                   {isDeleting ? 'Removing...' : 'Yes, Delete Trip'}
                 </button>
-                
+
                 <button
                   onClick={() => setTripToDelete(null)}
                   disabled={isDeleting}

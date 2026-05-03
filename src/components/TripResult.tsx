@@ -20,11 +20,45 @@ import friends from '../assets/friends.gif';
 import family from '../assets/Family-travel.gif';
 import soloTravel from '../assets/solo-traveller.gif';
 import Romantic from '../assets/dating.gif';
+import { arrayMove } from '@dnd-kit/sortable';
 import TripStats from './trip-result/TripStats';
 import HotelSection from './trip-result/HotelSection';
 import MustVisitSection from './trip-result/MustVisitSection';
 import ItineraryDay from './trip-result/ItineraryDay';
 import EditModeToggle from './trip-result/EditModeToggle';
+import { useBlocker } from 'react-router-dom';
+import { motion, AnimatePresence } from 'framer-motion';
+
+const GhostWriter = ({ text, className }: { text: string; className?: string }) => {
+  return (
+    <motion.div className={`inline-flex items-center ${className}`}>
+      {text.split("").map((char, i) => (
+        <motion.span
+          key={`${text}-${i}`}
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{
+            duration: 0.05,
+            delay: i * 0.02,
+            ease: "easeIn"
+          }}
+        >
+          {char === " " ? "\u00A0" : char}
+        </motion.span>
+      ))}
+      <motion.span
+        initial={{ opacity: 1 }}
+        animate={{ opacity: 0 }}
+        transition={{
+          duration: 0.8,
+          repeat: Infinity,
+          ease: "easeInOut"
+        }}
+        className="ml-0.5 inline-block w-1.5 h-4 bg-violet-500 rounded-full"
+      />
+    </motion.div>
+  );
+};
 
 export interface TripResultData {
   id?: string;
@@ -57,24 +91,65 @@ interface TripResultProps {
 }
 
 
-function TripTypeBadge({ tripType }: { tripType?: string }) {
-  const t = tripType ?? '';
-  const icon =
-    t === 'Friends' ? (
-      <img src={friends} className="h-8 w-8 object-cover rounded-full" alt="" />
-    ) : t === 'Family' ? (
-      <img src={family} alt="" className="h-8 w-8 object-cover rounded-full" />
-    ) : t === 'Solo' ? (
-      <img src={soloTravel} alt="" className="h-8 w-8 object-cover rounded-full" />
-    ) : t === 'Couple' ? (
-      <img src={Romantic} alt="" className="h-8 w-8 object-cover rounded-full bg-current" />
-    ) : null;
+function TripTypeBadge({ 
+  tripType, 
+  onUpdate, 
+  isEditMode 
+}: { 
+  tripType?: string, 
+  onUpdate?: (type: string) => void, 
+  isEditMode: boolean 
+}) {
+  const [isOpen, setIsOpen] = useState(false);
+  const options = ['Solo', 'Family', 'Friends', 'Couple'];
 
   return (
-    <span className="px-4 py-1.5 transition-all duration-500 bg-slate-900 text-white border border-slate-800 rounded-full text-xs md:text-sm font-bold tracking-wide uppercase flex items-center gap-2">
-      {t}
-      {icon}
-    </span>
+    <div className="relative">
+      <button
+        disabled={!isEditMode}
+        onClick={() => setIsOpen(!isOpen)}
+        className={`px-4 py-1.5 transition-all duration-500 rounded-full text-xs md:text-sm font-bold uppercase flex items-center gap-2 ${
+          isEditMode 
+            ? 'bg-violet-600 text-white shadow-lg shadow-violet-200 cursor-pointer hover:scale-105 active:scale-95' 
+            : 'bg-slate-900 text-white border border-slate-800'
+        }`}
+      >
+        {tripType || 'Select Type'}
+        {isEditMode && (
+          <svg className={`w-3 h-3 transition-transform duration-300 ${isOpen ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M19 9l-7 7-7-7" />
+          </svg>
+        )}
+      </button>
+
+      <AnimatePresence>
+        {isOpen && isEditMode && (
+          <>
+            <div className="fixed inset-0 z-[90]" onClick={() => setIsOpen(false)} />
+            <motion.div
+              initial={{ opacity: 0, y: 10, scale: 0.95 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: 10, scale: 0.95 }}
+              className="absolute top-full mt-3 left-0 z-[100] bg-white/90 backdrop-blur-2xl border border-slate-100 p-2 rounded-[1.5rem] shadow-2xl min-w-[160px] origin-top-left"
+            >
+              {options.map((opt) => (
+                <button
+                  key={opt}
+                  onClick={() => {
+                    onUpdate?.(opt);
+                    setIsOpen(false);
+                  }}
+                  className="w-full text-left px-4 py-3 rounded-xl text-xs font-black text-slate-600 hover:bg-violet-600 hover:text-white transition-all flex items-center justify-between group"
+                >
+                  {opt}
+                  {tripType === opt && <div className="w-1.5 h-1.5 rounded-full bg-violet-400 group-hover:bg-white" />}
+                </button>
+              ))}
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
+    </div>
   );
 }
 
@@ -141,6 +216,7 @@ const HARDCODED_PLACES = [
 export default function TripResult({ 
   data, 
   onViewMyTrips,
+  onUpdateTripData,
   isEditMode,
   setIsEditMode
 }: TripResultProps) {
@@ -151,9 +227,20 @@ export default function TripResult({
   const [pendingAction, setPendingAction] = useState<'save' | null>(null);
   const [loginSuccessMessage, setLoginSuccessMessage] = useState<string | null>(null);
   const [isSaved, setIsSaved] = useState(false);
+  const [localDayplan, setLocalDayplan] = useState<DayPlan[]>(data?.dayPlan || []);
 
   const dayRefs = useRef<{ [key: number]: HTMLButtonElement | null }>({});
   const prevDay = useRef(activeDay);
+
+  // Navigation Blocker Logic
+  const blocker = useBlocker(
+    ({ currentLocation, nextLocation }) =>
+      isEditMode && currentLocation.pathname !== nextLocation.pathname
+  );
+
+  // If navigation is blocked, we show this beautiful modal
+  const showBlockerModal = blocker.state === "blocked";
+
 
   useEffect(() => {
     if (prevDay.current !== activeDay) {
@@ -164,6 +251,70 @@ export default function TripResult({
       prevDay.current = activeDay;
     }
   }, [activeDay]);
+
+  useEffect(() => {
+    if(data?.dayPlan){
+      setLocalDayplan(data.dayPlan);
+    }
+  },[data]);
+
+  useEffect(() => {
+  const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+    if (isEditMode) {
+      e.preventDefault();
+      e.returnValue = ""; // Standard way to trigger the browser warning
+    }
+  };
+
+  window.addEventListener("beforeunload", handleBeforeUnload);
+  return () => window.removeEventListener("beforeunload", handleBeforeUnload);
+}, [isEditMode]);
+
+
+  const handleUpdateActivity  = (dayNumber: number,activityIndex: number, updatedActivity: any) => {
+    const updatedLocalDayplan = localDayplan.map(dp => {
+      if(dp.day === dayNumber){
+        const newActivities = [...dp.activities];
+        newActivities[activityIndex] = updatedActivity;
+        return {...dp,activities : newActivities}
+      }
+      return dp;
+    })
+    setLocalDayplan(updatedLocalDayplan);
+  };
+
+  const handleDeleteActivity = (dayNumber: number, activityIndex: number) => {
+  const updatedPlan = localDayplan.map(dp => {
+    if (dp.day === dayNumber) {
+      return { ...dp, activities: dp.activities.filter((_, i) => i !== activityIndex) };
+    }
+    return dp;
+  });
+  setLocalDayplan(updatedPlan);
+  };
+
+  const handleAddActivity = (dayNumber: number) =>{
+    const updatePLan = localDayplan.map(dp => {
+      if(dp.day === dayNumber){
+        return{...dp,activities:[...dp.activities,{ title: "New Activity", time: "12:00", desc: "Add description here..." } ]}
+      }
+      return dp;
+    })
+    setLocalDayplan(updatePLan);
+  };
+
+  const handleReorderActivity = (dayNumber: number, oldIndex: number, newIndex: number) => {
+    const updatedPlan = localDayplan.map(dp => {
+      if (dp.day === dayNumber) {
+        return { 
+          ...dp, 
+          activities: arrayMove(dp.activities, oldIndex, newIndex) 
+        };
+      }
+      return dp;
+    });
+    setLocalDayplan(updatedPlan);
+  };
 
   async function handleContinueWithGoogle() {
     try {
@@ -240,7 +391,40 @@ export default function TripResult({
   const dayCount = Math.max(1, data.dayPlan?.length || Number(data?.days) || 1);
   const days = Array.from({ length: dayCount }, (_, i) => i + 1);
   const activeDayPlan = data.dayPlan?.find((item) => item.day === activeDay);
-  // Header animations and logic
+  const handleUpdateStats = (field: string, value: any) => {
+    if (!onUpdateTripData) return;
+    
+    const newData = { ...data };
+    
+    if (field === 'startDate' || field === 'endDate') {
+      const start = field === 'startDate' ? value : data.startDate;
+      const end = field === 'endDate' ? value : data.endDate;
+      
+      newData[field as keyof TripResultData] = value;
+      
+      if (start && end) {
+        const s = new Date(start);
+        const e = new Date(end);
+        const diff = e.getTime() - s.getTime();
+        const calculatedDays = Math.max(1, Math.ceil(diff / (1000 * 3600 * 24)) + 1);
+        newData.days = calculatedDays;
+      }
+    } else if (field === 'Destination') {
+      newData.Destination = value;
+    } else if (field === 'budget') {
+      newData.totalEstimate = { ...data.totalEstimate!, min: parseInt(value) || 0 };
+    } else if (field === 'travelers') {
+      newData.travelers = value;
+    } else if (field === 'type') {
+      newData.type = value;
+      // Safety net: Force travelers to 1 if Solo
+      if (value.toLowerCase() === 'solo') {
+        newData.travelers = 1;
+      }
+    }
+
+    onUpdateTripData(newData);
+  };
 
   return (
     <section id="trip-result" className={`py-16 md:py-24 bg-slate-50 overflow-hidden relative transition-colors duration-500 ${isEditMode ? 'bg-violet-50/30' : ''}`}>
@@ -265,6 +449,42 @@ export default function TripResult({
         />
       )}
 
+      {/* Premium Navigation Guard Modal */}
+      {showBlockerModal && (
+        <div className="fixed inset-0 z-[200] flex items-center justify-center p-6 bg-slate-900/40 backdrop-blur-md animate-in fade-in duration-300">
+          <div className="bg-white rounded-[2.5rem] p-8 md:p-12 max-w-md w-full shadow-2xl border border-slate-100 relative overflow-hidden">
+             {/* Decorative Background */}
+             <div className="absolute -top-12 -right-12 w-32 h-32 bg-violet-50 rounded-full blur-2xl opacity-50" />
+             
+             <div className="relative z-10 text-center">
+                <div className="w-20 h-20 bg-violet-100 rounded-3xl flex items-center justify-center mx-auto mb-8 shadow-inner">
+                   <span className="text-4xl">⚠️</span>
+                </div>
+                
+                <h3 className="text-2xl md:text-3xl font-black text-slate-900 mb-4 tracking-tight">Unsaved Changes!</h3>
+                <p className="text-slate-500 font-medium leading-relaxed mb-10">
+                   You're currently in the <span className="text-violet-600 font-bold">Itinerary Studio</span>. Leaving now will discard all your recent edits.
+                </p>
+                
+                <div className="flex flex-col gap-3">
+                   <button 
+                     onClick={() => blocker.proceed?.()}
+                     className="w-full py-4 bg-slate-900 text-white rounded-2xl font-black text-sm uppercase tracking-widest hover:bg-slate-800 transition-all shadow-xl shadow-slate-900/10 active:scale-95"
+                   >
+                     Discard & Leave
+                   </button>
+                   <button 
+                     onClick={() => blocker.reset?.()}
+                     className="w-full py-4 bg-white text-slate-900 border-2 border-slate-100 rounded-2xl font-black text-sm uppercase tracking-widest hover:border-violet-200 hover:text-violet-600 transition-all active:scale-95"
+                   >
+                     Stay in Studio
+                   </button>
+                </div>
+             </div>
+          </div>
+        </div>
+      )}
+
       <div className="absolute top-0 left-0 w-full h-96 bg-gradient-to-b from-indigo-50 to-transparent -z-10" />
       <div className="absolute bottom-0 right-0 w-96 h-96 bg-violet-100/30 rounded-full blur-3xl -z-10" />
 
@@ -272,21 +492,40 @@ export default function TripResult({
         {/* Header */}
         <div className="flex flex-col md:flex-row justify-between items-start md:items-end mb-12 md:mb-16 gap-8">
           <div className="w-full md:w-auto">
+            <div className="flex items-center gap-3 mb-6 min-h-[40px]">
+              <span className="px-4 py-3 bg-violet-100 text-violet-700 rounded-full text-[9px] md:text-sm font-bold tracking-wide uppercase shadow-inner shadow-violet-200/50">
+                <AnimatePresence mode="wait">
+                  <GhostWriter 
+                    key={isEditMode ? 'studio' : 'ready'}
+                    text={isEditMode ? "✨ Studio: Refine your masterpiece..." : "Your adventure is ready"} 
+                  />
+                </AnimatePresence>
+              </span>
+              <TripTypeBadge 
+                tripType={data?.type} 
+                isEditMode={isEditMode}
+                onUpdate={(newType) => handleUpdateStats('type', newType)}
+              />
+            </div>
+            <div className='flex md:flex-col justify-between items-center'>
+              {isEditMode ? (
+                <input
+                  className="bg-transparent border-b border-violet-200 outline-none text-5xl md:text-8xl font-black text-slate-900 leading-none tracking-tight w-full"
+                  value={destination}
+                  onChange={(e) => handleUpdateStats('Destination', e.target.value)}
+                />
+              ) : (
+                <h2 className="text-5xl md:text-8xl font-black text-slate-900 leading-none tracking-tight">{destination}</h2>
+              )}
+            </div>
+          </div>
+          <div>
             {data?.id && (
               <EditModeToggle 
                 isActive={isEditMode} 
                 onToggle={() => setIsEditMode(!isEditMode)} 
               />
             )}
-            <div className="flex items-center gap-3 mb-6">
-              <span className="px-4 py-3 bg-violet-100 text-violet-700 rounded-full text-[9px] md:text-sm font-bold tracking-wide uppercase">
-                Your adventure is ready
-              </span>
-              <TripTypeBadge tripType={data?.type} />
-            </div>
-            <div className='flex md:flex-col justify-between items-center'>
-            <h2 className="text-5xl md:text-8xl font-black text-slate-900 leading-none tracking-tight">{destination}</h2>
-            </div>
           </div>
         </div>
 
@@ -297,6 +536,10 @@ export default function TripResult({
           travelers={`${data?.travelers ?? '—'} people`}
           days={dayCount}
           tripType={data?.type ?? '—'}
+          isEditMode={isEditMode}
+          onUpdate={handleUpdateStats}
+          startDate={data?.startDate}
+          endDate={data?.endDate}
         />
 
         {data.totalEstimate && (
@@ -433,7 +676,11 @@ export default function TripResult({
 
             <ItineraryDay 
               dayNumber={activeDay}
-              activities={activeDayPlan?.activities.length ? activeDayPlan.activities : HARDCODED_DAY_ACTIVITIES}
+              activities={localDayplan.find(dp => dp.day === activeDay)?.activities || []}
+              onUpdateActivity={(idx, updated) => handleUpdateActivity(activeDay, idx, updated)}
+              onDeleteActivity={(idx) => handleDeleteActivity(activeDay, idx)}
+              onAddActivity={() => handleAddActivity(activeDay)}
+              onReorder={(oldIdx, newIdx) => handleReorderActivity(activeDay, oldIdx, newIdx)}
               isEditMode={isEditMode}
               weather={data.weather?.[activeDay - 1]}
               date={data.startDate ? (() => {
@@ -605,7 +852,13 @@ export default function TripResult({
                   <span className="text-[10px] font-black text-violet-400 uppercase tracking-widest">Saved to cloud</span>
                 </div>
                 <button 
-                  onClick={() => setIsEditMode(false)}
+                  onClick={() => {
+                    setIsEditMode(false);
+                    // SAVE TO DB: If we have updated data, pass it back to the parent to save
+                    if (onUpdateTripData) {
+                      onUpdateTripData({ ...data, dayPlan: localDayplan });
+                    }
+                  }}
                   className="px-6 py-3 bg-white text-slate-900 rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-slate-100 transition-colors shadow-lg active:scale-95"
                 >
                   Finish Editing

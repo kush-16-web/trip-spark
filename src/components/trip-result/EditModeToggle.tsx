@@ -13,28 +13,29 @@ const EditModeToggle: React.FC<EditModeToggleProps> = ({ isActive, onToggle }) =
         className={`group relative flex items-center gap-3 px-6 py-3 rounded-2xl border transition-all duration-500 overflow-hidden ${
           isActive 
             ? 'bg-slate-900 border-slate-900 text-white shadow-2xl shadow-violet-500/20' 
-            : 'bg-white border-slate-200 text-slate-500 hover:border-violet-200 hover:text-violet-600'
+            : 'bg-white border-violet-100 text-slate-600 shadow-lg shadow-violet-500/5 hover:border-violet-300 hover:shadow-violet-500/10 hover:translate-y-[-1px]'
         }`}
       >
-        <div className={`w-2 h-2 rounded-full transition-all duration-500 ${
-          isActive ? 'bg-violet-400 scale-125 animate-pulse' : 'bg-slate-300 group-hover:bg-violet-400'
-        }`} />
-        <span className="text-xs font-black uppercase tracking-[0.2em]">
-          {isActive ? 'Studio Mode Active' : 'Enter Studio Mode'}
+        <div className="relative flex items-center justify-center">
+          <div className={`w-2 h-2 rounded-full transition-all duration-500 ${
+            isActive ? 'bg-violet-400 scale-125 animate-pulse' : 'bg-violet-300 group-hover:bg-violet-500'
+          }`} />
+          {!isActive && (
+            <div className="absolute w-full h-full rounded-full bg-violet-400 animate-ping opacity-40" />
+          )}
+        </div>
+        
+        <span className={`text-[10px] font-black uppercase tracking-[0.2em] transition-colors ${
+          isActive ? 'text-white' : 'text-slate-900 group-hover:text-violet-600'
+        }`}>
+          {isActive ? 'Studio Mode Active' : '✨ Enter Studio Mode'}
         </span>
         
-        {/* Shine effect animation logic - handled by CSS in Tailwind/Vanilla */}
-        {isActive && (
-          <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000" />
-        )}
+        {/* Subtle Shine effect for discoverability */}
+        <div className={`absolute inset-0 bg-gradient-to-r from-transparent ${isActive ? 'via-white/5' : 'via-violet-500/5'} to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000`} />
       </button>
       
-      {isActive && (
-        <div className="flex items-center gap-2 px-4 py-2 bg-violet-100/50 border border-violet-100 rounded-xl animate-in fade-in zoom-in duration-500">
-          <div className="w-1.5 h-1.5 rounded-full bg-violet-500 animate-pulse" />
-          <span className="text-[10px] font-black text-violet-600 uppercase tracking-widest">Designing</span>
-        </div>
-      )}
+      {/* Designing label removed */}
     </div>
   );
 };

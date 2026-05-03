@@ -14,38 +14,178 @@ interface TripStatsProps {
   travelers: string;
   days: number | string;
   tripType?: string;
+  isEditMode: boolean;
+  onUpdate: (field: string, value: any) => void;
+  startDate?: string;
+  endDate?: string;
 }
 
-const TripStats: React.FC<TripStatsProps> = ({ location, budget, travelers, days, tripType }) => {
-  // Logic to get the right GIF for the trip type
+const TripStats: React.FC<TripStatsProps> = ({ 
+  location, 
+  budget, 
+  travelers, 
+  days, 
+  tripType, 
+  isEditMode, 
+  onUpdate,
+  startDate,
+  endDate 
+}) => {
+  const [isTypeMenuOpen, setIsTypeMenuOpen] = React.useState(false);
+
+  const typeOptions = [
+    { label: 'Solo', icon: soloTravel },
+    { label: 'Couple', icon: Romantic },
+    { label: 'Family', icon: family },
+    { label: 'Friends', icon: friends },
+  ];
+
   const getTravelerIcon = () => {
     switch (tripType?.toLowerCase()) {
-      case 'solo': return soloTravel;
-      case 'family': return family;
-      case 'couple': return Romantic;
       case 'friends': return friends;
+      case 'family': return family;
+      case 'solo': return soloTravel;
+      case 'couple': return Romantic;
       default: return groupIcon;
     }
   };
 
-  const stats = [
-    { label: 'Destination', value: location, icon: compassIcon, color: 'bg-blue-50' },
-    { label: 'Budget', value: budget, icon: walletIcon, color: 'bg-emerald-50' },
-    { label: 'Travelers', value: travelers, icon: getTravelerIcon(), color: 'bg-violet-50' },
-    { label: 'Duration', value: `${days} Days`, icon: calender, color: 'bg-orange-50' },
-  ];
-
   return (
-    <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6 mb-12 md:mb-16">
-      {stats.map((stat, idx) => (
-        <div key={idx} className="bg-white p-6 rounded-[2rem] border border-slate-100 shadow-sm hover:shadow-md transition-shadow">
-          <div className={`w-14 h-14 ${stat.color} rounded-2xl flex items-center justify-center mb-4 shadow-inner overflow-hidden p-2`}>
-            <img src={stat.icon} alt={stat.label} className="w-full h-full object-contain" />
-          </div>
-          <p className="text-[10px] uppercase tracking-widest font-bold text-slate-400 mb-1">{stat.label}</p>
-          <p className="text-sm md:text-base font-black text-slate-900 truncate">{stat.value}</p>
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-16">
+      {/* 1. Journey Card (Destination) */}
+      <div className="bg-white p-8 rounded-[2.5rem] border border-slate-100 shadow-sm hover:shadow-md transition-all">
+        <div className="w-12 h-12 bg-blue-50 rounded-2xl flex items-center justify-center mb-6 shadow-inner">
+          <img src={compassIcon} className="w-8 h-8 object-contain" alt="" />
         </div>
-      ))}
+        <p className="text-[10px] uppercase tracking-widest font-black text-slate-400 mb-2">Destination</p>
+        {isEditMode ? (
+          <input
+            className="w-full bg-transparent border-b border-violet-200 outline-none font-black text-slate-900 text-lg"
+            value={location}
+            onChange={(e) => onUpdate('Destination', e.target.value)}
+          />
+        ) : (
+          <h4 className="text-xl font-black text-slate-900 truncate">{location}</h4>
+        )}
+      </div>
+
+      {/* 2. Timeline Card (Smart Dates) */}
+      <div className="bg-white p-8 rounded-[2.5rem] border border-slate-100 shadow-sm hover:shadow-md transition-all">
+        <div className="flex justify-between items-start mb-6">
+          <div className="w-12 h-12 bg-orange-50 rounded-2xl flex items-center justify-center shadow-inner">
+            <img src={calender} className="w-8 h-8 object-contain" alt="" />
+          </div>
+          <div className="px-3 py-1 bg-orange-100 text-orange-700 rounded-full text-[10px] font-black uppercase tracking-widest">
+            {days} Days
+          </div>
+        </div>
+        <p className="text-[10px] uppercase tracking-widest font-black text-slate-400 mb-2">Timeline</p>
+        {isEditMode ? (
+          <div className="flex flex-col gap-2">
+            <input
+              type="date"
+              className="bg-transparent text-xs font-bold text-slate-600 outline-none border-b border-orange-100"
+              value={startDate || ''}
+              onChange={(e) => onUpdate('startDate', e.target.value)}
+            />
+            <input
+              type="date"
+              className="bg-transparent text-xs font-bold text-slate-600 outline-none border-b border-orange-100"
+              value={endDate || ''}
+              onChange={(e) => onUpdate('endDate', e.target.value)}
+            />
+          </div>
+        ) : (
+          <div className="flex items-center gap-2 text-slate-900 font-black">
+            <span>{startDate ? new Date(startDate).toLocaleDateString(undefined, { month: 'short', day: 'numeric' }) : '—'}</span>
+            <span className="text-slate-300">→</span>
+            <span>{endDate ? new Date(endDate).toLocaleDateString(undefined, { month: 'short', day: 'numeric' }) : '—'}</span>
+          </div>
+        )}
+      </div>
+
+      {/* 3. Crew Card (Travelers & Type) */}
+      <div className="bg-white p-8 rounded-[2.5rem] border border-slate-100 shadow-sm hover:shadow-md transition-all">
+        <div className="relative mb-6">
+          {/* Interactive Icon / Dropdown Trigger */}
+          <button 
+            type="button"
+            disabled={!isEditMode}
+            onClick={() => setIsTypeMenuOpen(!isTypeMenuOpen)}
+            className={`w-12 h-12 rounded-2xl flex items-center justify-center shadow-inner transition-all ${isEditMode ? 'bg-violet-100 hover:scale-105 cursor-pointer ring-2 ring-violet-200 ring-offset-2' : 'bg-violet-50'}`}
+          >
+            <img src={getTravelerIcon()} className="w-8 h-8 object-contain" alt="" />
+          </button>
+
+          {/* Floating Dropdown Menu */}
+          {isTypeMenuOpen && isEditMode && (
+            <>
+              <div className="fixed inset-0 z-10" onClick={() => setIsTypeMenuOpen(false)} />
+              <div className="absolute top-full left-0 mt-2 w-48 bg-white border border-slate-100 rounded-xl shadow-xl z-20 overflow-hidden animate-in fade-in slide-in-from-top-2 duration-200">
+                {typeOptions.map((opt) => (
+                  <button
+                    key={opt.label}
+                    type="button"
+                    onClick={() => {
+                      onUpdate('type', opt.label);
+                      setIsTypeMenuOpen(false);
+                    }}
+                    className="w-full text-left px-3 py-2.5 hover:bg-violet-50 transition-colors flex items-center justify-between group"
+                  >
+                    <div className="flex items-center gap-3">
+                      <img src={opt.icon} className="w-6 h-6 object-cover rounded-full bg-slate-100" alt="" />
+                      <span className="text-xs font-bold text-slate-600 group-hover:text-violet-700">{opt.label}</span>
+                    </div>
+                    {tripType?.toLowerCase() === opt.label.toLowerCase() && (
+                      <div className="w-1.5 h-1.5 rounded-full bg-violet-500" />
+                    )}
+                  </button>
+                ))}
+              </div>
+            </>
+          )}
+        </div>
+
+        <p className="text-[10px] uppercase tracking-widest font-black text-slate-400 mb-2">The Crew</p>
+        
+        {isEditMode ? (
+          <div className="flex flex-col gap-3">
+            <div className="flex items-center gap-3">
+              <input
+                type="number"
+                min="1"
+                disabled={tripType?.toLowerCase() === 'solo'}
+                className={`w-16 bg-transparent border-b border-violet-200 outline-none font-black text-slate-900 text-lg ${tripType?.toLowerCase() === 'solo' ? 'opacity-50 cursor-not-allowed' : ''}`}
+                value={tripType?.toLowerCase() === 'solo' ? 1 : travelers.split(' ')[0]}
+                onChange={(e) => onUpdate('travelers', e.target.value)}
+              />
+              <span className="text-xs font-bold text-slate-400">People</span>
+            </div>
+          </div>
+        ) : (
+          <div className="flex flex-col">
+            <h4 className="text-xl font-black text-slate-900">{travelers}</h4>
+            <span className="text-[10px] font-bold text-violet-500 uppercase tracking-wider">{tripType}</span>
+          </div>
+        )}
+      </div>
+
+      {/* 4. Budget Card (Financials) */}
+      <div className="bg-white p-8 rounded-[2.5rem] border border-slate-100 shadow-sm hover:shadow-md transition-all">
+        <div className="w-12 h-12 bg-emerald-50 rounded-2xl flex items-center justify-center mb-6 shadow-inner">
+          <img src={walletIcon} className="w-8 h-8 object-contain" alt="" />
+        </div>
+        <p className="text-[10px] uppercase tracking-widest font-black text-slate-400 mb-2">Budget</p>
+        {isEditMode ? (
+          <input
+            className="w-full bg-transparent border-b border-violet-200 outline-none font-black text-slate-900 text-lg"
+            value={budget}
+            onChange={(e) => onUpdate('budget', e.target.value)}
+          />
+        ) : (
+          <h4 className="text-xl font-black text-slate-900 truncate">{budget}</h4>
+        )}
+      </div>
     </div>
   );
 };
