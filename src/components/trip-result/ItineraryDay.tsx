@@ -445,10 +445,62 @@ const ItineraryDay: React.FC<ItineraryDayProps> = ({
               </DndContext>
 
               {isEditMode && (
-                <button onClick={onAddActivity} className="w-full py-4 md:py-6 border-2 border-dashed border-slate-200 rounded-2xl md:rounded-[2rem] text-slate-400 font-bold hover:border-violet-300 hover:text-violet-500 hover:bg-violet-50/50 transition-all flex items-center justify-center gap-2 mt-6 md:mt-8 group text-sm md:text-base">
-                  <span className="text-lg md:text-xl group-hover:rotate-90 transition-transform">+</span>
-                  Add Activity
-                </button>
+                <div className="space-y-4 mt-8">
+                  <button onClick={onAddActivity} className="w-full py-4 md:py-6 border-2 border-dashed border-slate-200 rounded-2xl md:rounded-[2rem] text-slate-400 font-bold hover:border-violet-300 hover:text-violet-500 hover:bg-violet-50/50 transition-all flex items-center justify-center gap-2 group text-sm md:text-base">
+                    <span className="text-lg md:text-xl group-hover:rotate-90 transition-transform">+</span>
+                    Add Activity Manually
+                  </button>
+
+                  {showAIInput ? (
+                    <div className="animate-in fade-in slide-in-from-bottom-2 duration-300">
+                      <div className="relative group">
+                        <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                          <svg className="h-5 w-5 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                          </svg>
+                        </div>
+                        <input 
+                          type="text" 
+                          placeholder="What should we add? E.g., A jazz bar for the evening..."
+                          className="w-full pl-12 pr-[100px] py-4 bg-slate-50 border border-slate-200 focus:border-slate-900 rounded-2xl outline-none font-medium text-slate-700 transition-all shadow-sm focus:shadow-md"
+                          value={aiPrompt}
+                          onChange={(e) => setAiPrompt(e.target.value)}
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter' && aiPrompt.trim()) {
+                              onGenerateDayAI?.(aiPrompt);
+                              setShowAIInput(false);
+                            }
+                          }}
+                          autoFocus
+                        />
+                        <button 
+                          onClick={() => {
+                            if (aiPrompt.trim()) {
+                              onGenerateDayAI?.(aiPrompt);
+                              setShowAIInput(false);
+                            }
+                          }}
+                          className="absolute right-2 top-2 bottom-2 px-4 bg-slate-900 text-white text-xs font-bold rounded-xl hover:bg-slate-800 transition-colors"
+                        >
+                          Fill
+                        </button>
+                      </div>
+                      <button onClick={() => setShowAIInput(false)} className="mt-2 text-[10px] text-slate-400 font-bold uppercase hover:text-slate-600 transition-colors">
+                        Cancel
+                      </button>
+                    </div>
+                  ) : (
+                    <button 
+                      onClick={() => setShowAIInput(true)}
+                      className="w-full px-8 py-3.5 bg-slate-900 text-white font-bold rounded-full hover:bg-slate-800 transition-all shadow-lg shadow-slate-900/20 flex items-center justify-center gap-2 group"
+                    >
+                      <svg className="w-4 h-4 opacity-70 group-hover:animate-pulse" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                      </svg>
+                      Auto-fill with AI
+                    </button>
+                  )}
+                </div>
               )}
             </>
           )}

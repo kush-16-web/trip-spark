@@ -21,6 +21,7 @@ import family from '../assets/Family-travel.gif';
 import soloTravel from '../assets/solo-traveller.gif';
 import Romantic from '../assets/dating.gif';
 import { arrayMove } from '@dnd-kit/sortable';
+import magicWandIcon from '../assets/magic-wand.gif';
 import TripStats from './trip-result/TripStats';
 import HotelSection from './trip-result/HotelSection';
 import MustVisitSection from './trip-result/MustVisitSection';
@@ -102,20 +103,30 @@ function TripTypeBadge({
   isEditMode: boolean 
 }) {
   const [isOpen, setIsOpen] = useState(false);
-  const options = ['Solo', 'Family', 'Friends', 'Couple'];
+  const options = [
+    { type: 'Solo', icon: soloTravel },
+    { type: 'Family', icon: family },
+    { type: 'Friends', icon: friends },
+    { type: 'Couple', icon: Romantic },
+  ];
+
+  const selectedOption = options.find(opt => opt.type.toLocaleLowerCase() === tripType?.toLocaleLowerCase()) || options[0];
 
   return (
     <div className="relative">
       <button
         disabled={!isEditMode}
         onClick={() => setIsOpen(!isOpen)}
-        className={`px-4 py-1.5 transition-all duration-500 rounded-full text-xs md:text-sm font-bold uppercase flex items-center gap-2 ${
+        className={`px-4 py-1.5 transition-all duration-500 rounded-full text-xs md:text-sm font-bold uppercase flex items-center gap-3 ${
           isEditMode 
-            ? 'bg-violet-600 text-white shadow-lg shadow-violet-200 cursor-pointer hover:scale-105 active:scale-95' 
+            ? 'bg-slate-900 text-white shadow-lg shadow-violet-200 cursor-pointer hover:scale-105 active:scale-95' 
             : 'bg-slate-900 text-white border border-slate-800'
         }`}
       >
-        {tripType || 'Select Type'}
+        <div className="w-6 h-6 bg-black rounded-full flex items-center justify-center overflow-hidden border border-white/10 shrink-0">
+          <img src={selectedOption.icon} className="w-4 h-4 md:w-8 md:h-8 rounded-full object-contain" alt="" />
+        </div>
+        <span className="text-xs md:text-sm">{tripType || 'Select Type'}</span>
         {isEditMode && (
           <svg className={`w-3 h-3 transition-transform duration-300 ${isOpen ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M19 9l-7 7-7-7" />
@@ -135,15 +146,17 @@ function TripTypeBadge({
             >
               {options.map((opt) => (
                 <button
-                  key={opt}
+                  key={opt.type}
                   onClick={() => {
-                    onUpdate?.(opt);
+                    onUpdate?.(opt.type);
                     setIsOpen(false);
                   }}
-                  className="w-full text-left px-4 py-3 rounded-xl text-xs font-black text-slate-600 hover:bg-violet-600 hover:text-white transition-all flex items-center justify-between group"
+                  className="w-full flex items-center gap-3 px-4 py-3 hover:bg-slate-50 rounded-xl transition-all group"
                 >
-                  {opt}
-                  {tripType === opt && <div className="w-1.5 h-1.5 rounded-full bg-violet-400 group-hover:bg-white" />}
+                  <div className="w-8 h-8 bg-slate-100 group-hover:bg-black rounded-xl flex items-center justify-center transition-colors shrink-0">
+                    <img src={opt.icon} className="w-5 h-5 object-contain" alt="" />
+                  </div>
+                  <span className="text-[10px] font-black text-slate-900 uppercase tracking-widest">{opt.type}</span>
                 </button>
               ))}
             </motion.div>
@@ -231,6 +244,8 @@ export default function TripResult({
   const [isSaved, setIsSaved] = useState(false);
   const [localDayplan, setLocalDayplan] = useState<DayPlan[]>(data?.dayPlan || []);
   const [isGeneratingDay, setIsGeneratingDay] = useState(false);
+  const [isGeneratingBudget, setIsGeneratingBudget] = useState(false);
+  const [isGeneratingSummary, setIsGeneratingSummary] = useState(false);
 
   const dayRefs = useRef<{ [key: number]: HTMLButtonElement | null }>({});
   const prevDay = useRef(activeDay);
@@ -259,7 +274,7 @@ export default function TripResult({
     if(data?.dayPlan){
       setLocalDayplan(data.dayPlan);
     }
-  },[data]);
+  },[data?.id]);
 
   useEffect(() => {
   const handleBeforeUnload = (e: BeforeUnloadEvent) => {
@@ -328,20 +343,21 @@ export default function TripResult({
     try {
       setIsGeneratingDay(true);
       
-      // 1. Gather all existing activities so the AI doesn't repeat them
-      const existingActivities = localDayplan.flatMap(dp => dp.activities.map(a => a.title));
+      // 1. Get the activities ALREADY on this specific day
+      const currentDayActivities = localDayplan.find(dp => dp.day === dayNumber)?.activities || [];
+      const otherDaysActivities = localDayplan.flatMap(dp => dp.day !== dayNumber ? dp.activities.map(a => a.title) : []);
       
-      // 2. Call your new backend endpoint
-      // Adjust the URL if your backend runs on a different port!
+      // 2. Call your backend endpoint
       const response = await fetch('http://localhost:8080/api/trip/generate-day', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          destination: data?.Destination || destination,
+          destination: data?.Destination,
           type: data?.type || 'Solo',
           daynumber: dayNumber,
           customPrompt,
-          existingActivities
+          existingActivities: otherDaysActivities.join(", "),
+          currentDaySchedule: currentDayActivities
         })
       });
 
@@ -349,17 +365,19 @@ export default function TripResult({
       
       const result = await response.json();
       
-      // 3. Push the new activities directly into the frontend state!
+      // 3. APPEND the new activities directly into the frontend state!
       setLocalDayplan(prev => {
         const existingDay = prev.find(dp => dp.day === dayNumber);
         if (!existingDay) {
-          // If the day tab was completely empty, create it
           return [...prev, { day: dayNumber, activities: result.activities }];
         }
-        // If the day existed, replace the activities with the new AI ones
         return prev.map(dp => {
           if (dp.day === dayNumber) {
-            return { ...dp, activities: result.activities };
+            // Logic: If the day was empty, use new activities. If not, append them.
+            return { 
+              ...dp, 
+              activities: [...dp.activities, ...result.activities] 
+            };
           }
           return dp;
         });
@@ -375,7 +393,7 @@ export default function TripResult({
 
     const handleFetchNewWeather = async (newStartDate: string, newEndDate: string) => {
     try {
-      const url = `http://localhost:8080/api/trip/weather?destination=${data.Destination}&startDate=${newStartDate}&endDate=${newEndDate}`;
+      const url = `http://localhost:8080/api/trip/weather/${encodeURIComponent(data.Destination || '')}/${newStartDate}/${newEndDate}`;
       const response = await fetch(url);
       const result = await response.json();
       
@@ -388,6 +406,71 @@ export default function TripResult({
     }
   };
 
+  const handleGenerateBudget = async () => {
+    setIsGeneratingBudget(true);
+    try {
+      const response = await fetch('http://localhost:8080/api/trip/generate-budget',{
+        method:'POST',
+        headers:{
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          destination: data.Destination,
+          type: data.type,
+          days: data.days,
+          budgetRange: data.budgetRange,
+          travelers: data.travelers,
+          currentTotalEstimate: data.totalEstimate,
+          currentBudgetEstimate: data.budgetEstimate,      
+        })
+      })
+      const result = await response.json();
+      if(result.ok && result.budget){
+        if(onUpdateTripData){
+          onUpdateTripData({
+            totalEstimate:result.budget.totalEstimate,
+            budgetEstimate:result.budget.budgetEstimate,
+          })
+        }
+      }
+    } catch (error) {
+      console.error("Error generating budget:", error);
+      alert("Failed to generate budget. Please try again.");
+    } finally{
+      setIsGeneratingBudget(false);
+    }
+  }
+
+  const handleGenerateSummary = async () => {
+    if(!data.Destination) return;
+    setIsGeneratingSummary(true);
+    try {
+      const response = await fetch('http://localhost:8080/api/trip/generate-summary',
+        {method:'POST',
+          headers:{
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            destination: data.Destination,
+            days: dayCount,
+            type: data.type,
+            travelers:data.travelers,
+          }) 
+        });
+        const result = await response.json();
+        if(result.ok){
+          onUpdateTripData({
+            summary:result.summary.summary,
+            summaryBullets:result.summary.summaryBullets,
+          })
+        }
+    } catch (error) {
+      console.error("Error generating summary:", error);
+      alert("Failed to generate summary. Please try again.");
+    } finally{
+      setIsGeneratingSummary(false);
+    }
+  }
 
   async function handleContinueWithGoogle() {
     try {
@@ -456,9 +539,9 @@ export default function TripResult({
   const perPersonMax = Math.round((data.totalEstimate?.max ?? 0) / travelerCount);
   const budgetDisplay =
     data.budgetRange
-      ? `₹${data.budgetRange.min.toLocaleString()} - ₹${data.budgetRange.max.toLocaleString()}`
+      ? `₹${data.budgetRange.min?.toLocaleString() ?? '0'} - ₹${data.budgetRange.max?.toLocaleString() ?? '0'}`
       : data.totalEstimate
-        ? `${data.totalEstimate.currency}${data.totalEstimate.min.toLocaleString()} - ${data.totalEstimate.currency}${data.totalEstimate.max.toLocaleString()}`
+        ? `${data.totalEstimate.currency}${data.totalEstimate.min?.toLocaleString() ?? '0'} - ${data.totalEstimate.currency}${data.totalEstimate.max?.toLocaleString() ?? '0'}`
         : '—';
   const destination = data.Destination?.trim() || 'your destination';
   const dayCount = Math.max(1, Number(data?.days) || data.dayPlan?.length || 1);
@@ -474,18 +557,23 @@ export default function TripResult({
       const end = field === 'endDate' ? value : data.endDate;
       
       newData[field as keyof TripResultData] = value;
-      
+
       if (start && end) {
         const s = new Date(start);
         const e = new Date(end);
         const diff = e.getTime() - s.getTime();
         const calculatedDays = Math.max(1, Math.ceil(diff / (1000 * 3600 * 24)) + 1);
         newData.days = calculatedDays;
+        handleFetchNewWeather(start, end);
       }
     } else if (field === 'Destination') {
       newData.Destination = value;
-    } else if (field === 'budget') {
+    } else if (field === 'budgetMin') {
       newData.totalEstimate = { ...data.totalEstimate!, min: parseInt(value) || 0 };
+    } else if (field === 'budgetMax') {
+      newData.totalEstimate = { ...data.totalEstimate!, max: parseInt(value) || 0 };
+    } else if (field === 'currency') {
+      newData.totalEstimate = { ...data.totalEstimate!, currency: value };
     } else if (field === 'travelers') {
       newData.travelers = value;
     } else if (field === 'type') {
@@ -494,10 +582,6 @@ export default function TripResult({
       if (value.toLowerCase() === 'solo') {
         newData.travelers = 1;
       }
-    }
-
-    if(field === 'dates'){
-      handleFetchNewWeather(value.startDate, value.endDate);
     }
 
     onUpdateTripData(newData);
@@ -567,8 +651,8 @@ export default function TripResult({
 
       <div className="max-w-6xl mx-auto px-6 relative z-10">
         {/* Header */}
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-end mb-12 md:mb-16 gap-8">
-          <div className="w-full md:w-auto">
+        <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center mb-12 md:mb-16 gap-8 relative z-10">
+          <div className="w-full lg:flex-1 lg:max-w-4xl">
             <div className="flex items-center gap-3 mb-6 min-h-[40px]">
               <span className="px-4 py-3 bg-violet-100 text-violet-700 rounded-full text-[9px] md:text-sm font-bold tracking-wide uppercase shadow-inner shadow-violet-200/50">
                 <AnimatePresence mode="wait">
@@ -587,16 +671,17 @@ export default function TripResult({
             <div className='flex md:flex-col justify-between items-center'>
               {isEditMode ? (
                 <input
-                  className="bg-transparent border-b border-violet-200 outline-none text-5xl md:text-8xl font-black text-slate-900 leading-none tracking-tight w-full"
+                  className="bg-transparent border-b border-violet-200 outline-none text-5xl md:text-8xl font-black text-slate-900 leading-none tracking-tight w-full max-w-full md:max-w-[90%]"
                   value={destination}
                   onChange={(e) => handleUpdateStats('Destination', e.target.value)}
+                  autoFocus
                 />
               ) : (
                 <h2 className="text-5xl md:text-8xl font-black text-slate-900 leading-none tracking-tight">{destination}</h2>
               )}
             </div>
           </div>
-          <div>
+          <div className="shrink-0">
             {data?.id && (
               <EditModeToggle 
                 isActive={isEditMode} 
@@ -617,6 +702,9 @@ export default function TripResult({
           onUpdate={handleUpdateStats}
           startDate={data?.startDate}
           endDate={data?.endDate}
+          minBudget={data?.totalEstimate?.min ?? 0}
+          maxBudget={data?.totalEstimate?.max ?? 0}
+          currency={data?.totalEstimate?.currency ?? '₹'}
         />
 
         {data.totalEstimate && (
@@ -634,7 +722,7 @@ export default function TripResult({
                 <div>
                   <p className="text-2xl md:text-6xl font-black items-center tracking-tighter mb-4">
                     <span className="text-violet-400 text-xl md:text-4xl mr-2">{data.totalEstimate.currency}</span>
-                    {data.totalEstimate.min.toLocaleString()} <span className="text-slate-500 mx-2 text-lg md:text-5xl">—</span> {data.totalEstimate.max.toLocaleString()}
+                    {data.totalEstimate.min?.toLocaleString() ?? '0'} <span className="text-slate-500 mx-2 text-lg md:text-5xl">—</span> {data.totalEstimate.max?.toLocaleString() ?? '0'}
                   </p>
                   <p className="text-sm text-slate-400 max-w-xl leading-relaxed">{data.totalEstimate.note}</p>
                 </div>
@@ -653,51 +741,87 @@ export default function TripResult({
         )}
 
         {/* 1. Trip summary */}
-        <section className="mb-24 md:mb-40" aria-labelledby="trip-summary-heading">
-          <div className="flex flex-col lg:flex-row gap-12 lg:gap-24 items-start">
-            <div className="lg:w-1/3 sticky top-24">
-              <div className="inline-flex items-center gap-3 px-4 py-2 bg-slate-900 rounded-full mb-8">
-                <div className="w-2 h-2 rounded-full bg-violet-400 animate-pulse" />
-                <span className="text-[10px] text-white font-black tracking-[0.2em] uppercase">Overview</span>
-              </div>
-              <h3 id="trip-summary-heading" className="text-4xl md:text-6xl font-black text-slate-900  tracking-tighter mb-6">
-                The Experience
-              </h3>
-              <div className="w-20 h-2 bg-violet-600 rounded-full" />
-            </div>
+<section className="mb-24 md:mb-48 px-4 md:px-0" aria-labelledby="trip-summary-heading">
+  <div className="flex flex-col lg:flex-row gap-16 lg:gap-24 items-start">
+    {/* Left Column: Title & Controls */}
+    <div className="lg:w-1/3 lg:sticky lg:top-32 w-full">
+      <div className="flex flex-row items-center justify-between">
+        <div className="inline-flex items-center gap-3 px-4 py-2 bg-slate-900 rounded-full mb-8 shadow-xl shadow-slate-900/10">
+          <div className="w-2 h-2 rounded-full bg-violet-400 animate-pulse" />
+          <span className="text-[10px] text-white font-black tracking-[0.3em] uppercase">Overview</span>
+        </div>
+      {isEditMode && (
+        <button
+          onClick={handleGenerateSummary}
+          disabled={isGeneratingSummary}
+          className="flex flex-col items-center gap-2 group"
+        >
+          <div className="p-1 bg-white shadow-2xl shadow-violet-100 border border-slate-100 rounded-[2rem] group-hover:scale-110 active:scale-95 transition-all relative overflow-hidden">
+            <div className="absolute inset-0 bg-violet-500/0 group-hover:bg-violet-500/5 transition-colors" />
+            <img src={magicWandIcon} className="md:w-10 md:h-10 w-8 h-8 relative z-10 group-hover:rotate-12 transition-transform" />
+          </div>
+          <span className="text-[10px] font-black uppercase tracking-widest text-slate-400 group-hover:text-violet-600 transition-colors">Refine AI</span>
+        </button>
+      )}
+    </div>    
+      <div className="flex flex-row lg:flex-col items-center lg:items-start justify-between lg:justify-start gap-6 mb-8">
+        <div>
+          <h3 id="trip-summary-heading" className="text-5xl md:text-7xl font-black text-slate-900 tracking-tighter leading-[0.9]">
+            The <br className="hidden lg:block" /> Experience
+          </h3>
+          <div className="w-24 h-2 bg-violet-600 rounded-full mt-6" />
+        </div>
+
+      </div>
+    </div>
+    
+    {/* Right Column: The Card */}
+    <div className="lg:w-2/3 relative w-full">
+       {/* Premium AI Loading Overlay */}
+       {isGeneratingSummary && (
+        <div className="absolute inset-0 bg-white/60 backdrop-blur-2xl z-50 flex flex-col items-center justify-center animate-in fade-in zoom-in-95 duration-500 rounded-[3rem] md:rounded-[4rem]">
+          <img src={magicWandIcon} className="w-24 h-24 mb-4" />
+          <p className="text-slate-900 font-black text-xs uppercase tracking-[0.4em] animate-pulse">Rewriting the story...</p>
+        </div>
+      )}
+
+      <div className="relative group">
+        {/* Decorative background glow */}
+        <div className="absolute -top-20 -right-20 w-64 h-64 bg-violet-200/40 rounded-full blur-[100px] opacity-50 group-hover:opacity-80 transition-opacity" />
+        
+        <div className="bg-white/60 backdrop-blur-xl border border-white p-8 md:p-16 rounded-[3rem] md:rounded-[4rem] shadow-[0_32px_64px_-16px_rgba(0,0,0,0.08)] relative overflow-hidden">
+          {/* Huge background quote mark */}
+          <span className="absolute -top-10 -left-6 text-[15rem] font-serif text-slate-100/50 select-none pointer-events-none">“</span>
+          
+          <div className="relative z-10">
+            <p className="text-lg md:text-4xl text-slate-900 font-bold leading-[1.1] tracking-tight mb-16">
+              <AnimatePresence mode="wait">
+                <GhostWriter 
+                  key={data.summary}
+                  text={data.summary ?? `A curated journey through ${destination}.`} 
+                />
+              </AnimatePresence>
+            </p>
             
-            <div className="lg:w-2/3">
-              <div className="relative">
-                {/* Decorative background element */}
-                <div className="absolute -top-10 -left-10 w-32 h-32 bg-violet-100 rounded-full blur-3xl opacity-50 -z-10" />
-                
-                <div className="bg-white/40 backdrop-blur-md border border-white/60 p-8 md:p-12 rounded-[3rem] shadow-xl shadow-slate-200/50 relative overflow-hidden group">
-                  <img src={tripIcon} className="absolute -right-4 -top-4 w-24 h-24 opacity-10 group-hover:opacity-20 transition-opacity" alt="" />
-                  
-                  <p className="text-lg md:text-3xl text-slate-900 font-bold leading-snug mb-16 relative">
-                    <span className="text-6xl text-violet-200 absolute -top-8 -left-6 font-serif">“</span>
-                    {data.summary ?? `An curated journey through ${destination}.`}
-                  </p>
-                  
-                  <div className="grid sm:grid-cols-2 gap-8 md:gap-12 relative">
-                    {(data.summaryBullets ?? []).map((item, idx) => (
-                      <div key={idx} className="group/item">
-                        <div className="flex items-start gap-5">
-                          <div className="flex-shrink-0 w-10 h-10 rounded-2xl bg-slate-50 border border-slate-100 flex items-center justify-center group-hover/item:bg-violet-600 group-hover/item:border-violet-600 transition-all duration-300">
-                            <span className="text-slate-400 font-black text-sm group-hover/item:text-white transition-colors">0{idx + 1}</span>
-                          </div>
-                          <p className="text-slate-600 text-base md:text-lg leading-relaxed font-medium pt-1">
-                            {item}
-                          </p>
-                        </div>
-                      </div>
-                    ))}
+            <div className="grid sm:grid-cols-2 gap-x-12 gap-y-10">
+              {(data.summaryBullets ?? []).map((item, idx) => (
+                <div key={idx} className="group/item flex items-start gap-6">
+                  <div className="flex-shrink-0 w-12 h-12 rounded-2xl bg-slate-50 border border-slate-100 flex items-center justify-center group-hover/item:bg-slate-900 group-hover/item:border-slate-900 transition-all duration-300 shadow-sm">
+                    <span className="text-slate-400 font-black text-sm group-hover/item:text-white">0{idx + 1}</span>
                   </div>
+                  <p className="text-slate-600 text-lg leading-relaxed font-medium pt-1">
+                    {item}
+                  </p>
                 </div>
-              </div>
+              ))}
             </div>
           </div>
-        </section>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
 
         {/* 2. Day-wise plan */}
         <section className="mb-24 md:mb-32" aria-labelledby="day-plan-heading">
@@ -779,9 +903,35 @@ export default function TripResult({
 
         {/* 3. Budget estimate */}
         <section className="mb-24 md:mb-32" aria-labelledby="budget-heading">
-          <SectionHeading id="budget-heading" eyebrow="Investment" title="Budget breakdown" icon={walletIcon} />
-          
-          <div className="grid lg:grid-cols-3 gap-8">
+                        <div className="flex flex-col sm:flex-row sm:items-center justify-start md:justify-between gap-4 mb-8 md:mb-12">
+            <div className="mb-0">
+              <SectionHeading id="budget-heading" eyebrow="Investment" title="Budget breakdown" icon={walletIcon} />
+            </div>
+            
+            {isEditMode && (
+              <button 
+                onClick={handleGenerateBudget}
+                disabled={isGeneratingBudget}
+                className="w-fit md:w-full px-4 py-2 bg-black text-white font-bold rounded-xl hover:bg-slate-800 transition-colors flex items-center gap-2 text-sm disabled:opacity-50"
+              >
+                {isGeneratingBudget ? (
+                  <> <span className="animate-spin">⏳</span> Updating... </>
+                ) : (
+                  <> ✨ Auto-update </>
+                )}
+              </button>
+            )}
+          </div>
+
+          <div className="grid lg:grid-cols-3 gap-8 relative overflow-hidden">
+            {isGeneratingBudget && (
+    <div className="absolute inset-0 bg-white/60 backdrop-blur-md z-20 flex flex-col items-center justify-center animate-in fade-in duration-500 rounded-[3rem]">
+       <div className="w-12 h-12 border-4 border-slate-900 border-t-violet-500 rounded-full animate-spin mb-4" />
+       <p className="text-slate-900 font-black text-xs uppercase tracking-widest animate-pulse">
+         Syncing with AI...
+       </p>
+    </div>
+  )}
             <div className="lg:col-span-1">
               <div className="h-full bg-slate-900 rounded-[3rem] p-10 flex flex-col justify-between relative overflow-hidden group">
                 <div className="absolute -bottom-10 -right-10 w-40 h-40 bg-violet-500/20 rounded-full blur-3xl group-hover:scale-150 transition-transform duration-1000" />
@@ -803,7 +953,7 @@ export default function TripResult({
                       <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-2">Grand Total</p>
                       <p className="text-3xl font-black text-white tracking-tighter">
                         <span className="text-violet-400 text-xl mr-1">{data.totalEstimate.currency}</span>
-                        {data.totalEstimate.min.toLocaleString()} — {data.totalEstimate.max.toLocaleString()}
+                        {data.totalEstimate.min?.toLocaleString() ?? '0'} — {data.totalEstimate.max?.toLocaleString() ?? '0'}
                       </p>
                     </>
                   )}
@@ -843,72 +993,74 @@ export default function TripResult({
         </section>
 
         {/* Footer actions - Redesigned for Premium Feel */}
-        <div className="mt-20 md:mt-32 pb-20 max-w-4xl mx-auto px-6">
-          <div className="relative p-8 md:p-12 rounded-[3rem] bg-white border border-slate-100 shadow-2xl shadow-slate-200/50 overflow-hidden text-center">
-            {/* Background Accent */}
-            <div className="absolute -top-24 -right-24 w-64 h-64 bg-violet-50 rounded-full blur-3xl opacity-50" />
-            <div className="absolute -bottom-24 -left-24 w-64 h-64 bg-blue-50 rounded-full blur-3xl opacity-50" />
+        {!isEditMode && (
+          <div className="mt-20 md:mt-32 pb-20 max-w-4xl mx-auto px-6">
+            <div className="relative p-8 md:p-12 rounded-[3rem] bg-white border border-slate-100 shadow-2xl shadow-slate-200/50 overflow-hidden text-center">
+              {/* Background Accent */}
+              <div className="absolute -top-24 -right-24 w-64 h-64 bg-violet-50 rounded-full blur-3xl opacity-50" />
+              <div className="absolute -bottom-24 -left-24 w-64 h-64 bg-blue-50 rounded-full blur-3xl opacity-50" />
 
-            <div className="relative z-10">
-              <p className="text-violet-500 font-black uppercase tracking-[0.3em] text-[8px] sm:text-[10px] md:text-xs mb-4">
-                Your next story starts here
-              </p>
-              <h3 className="text-xl sm:text-2xl md:text-4xl font-black text-slate-900 mb-8">
-                Ready for the adventure?
-              </h3>
-              
-              <div className="flex flex-col items-center gap-6">
-                <div className="flex flex-col md:flex-row justify-center items-center gap-4 w-full">
-                  <button
-                    type="button"
-                    onClick={onClickSaveTrip}
-                    className={`w-full md:w-auto py-2.5 sm:px-10 sm:py-5 ${isSaved ? 'bg-white text-black border border-black' : 'bg-slate-900 hover:bg-slate-800 text-white'} rounded-2xl font-bold text-sm sm:text-lg hover:translate-y-[-2px] transition-all duration-300 shadow-xl shadow-slate-900/10 active:scale-95 flex items-center justify-center gap-2`}
-                  >
-                    {isSaved ? 'See trip!' : 'Save Trip'} <span className="text-xl">✈️</span>
-                  </button>
-                  
-                  <button
-                    type="button"
-                    onClick={() => {
-                      if (navigator.share) {
-                        navigator.share({
-                          title: `Trip to ${data.Destination}`,
-                          text: `Check out my itinerary for ${data.Destination}!`,
-                          url: `${window.location.origin}/share/${data.shareId}`,
-                        });
-                      } else {
-                        navigator.clipboard.writeText(`${window.location.origin}/share/${data.shareId}`);
-                        alert('Link copied to clipboard!');
-                      }
-                    }}
-                    className="w-full md:w-auto py-2.5 sm:px-6 sm:py-5 bg-white text-slate-900 border-2 border-slate-200 rounded-2xl font-bold text-sm sm:text-lg hover:border-violet-400 hover:text-violet-600 hover:translate-y-[-2px] transition-all duration-300 active:scale-95 flex items-center justify-center gap-2"
-                  >
-                    Share Itinerary
-                    <span className="text-xl">🔗</span>
-                  </button>
-                </div>
-
-                <div className="flex flex-wrap justify-center gap-3 mt-4">
-                  {onViewMyTrips && (
+              <div className="relative z-10">
+                <p className="text-violet-500 font-black uppercase tracking-[0.3em] text-[8px] sm:text-[10px] md:text-xs mb-4">
+                  Your next story starts here
+                </p>
+                <h3 className="text-xl sm:text-2xl md:text-4xl font-black text-slate-900 mb-8">
+                  Ready for the adventure?
+                </h3>
+                
+                <div className="flex flex-col items-center gap-6">
+                  <div className="flex flex-col md:flex-row justify-center items-center gap-4 w-full">
                     <button
                       type="button"
-                      onClick={onViewMyTrips}
-                      className="px-6 py-3 text-slate-500 font-bold text-sm hover:text-violet-600 bg-violet-50 rounded-xl transition-all"
+                      onClick={onClickSaveTrip}
+                      className={`w-full md:w-auto py-2.5 sm:px-10 sm:py-5 ${isSaved ? 'bg-white text-black border border-black' : 'bg-slate-900 hover:bg-slate-800 text-white'} rounded-2xl font-bold text-sm sm:text-lg hover:translate-y-[-2px] transition-all duration-300 shadow-xl shadow-slate-900/10 active:scale-95 flex items-center justify-center gap-2`}
                     >
-                      View all my trips
+                      {isSaved ? 'See trip!' : 'Save Trip'} <span className="text-xl">✈️</span>
                     </button>
-                  )}
-                  {loggedInUser?.email && (
-                    <div className="px-4 py-3 bg-slate-50 border border-slate-100 rounded-xl flex items-center gap-2">
-                      <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-                      <span className="text-xs text-slate-500 font-medium">Logged in as {loggedInUser.email}</span>
-                    </div>
-                  )}
+                    
+                    <button
+                      type="button"
+                      onClick={() => {
+                        if (navigator.share) {
+                          navigator.share({
+                            title: `Trip to ${data.Destination}`,
+                            text: `Check out my itinerary for ${data.Destination}!`,
+                            url: `${window.location.origin}/share/${data.shareId}`,
+                          });
+                        } else {
+                          navigator.clipboard.writeText(`${window.location.origin}/share/${data.shareId}`);
+                          alert('Link copied to clipboard!');
+                        }
+                      }}
+                      className="w-full md:w-auto py-2.5 sm:px-6 sm:py-5 bg-white text-slate-900 border-2 border-slate-200 rounded-2xl font-bold text-sm sm:text-lg hover:border-violet-400 hover:text-violet-600 hover:translate-y-[-2px] transition-all duration-300 active:scale-95 flex items-center justify-center gap-2"
+                    >
+                      Share Itinerary
+                      <span className="text-xl">🔗</span>
+                    </button>
+                  </div>
+
+                  <div className="flex flex-wrap justify-center gap-3 mt-4">
+                    {onViewMyTrips && (
+                      <button
+                        type="button"
+                        onClick={onViewMyTrips}
+                        className="px-6 py-3 text-slate-500 font-bold text-sm hover:text-violet-600 bg-violet-50 rounded-xl transition-all"
+                      >
+                        View all my trips
+                      </button>
+                    )}
+                    {loggedInUser?.email && (
+                      <div className="px-4 py-3 bg-slate-50 border border-slate-100 rounded-xl flex items-center gap-2">
+                        <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                        <span className="text-xs text-slate-500 font-medium">Logged in as {loggedInUser.email}</span>
+                      </div>
+                    )}
+                  </div>
                 </div>
               </div>
             </div>
           </div>
-        </div>
+        )}
 
         {/* Editor HUD - Premium Floating Controls */}
         {isEditMode && (

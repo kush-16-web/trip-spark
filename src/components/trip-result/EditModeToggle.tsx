@@ -34,7 +34,6 @@ const EditModeToggle: React.FC<EditModeToggleProps> = ({ isActive, onToggle }) =
         {/* Subtle Shine effect for discoverability */}
         <div className={`absolute inset-0 bg-gradient-to-r from-transparent ${isActive ? 'via-white/5' : 'via-violet-500/5'} to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000`} />
       </button>
-      
       {/* Designing label removed */}
     </div>
   );
