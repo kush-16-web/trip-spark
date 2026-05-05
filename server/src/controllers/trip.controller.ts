@@ -500,3 +500,14 @@ export const generateSummaryOnly = async (req: Request, res: Response) => {
     });
   }
 }
+
+export const getExchangeRate = async (req: Request, res: Response) => {
+  try {
+    const { base, target } = req.params;
+    const rate = await exchangeRates(base as string, target as string);
+    return res.status(200).json({ ok: true, rate });
+  } catch (error) {
+    console.error('[trip.controller] Failed to get exchange rate:', error);
+    return res.status(500).json({ ok: false, message: 'Failed to fetch exchange rate' });
+  }
+}

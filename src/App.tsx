@@ -35,9 +35,34 @@ function App() {
   const [userEmail, setUserEmail] = useState<string | undefined>(undefined);
   const [userPicture, setUserPicture] = useState<string | undefined>(undefined);
   const [isEditMode, setIsEditMode] = useState(false);
+  const [loadingMessage, setLoadingMessage] = useState("Planning your trip...");
   
   const formRef = useRef<HTMLDivElement | null>(null);
   const resultRef = useRef<HTMLDivElement | null>(null);
+
+  const loadingMessages = [
+    "Planning your trip...",
+    "Researching destinations...",
+    "Checking weather...",
+    "Building itinerary...",
+    "Adding hidden gems...",
+    "Finalizing details...",
+    "Voila! Your trip is ready..."
+  ];
+
+  useEffect(() => {
+    if(loading){
+      let index = 0;
+      const interval = setInterval(() => {
+        index = (index + 1) % loadingMessages.length;
+        setLoadingMessage(loadingMessages[index]);
+      }, 2500);
+
+      return () => {
+        if(interval) clearInterval(interval);
+      }
+    }
+  },[loading])
 
   useEffect(() => {
     // ... (skipping lines) ...
@@ -113,7 +138,6 @@ function App() {
     }, 2500);
   }
 
-  const [loadingMessage] = useState("Planning your trip...");
 
   const handleOpenTrip = async (tripId: string) => {
     try {

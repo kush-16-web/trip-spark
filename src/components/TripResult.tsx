@@ -83,6 +83,7 @@ export interface TripResultData {
   currencyMode?: 'INR' | 'LOCAL';
   exchangeRate?: number;
   localCurrency?: any;
+  plan?: Partial<TripResultData>;
 }
 
 interface TripResultProps {
@@ -239,7 +240,7 @@ export default function TripResult({
   const [pendingAction, setPendingAction] = useState<'save' | null>(null);
   const [loginSuccessMessage, setLoginSuccessMessage] = useState<string | null>(null);
   const [isSaved, setIsSaved] = useState(false);
-  const [localDayplan, setLocalDayplan] = useState<DayPlan[]>(data?.dayPlan || []);
+  const [localDayplan, setLocalDayplan] = useState<DayPlan[]>(data?.dayPlan || data?.plan?.dayPlan || []);
   const [isGeneratingDay, setIsGeneratingDay] = useState(false);
   const [isGeneratingBudget, setIsGeneratingBudget] = useState(false);
   const [isGeneratingSummary, setIsGeneratingSummary] = useState(false);
@@ -265,9 +266,10 @@ export default function TripResult({
 
     if (isNaN(numericAmount)) return amount;
 
-    if (currencyMode === 'LOCAL' && data?.totalEstimate?.localCurrency) {
+    const localCurrency = data?.totalEstimate?.localCurrency || data?.plan?.totalEstimate?.localCurrency;
+    if (currencyMode === 'LOCAL' && localCurrency) {
       const converted = numericAmount * exchangeRate;
-      return `${data.totalEstimate.localCurrency.symbol}${Math.round(converted).toLocaleString()}`;
+      return `${localCurrency.symbol}${Math.round(converted).toLocaleString()}`;
     }
     return `₹${Math.round(numericAmount).toLocaleString()}`;
   };
@@ -287,10 +289,11 @@ export default function TripResult({
   }, [activeDay]);
 
   useEffect(() => {
-    if(data?.dayPlan){
-      setLocalDayplan(data.dayPlan);
+    const planToUse = data?.dayPlan || data?.plan?.dayPlan;
+    if(planToUse){
+      setLocalDayplan(planToUse);
     }
-  },[data?.id]);
+  },[data?.id, data?.plan]);
 
   useEffect(() => {
   const handleBeforeUnload = (e: BeforeUnloadEvent) => {
@@ -573,10 +576,11 @@ export default function TripResult({
   })();
 
   const travelerCount = Number(data.travelers) || 1;
-  const perPersonMin = Math.round((data.totalEstimate?.min ?? 0) / travelerCount);
-  const perPersonMax = Math.round((data.totalEstimate?.max ?? 0) / travelerCount);
-  const budgetDisplay = data.totalEstimate
-    ? `${formatPrice(data.totalEstimate.min)} — ${formatPrice(data.totalEstimate.max)}`
+  const totalToUse = data.totalEstimate || data.plan?.totalEstimate;
+  const perPersonMin = Math.round((totalToUse?.min ?? 0) / travelerCount);
+  const perPersonMax = Math.round((totalToUse?.max ?? 0) / travelerCount);
+  const budgetDisplay = totalToUse
+    ? `${formatPrice(totalToUse.min)} — ${formatPrice(totalToUse.max)}`
     : '—';
   const destination = data.Destination?.trim() || 'your destination';
   const dayCount = Math.max(1, Number(data?.days) || data.dayPlan?.length || 1);
@@ -601,6 +605,8 @@ export default function TripResult({
         newData.days = calculatedDays;
         handleFetchNewWeather(start, end);
       }
+
+      
     } else if (field === 'Destination') {
       newData.Destination = value;
     } else if (field === 'budgetMin') {
@@ -636,6 +642,18 @@ export default function TripResult({
 
     html2pdf().set(opt).from(element).save();
   }
+
+  const hotelsToDisplay = (data.suggestedStays || data.plan?.suggestedStays || []).map((h: any) => ({
+    name: h.name,
+    tag: h.tag || h.price || 'Recommended',
+    blurb: h.blurb || h.desc || ''
+  }));
+
+  const placesToDisplay = (data.suggestedPlaces || data.plan?.suggestedPlaces || []).map((p: any) => ({
+    name: p.name || p.title || 'Sight',
+    tag: p.tag || p.desc || 'Must visit',
+    time: p.time || 'Flexible'
+  }));
 
   return (
     <section 
@@ -755,15 +773,15 @@ export default function TripResult({
           onUpdate={handleUpdateStats}
           startDate={data?.startDate}
           endDate={data?.endDate}
-          minBudget={data?.totalEstimate?.min ?? 0}
-          maxBudget={data?.totalEstimate?.max ?? 0}
-          currency={data?.totalEstimate?.currency ?? '₹'}
+          minBudget={totalToUse?.min ?? 0}
+          maxBudget={totalToUse?.max ?? 0}
+          currency={totalToUse?.currency ?? '₹'}
           currencyMode={currencyMode}
           exchangeRate={exchangeRate}
-          localCurrency={data?.totalEstimate?.localCurrency}
+          localCurrency={totalToUse?.localCurrency}
         />
 
-        {data.totalEstimate && (
+        {totalToUse && (
           <div className="relative overflow-hidden rounded-[2rem] md:rounded-[2.5rem] bg-gradient-to-br from-slate-900 via-slate-900 to-indigo-950 text-white p-8 md:p-12 mb-12 md:mb-16 shadow-2xl shadow-indigo-100">
             {/* Background design elements */}
             <div className="absolute top-0 right-0 w-64 h-64 bg-violet-500/10 rounded-full blur-3xl -mr-32 -mt-32" />
@@ -853,14 +871,14 @@ export default function TripResult({
             <div className="text-lg md:text-4xl text-slate-900 font-bold leading-[1.1] tracking-tight mb-16">
               <AnimatePresence mode="wait">
                 <GhostWriter 
-                  key={data.summary}
-                  text={data.summary ?? `A curated journey through ${destination}.`} 
+                  key={data.summary || data.plan?.summary}
+                  text={data.summary || data.plan?.summary || `A curated journey through ${destination}.`} 
                 />
               </AnimatePresence>
             </div>
             
             <div className="grid sm:grid-cols-2 gap-x-12 gap-y-10">
-              {(data.summaryBullets ?? []).map((item, idx) => (
+              {(data.summaryBullets || data.plan?.summaryBullets || []).map((item: string, idx: number) => (
                 <div key={idx} className="group/item flex items-start gap-6">
                   <div className="flex-shrink-0 w-12 h-12 rounded-2xl bg-slate-50 border border-slate-100 flex items-center justify-center group-hover/item:bg-slate-900 group-hover/item:border-slate-900 transition-all duration-300 shadow-sm">
                     <span className="text-slate-400 font-black text-sm group-hover/item:text-white">0{idx + 1}</span>
@@ -883,7 +901,7 @@ export default function TripResult({
         <section className="mb-24 md:mb-32 px-6" aria-labelledby="day-plan-heading">
           <SectionHeading id="day-plan-heading" eyebrow="Schedule" title="Day-wise plan" icon={calender} />
           
-          <div className="max-w-5xl mx-auto px-4 md:px-0">
+          <div className="max-w-full mx-auto px-4 md:px-0">
             {/* Horizontal Tabs - Refined sliding mechanism */}
             <div className="relative mb-8 md:mb-10">
               <div 
@@ -931,39 +949,66 @@ export default function TripResult({
               </div>
             </div>
 
-                     <ItineraryDay 
-              dayNumber={activeDay}
-              activities={localDayplan.find(dp => dp.day === activeDay)?.activities || []}
-              onUpdateActivity={(idx, updated) => handleUpdateActivity(activeDay, idx, updated)}
-              onDeleteActivity={(idx) => handleDeleteActivity(activeDay, idx)}
-              onAddActivity={() => handleAddActivity(activeDay)}
-              onReorder={(oldIdx, newIdx) => handleReorderActivity(activeDay, oldIdx, newIdx)}
-              isEditMode={isEditMode}
-              onGenerateDayAI={(prompt) => handleGenerateDayAI(activeDay, prompt)}
-              isGeneratingAI={isGeneratingDay}
-              weather={data?.weather?.[activeDay - 1]}
-              date={data?.startDate ? (() => {
-                const start = new Date(data.startDate);
-                const dayDate = new Date(start);
-                dayDate.setDate(start.getDate() + (activeDay - 1));
-                return dayDate.toLocaleDateString(undefined, {
-                  weekday: 'long',
-                  month: 'long',
-                  day: 'numeric',
-                  year: 'numeric'
-                });
-              })() : undefined}
-            />
-
-            {/* The Map: Now full width between Tabs and Activities */}
-            <div className="w-full h-[400px] md:h-[550px] mt-12 md:mt-16">
-              <div className="w-full h-full p-2 bg-white rounded-[3rem] shadow-2xl shadow-slate-200/50 border border-slate-100 overflow-hidden">
-                <TripMap 
-                  places={data?.suggestedPlaces || []}
-                  stays={data?.suggestedStays || []}
-                  activites={localDayplan.find(dp => dp.day === activeDay)?.activities || []}
-                  activeDay={activeDay}
+            {/* Split Layout: Activities & Map */}
+            <div className="flex flex-col lg:flex-row gap-10 items-start">
+              {/* Left Column: Activities (Scrollable) */}
+              <div className="w-full lg:w-1/2 order-2 lg:order-1">
+                <ItineraryDay 
+                  dayNumber={activeDay}
+                  activities={localDayplan.find(dp => dp.day === activeDay)?.activities || []}
+                  onUpdateActivity={(idx, updated) => handleUpdateActivity(activeDay, idx, updated)}
+                  onDeleteActivity={(idx) => handleDeleteActivity(activeDay, idx)}
+                  onAddActivity={() => handleAddActivity(activeDay)}
+                  onReorder={(oldIdx, newIdx) => handleReorderActivity(activeDay, oldIdx, newIdx)}
+                  isEditMode={isEditMode}
+                  onGenerateDayAI={(prompt) => handleGenerateDayAI(activeDay, prompt)}
+                  isGeneratingAI={isGeneratingDay}
+                  weather={data?.weather?.[activeDay - 1]}
+                  date={data?.startDate ? (() => {
+                    const start = new Date(data.startDate);
+                    const dayDate = new Date(start);
+                    dayDate.setDate(start.getDate() + (activeDay - 1));
+                    return dayDate.toLocaleDateString(undefined, {
+                      weekday: 'long',
+                      month: 'long',
+                      day: 'numeric',
+                      year: 'numeric'
+                    });
+                  })() : undefined}
                 />
+              </div>
+
+              {/* Right Column: Sticky Map */}
+              <div className="w-full lg:w-1/2 lg:sticky lg:top-32 order-1 lg:order-2 h-[450px] md:h-[650px] z-10">
+                <div className="w-full h-full p-2 bg-white rounded-[3rem] shadow-2xl shadow-slate-200/50 border border-slate-100 overflow-hidden relative group/map">
+                  {/* Map Label Overlay */}
+                  <div className="absolute top-6 left-6 z-20 px-4 py-2 bg-slate-900/80 backdrop-blur-md text-white text-[10px] font-black uppercase tracking-widest rounded-2xl border border-white/10 shadow-xl opacity-0 group-hover/map:opacity-100 transition-opacity pointer-events-none">
+                    Day {activeDay} Explorer
+                  </div>
+
+                  {/* Map Legend Overlay */}
+                  <div className="absolute bottom-6 left-6 z-20 px-4 py-3 bg-white/90 backdrop-blur-md border border-slate-100 rounded-[1.5rem] shadow-xl flex flex-col gap-2 pointer-events-none">
+                    <div className="flex items-center gap-2">
+                      <div className="w-2.5 h-2.5 bg-emerald-500 rounded-full border border-white shadow-sm" />
+                      <span className="text-[9px] font-black text-slate-600 uppercase tracking-wider">Hotel</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <div className="w-2.5 h-2.5 bg-black rounded-full border border-white shadow-sm" />
+                      <span className="text-[9px] font-black text-slate-600 uppercase tracking-wider">Sight</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <div className="w-6 h-1 bg-violet-600 rounded-full" />
+                      <span className="text-[9px] font-black text-slate-600 uppercase tracking-wider">Route</span>
+                    </div>
+                  </div>
+
+                  <TripMap 
+                    places={data?.suggestedPlaces || data.plan?.suggestedPlaces || []}
+                    stays={data?.suggestedStays || data.plan?.suggestedStays || []}
+                    activites={localDayplan.find(dp => dp.day === activeDay)?.activities || []}
+                    activeDay={activeDay}
+                  />
+                </div>
               </div>
             </div>
 
@@ -1048,19 +1093,19 @@ export default function TripResult({
                   <div className="flex items-center gap-4 text-violet-400 mb-10">
                     <div className="h-[2px] w-12 bg-current" />
                       <span className="text-sm font-bold uppercase tracking-widest">
-                        {data?.type || 'Trip'} • {currencyMode === 'LOCAL' ? (data?.totalEstimate?.localCurrency?.name || 'Local') : 'INR'}
+                        {data?.type || 'Trip'} • {currencyMode === 'LOCAL' ? (data?.totalEstimate?.localCurrency?.name || data.plan?.totalEstimate?.localCurrency?.name || 'Local') : 'INR'}
                       </span>
                   </div>
                 </div>
 
                 <div className="relative z-10 bg-white/5 backdrop-blur-xl border border-white/10 p-6 sm:p-8 rounded-[2rem] mt-auto">
-                  {data.totalEstimate && (
+                  {(data.totalEstimate || data.plan?.totalEstimate) && (
                     <div className="flex flex-col">
-                      <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-1">Grand Total</p>
+                      <p className="text-[10px] font-black uppercase tracking widest text-slate-400 mb-1">Grand Total</p>
                       <p className="text-2xl sm:text-3xl font-black text-white tracking-tighter flex items-center gap-2 flex-wrap">
-                        <span>{formatPrice(data.totalEstimate.min || 0)}</span>
+                        <span>{formatPrice(data.totalEstimate?.min || data.plan?.totalEstimate?.min || 0)}</span>
                         <span className="text-violet-500 opacity-50 text-sm">—</span>
-                        <span>{formatPrice(data.totalEstimate.max || 0)}</span>
+                        <span>{formatPrice(data.totalEstimate?.max || data.plan?.totalEstimate?.max || 0)}</span>
                       </p>
                     </div>
                   )}
@@ -1069,9 +1114,9 @@ export default function TripResult({
             </div>
 
             <div className="lg:col-span-2 grid sm:grid-cols-2 gap-6">
-              {(data.budgetEstimate?.length ? data.budgetEstimate : HARDCODED_BUDGET_ROWS).map((row, idx) => (
+              {((data.budgetEstimate?.length ? data.budgetEstimate : data.plan?.budgetEstimate?.length ? data.plan.budgetEstimate : null) || HARDCODED_BUDGET_ROWS).map((row: any, idx: number) => (
                 <article
-                  key={row.label}
+                  key={row.label || row.category || `budget-${idx}`}
                   className="group relative bg-white border border-slate-100 p-8 rounded-[2.5rem] shadow-xl shadow-slate-200/30 hover:border-violet-200 transition-all duration-300"
                 >
                   <div className="flex items-center justify-between mb-6">
@@ -1080,7 +1125,7 @@ export default function TripResult({
                     </div>
                     <span className="text-lg font-black text-slate-900 tracking-tight">{formatPrice(row.amount)}</span>
                   </div>
-                  <h5 className="font-bold text-slate-900 text-xl mb-2">{row.label}</h5>
+                  <h5 className="font-bold text-slate-900 text-xl mb-2">{row.label || row.category}</h5>
                   <p className="text-slate-500 text-sm leading-relaxed">{row.note}</p>
                 </article>
               ))}
@@ -1093,9 +1138,9 @@ export default function TripResult({
           <SectionHeading id="suggestions-heading" eyebrow="Discovery" title="Curated Suggestions" icon={compassIcon} />
           
           <div className="grid lg:grid-cols-2 gap-12 lg:gap-16">
-            <HotelSection hotels={data.suggestedStays?.length ? data.suggestedStays : HARDCODED_STAYS} />
+            <HotelSection hotels={hotelsToDisplay.length > 0 ? hotelsToDisplay : HARDCODED_STAYS} />
 
-            <MustVisitSection places={data.suggestedPlaces?.length ? data.suggestedPlaces : HARDCODED_PLACES} />
+            <MustVisitSection places={placesToDisplay.length > 0 ? placesToDisplay : HARDCODED_PLACES} />
           </div>
         </section>
 

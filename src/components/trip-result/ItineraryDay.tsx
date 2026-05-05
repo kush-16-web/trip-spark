@@ -238,13 +238,13 @@ const ItineraryDay: React.FC<ItineraryDayProps> = ({
       {/* Card Decoration */}
       <div className="absolute -inset-1 bg-gradient-to-r from-violet-600 to-indigo-600 rounded-[3.5rem] blur opacity-5 group-hover:opacity-10 transition duration-1000"></div>
 
-      <div className="relative p-5 md:p-14 rounded-[2.5rem] md:rounded-[3rem] bg-white border border-slate-100 shadow-2xl shadow-slate-200/50 transition-all overflow-hidden">
+      <div className="relative p-5 md:p-8 rounded-[2.5rem] md:rounded-[3rem] bg-white border border-slate-100 shadow-2xl shadow-slate-200/50 transition-all overflow-hidden">
         <div className="absolute top-0 right-0 w-32 h-32 md:w-64 md:h-64 bg-violet-50/50 rounded-bl-[5rem] md:rounded-bl-[10rem] -z-10" />
 
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 md:gap-8 mb-8 md:mb-12 border-b border-slate-50 pb-8 md:pb-10">
-          <div className="flex flex-col gap-2 md:gap-4">
-            <div className="flex items-center gap-3 md:gap-4">
-              <h4 className="text-3xl md:text-5xl font-black text-slate-900 tracking-tighter">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 md:gap-6 mb-8 md:mb-10 border-b border-slate-50 pb-8">
+          <div className="flex flex-col gap-1 md:gap-2">
+            <div className="flex items-center gap-3">
+              <h4 className="text-3xl md:text-4xl font-black text-slate-900 tracking-tighter">
                 Day {dayNumber}
               </h4>
               <div className="px-3 py-1 bg-violet-100 text-violet-700 rounded-full text-[8px] md:text-[10px] font-black uppercase tracking-widest">
@@ -252,43 +252,43 @@ const ItineraryDay: React.FC<ItineraryDayProps> = ({
               </div>
             </div>
             {date && (
-              <div className="flex items-center gap-2 text-slate-400 font-bold text-sm md:text-lg">
-                <span className="w-6 h-[2px] bg-slate-200" />
+              <div className="flex items-center gap-2 text-slate-400 font-bold text-xs md:text-sm">
+                <span className="w-4 h-[2px] bg-slate-200" />
                 {date}
               </div>
             )}
           </div>
 
-          <div className="flex items-center justify-between md:justify-end gap-3 md:gap-4">
-            <div className="bg-slate-50 px-4 py-2 md:px-6 md:py-3 rounded-xl md:rounded-2xl border border-slate-100 flex flex-col items-center">
-              <span className="text-[8px] md:text-[10px] font-black text-slate-400 uppercase tracking-widest mb-0.5">Stops</span>
-              <span className="text-lg md:text-2xl font-black text-slate-900">{activities.length}</span>
+          <div className="flex items-center justify-between md:justify-end gap-2 md:gap-3">
+            <div className="bg-slate-50 px-3 py-1.5 md:px-4 md:py-2 rounded-xl border border-slate-100 flex flex-col items-center">
+              <span className="text-[8px] md:text-[9px] font-black text-slate-400 uppercase tracking-widest">Stops</span>
+              <span className="text-base md:text-xl font-black text-slate-900">{activities.length}</span>
             </div>
 
             {/* Weather Logic */}
             {weather && (
-              <div className="flex items-center gap-3 md:gap-4 bg-white border border-violet-100 rounded-[1.5rem] md:rounded-[2rem] p-1.5 md:p-2 pr-4 md:pr-6 shadow-lg shadow-violet-100/50">
-                <div className="w-10 h-10 md:w-16 md:h-16 rounded-xl md:rounded-[1.5rem] bg-white flex items-center justify-center shrink-0">
-                  {weather.weatherCode === 0 ? <img src={Sun} alt="Sun" className='w-12 h-12' /> :
-                    weather.weatherCode === 1 || weather.weatherCode === 2 ? <img src={Cloudy} alt="Cloudy" className='w-12 h-12' /> :
-                      weather.weatherCode === 3 ? <img src={Cloudy} alt="Cloudy" className='w-12 h-12' /> :
-                        weather.weatherCode === 45 || weather.weatherCode === 48 ? <img src={Fog} alt="Fog" className='w-12 h-12' /> :
-                          weather.weatherCode === 51 || weather.weatherCode === 53 || weather.weatherCode === 55 ? <img src={Raining} alt="Raining" className='w-12 h-12' /> :
-                            weather.weatherCode === 56 || weather.weatherCode === 57 ? <img src={Raining} alt="Raining" className='w-12 h-12' /> :
-                              weather.weatherCode === 61 || weather.weatherCode === 63 || weather.weatherCode === 65 ? <img src={Raining} alt="Raining" className='w-12 h-12' /> :
-                                weather.weatherCode === 66 || weather.weatherCode === 67 ? <img src={Raining} alt="Raining" className='w-12 h-12' /> :
-                                  weather.weatherCode === 71 || weather.weatherCode === 73 || weather.weatherCode === 75 ? <img src={Snowing} alt="Snowing" className='w-12 h-12' /> :
-                                    weather.weatherCode === 77 ? <img src={Snowing} alt="Snowing" className='w-12 h-12' /> :
-                                      weather.weatherCode === 80 || weather.weatherCode === 81 || weather.weatherCode === 82 ? <img src={Raining} alt="Raining" className='w-12 h-12' /> :
-                                        weather.weatherCode === 85 || weather.weatherCode === 86 ? <img src={Snowing} alt="Snowing" className='w-12 h-12' /> :
-                                          weather.weatherCode === 95 ? <img src={Thunderstorm} alt="Thunderstorm" className='w-12 h-12' /> :
-                                            weather.weatherCode === 96 || weather.weatherCode === 99 ? <img src={Thunderstorm} alt="Thunderstorm" className='w-12 h-12' /> : ''}
+              <div className="flex items-center gap-2 md:gap-3 bg-white border border-violet-100 rounded-[1.2rem] md:rounded-[1.5rem] p-1 md:p-1.5 pr-3 md:pr-4 shadow-lg shadow-violet-100/50">
+                <div className="w-8 h-8 md:w-12 md:h-12 rounded-lg md:rounded-xl bg-white flex items-center justify-center shrink-0">
+                  {weather.weatherCode === 0 ? <img src={Sun} alt="Sun" className='w-8 h-8 md:w-10 md:h-10' /> :
+                    weather.weatherCode === 1 || weather.weatherCode === 2 ? <img src={Cloudy} alt="Cloudy" className='w-8 h-8 md:w-10 md:h-10' /> :
+                      weather.weatherCode === 3 ? <img src={Cloudy} alt="Cloudy" className='w-8 h-8 md:w-10 md:h-10' /> :
+                        weather.weatherCode === 45 || weather.weatherCode === 48 ? <img src={Fog} alt="Fog" className='w-8 h-8 md:w-10 md:h-10' /> :
+                          weather.weatherCode === 51 || weather.weatherCode === 53 || weather.weatherCode === 55 ? <img src={Raining} alt="Raining" className='w-8 h-8 md:w-10 md:h-10' /> :
+                            weather.weatherCode === 56 || weather.weatherCode === 57 ? <img src={Raining} alt="Raining" className='w-8 h-8 md:w-10 md:h-10' /> :
+                              weather.weatherCode === 61 || weather.weatherCode === 63 || weather.weatherCode === 65 ? <img src={Raining} alt="Raining" className='w-8 h-8 md:w-10 md:h-10' /> :
+                                weather.weatherCode === 66 || weather.weatherCode === 67 ? <img src={Raining} alt="Raining" className='w-8 h-8 md:w-10 md:h-10' /> :
+                                  weather.weatherCode === 71 || weather.weatherCode === 73 || weather.weatherCode === 75 ? <img src={Snowing} alt="Snowing" className='w-8 h-8 md:w-10 md:h-10' /> :
+                                    weather.weatherCode === 77 ? <img src={Snowing} alt="Snowing" className='w-8 h-8 md:w-10 md:h-10' /> :
+                                      weather.weatherCode === 80 || weather.weatherCode === 81 || weather.weatherCode === 82 ? <img src={Raining} alt="Raining" className='w-8 h-8 md:w-10 md:h-10' /> :
+                                        weather.weatherCode === 85 || weather.weatherCode === 86 ? <img src={Snowing} alt="Snowing" className='w-8 h-8 md:w-10 md:h-10' /> :
+                                          weather.weatherCode === 95 ? <img src={Thunderstorm} alt="Thunderstorm" className='w-8 h-8 md:w-10 md:h-10' /> :
+                                            weather.weatherCode === 96 || weather.weatherCode === 99 ? <img src={Thunderstorm} alt="Thunderstorm" className='w-8 h-8 md:w-10 md:h-10' /> : ''}
                 </div>
                 <div className="flex flex-col">
-                  <span className="text-base md:text-xl font-black text-slate-900 leading-none mb-0.5">
+                  <span className="text-sm md:text-lg font-black text-slate-900 leading-none">
                     {weather.tempMax}° / {weather.tempMin}°
                   </span>
-                  <span className="text-[8px] md:text-[10px] font-bold text-violet-500 uppercase tracking-wider italic">
+                  <span className="text-[7px] md:text-[9px] font-bold text-violet-500 uppercase tracking-wider">
                     {weather.weatherCode === 0 ? "Perfect Sun" :
                       weather.weatherCode >= 1 && weather.weatherCode <= 3 ? "Mild & Nice" :
                         weather.weatherCode >= 51 && weather.weatherCode <= 67 ? "Rainy Outlook" :
