@@ -199,7 +199,7 @@ function App() {
     try {
       setTrip(finalTripData);
       setLoading(true);
-      await updatetrip(finalTripData.id, { ...finalTripData, plan: { dayPlan: finalTripData.dayPlan } });
+      await updatetrip(finalTripData.id, { ...finalTripData, plan: finalTripData });
       toast.success("Changes saved to cloud! ☁️");
       setIsEditMode(false);
     } catch (error) {

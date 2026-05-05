@@ -15,9 +15,12 @@
     "@dnd-kit/utilities": "^3.2.2",
     "firebase": "^12.12.1",
     "framer-motion": "^12.38.0",
+    "html2pdf.js": "^0.14.0",
+    "mapbox-gl": "^3.23.1",
     "react": "^19.2.5",
     "react-dom": "^19.2.5",
     "react-hot-toast": "^2.6.0",
+    "react-map-gl": "^8.1.1",
     "react-router-dom": "^7.14.2",
     "zod": "^4.3.6"
   },

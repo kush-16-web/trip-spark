@@ -7,6 +7,7 @@ const PORT = Number(process.env.PORT ?? 8080);
 const CLIENT_ORIGIN = process.env.CLIENT_ORIGIN ?? 'http://localhost:5173';
 const GEMINI_API_KEY = process.env.GEMINI_API_KEY ?? '';
 const GEMINI_MODEL = process.env.GEMINI_MODEL ?? 'gemini-2.0-flash';
+const EXCHANGE_RATE_API_KEY = process.env.EXCHANGE_RATE_API_KEY ?? 'ec9190b0e4d4fc7657343865';
 
 if (Number.isNaN(PORT)) {
   throw new Error('Invalid PORT in environment variables');
@@ -18,4 +19,5 @@ export const env = {
   CLIENT_ORIGIN,
   GEMINI_API_KEY,
   GEMINI_MODEL,
+  EXCHANGE_RATE_API_KEY,
 } as const;

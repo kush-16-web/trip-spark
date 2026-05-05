@@ -24,7 +24,7 @@ const Navbar: React.FC<NavbarProps> = ({ userEmail, userPicture, onLogoClick, is
     if (isEditMode) {
       setShowNavGuard(true);
     } else {
-      onLogoClick();
+      onLogoClick?.();
     }
   };
   const [isSigningIn, setIsSigningIn] = useState(false);
@@ -115,7 +115,7 @@ const Navbar: React.FC<NavbarProps> = ({ userEmail, userPicture, onLogoClick, is
           }
       `}</style>
       {/* Desktop/Tablet Top Navbar */}
-      <nav className={`hidden md:block mx-auto rounded-full mt-4 fixed top-0 left-0 right-0 z-50 bg-black/30 backdrop-blur-md py-4 transition-all duration-500 border border-white/10 shadow-2xl shadow-black/20 
+      <nav className={`hidden md:block mx-auto rounded-full mt-4 fixed top-0 left-0 right-0 z-50 bg-black/50 backdrop-blur-md py-4 transition-all duration-500 border border-white/10 shadow-2xl shadow-black/20 
   ${isScrolled ? 'w-[98%] lg:w-[95%] xl:w-[70%]' : 'w-[95%] lg:w-[90%] xl:w-[60%]'}
 `}>
         <div className="max-w-7xl mx-auto px-6 flex justify-between items-center">

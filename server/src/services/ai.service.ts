@@ -18,9 +18,10 @@ End Date: ${input.endDate}
 Vibe: ${input.vibe ?? 'Not specified'}
 Rules:
 - Return ONLY valid JSON (no markdown, no explanation text).
-- Budget must align strictly with the total range provided: ${input.budgetRange.min} to ${input.budgetRange.max}.
-- Include realistic total trip cost range.
+- Budget must align strictly with the total range provided: INR ${input.budgetRange.min} to INR ${input.budgetRange.max}.
+- All numeric values for 'totalEstimate' and 'budgetEstimate' must be in INR.
 - Day plan length must match exactly ${input.days} days.
+- CRITICAL: For EVERY MustVisit spot, Hotel, and Activity, provide real-world geographic coordinates (Latitude and Longitude) in the 'coordinates' object.
 Return this exact JSON shape:
 {
   "summary": "string",
@@ -28,25 +29,44 @@ Return this exact JSON shape:
   "totalEstimate": {
     "min": number,
     "max": number,
-    "currency": "string",
+    "currency": "INR",
+    "localCurrency": {
+      "code": "string",
+      "symbol": "string",
+      "name": "string"
+    },
     "note": "string"
   },
+  "budgetEstimate": [
+    { "category": "string", "amount": number }
+  ],
+  "suggestedPlaces": [
+    { 
+      "title": "string", 
+      "desc": "string",
+      "coordinates": { "lat": number, "lng": number }
+    }
+  ],
+  "suggestedStays": [
+    { 
+      "name": "string", 
+      "price": "string", 
+      "desc": "string",
+      "coordinates": { "lat": number, "lng": number }
+    }
+  ],
   "dayPlan": [
     {
       "day": number,
       "activities": [
-        { "time": "string", "title": "string", "desc": "string" }
+        { 
+          "time": "string", 
+          "title": "string", 
+          "desc": "string",
+          "coordinates": { "lat": number, "lng": number }
+        }
       ]
     }
-  ],
-  "budgetEstimate": [
-    { "label": "string", "amount": "string", "note": "string" }
-  ],
-  "suggestedStays": [
-    { "name": "string", "tag": "string", "blurb": "string" }
-  ],
-  "suggestedPlaces": [
-    { "name": "string", "tag": "string", "time": "string" }
   ]
 }
   Additional Guidelines:
@@ -159,17 +179,44 @@ export async function refineTripWithAI(currentPlan: any, instruction: string): P
       2. If the user wants to change a specific day, update that day's activities.
       3. If the user wants to change the budget style, update the budgetEstimate and suggestedStays.
       4. You MUST return the response in the EXACT same JSON schema as the input.
-      5. Return ONLY the valid JSON object. No conversation, no markdown blocks, no explanations.
+      7. CRITICAL: For EVERY suggestedPlace, suggestedStay, and Activity, provide real-world geographic coordinates (Latitude and Longitude) in the 'coordinates' object.
       
       JSON SCHEMA TO FOLLOW:
       {
         "summary": "string",
         "summaryBullets": ["string", "string", "string"],
-        "totalEstimate": { "min": number, "max": number, "currency": "string", "note": "string" },
-        "dayPlan": [{ "day": number, "activities": [{ "time": "string", "title": "string", "desc": "string" }] }],
+        "totalEstimate": { 
+          "min": number, 
+          "max": number, 
+          "currency": "INR", 
+          "localCurrency": {
+            "code": "string",
+            "symbol": "string",
+            "name": "string"
+          },
+          "note": "string" 
+        },
+        "dayPlan": [{ 
+          "day": number, 
+          "activities": [{ 
+            "time": "string", 
+            "title": "string", 
+            "desc": "string",
+            "coordinates": { "lat": number, "lng": number }
+          }] 
+        }],
         "budgetEstimate": [{ "label": "string", "amount": "string", "note": "string" }],
-        "suggestedStays": [{ "name": "string", "tag": "string", "blurb": "string" }],
-        "suggestedPlaces": [{ "name": "string", "tag": "string", "time": "string" }]
+        "suggestedStays": [{ 
+          "name": "string", 
+          "price": "string", 
+          "desc": "string",
+          "coordinates": { "lat": number, "lng": number }
+        }],
+        "suggestedPlaces": [{ 
+          "title": "string", 
+          "desc": "string",
+          "coordinates": { "lat": number, "lng": number }
+        }]
       }
     `;
 

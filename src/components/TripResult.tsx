@@ -12,7 +12,6 @@ import {
   type Weather,
 } from '../services/tripApi';
 
-import tripIcon from '../assets/trip.gif';
 import walletIcon from '../assets/wallet.gif';
 import compassIcon from '../assets/compass.gif';
 import calender from '../assets/calendar-time.gif';
@@ -29,6 +28,8 @@ import ItineraryDay from './trip-result/ItineraryDay';
 import EditModeToggle from './trip-result/EditModeToggle';
 import { useBlocker } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
+import TripMap from './trip-result/TripMap';
+import html2pdf from 'html2pdf.js';
 
 const GhostWriter = ({ text, className }: { text: string; className?: string }) => {
   return (
@@ -199,13 +200,6 @@ function SectionHeading({
   );
 }
 
-/** Placeholder copy until AI generates summary from place, days, vibe, etc. */
-const HARDCODED_DAY_ACTIVITIES = [
-  { time: '09:00', title: 'Morning exploration', desc: 'Landmarks and local neighborhoods while the city wakes up.' },
-  { time: '13:00', title: 'Lunch & culture', desc: 'Regional dishes, then a museum or walking tour.' },
-  { time: '16:00', title: 'Afternoon unwind', desc: 'Park, viewpoint, or café before the evening.' },
-];
-
 const HARDCODED_BUDGET_ROWS = [
   { label: 'Stay (nights)', amount: '$420–680', note: 'Mid-range hotels / guesthouses' },
   { label: 'Food & drinks', amount: '$180–320', note: 'Mix of cafés and one nicer dinner' },
@@ -246,15 +240,34 @@ export default function TripResult({
   const [isGeneratingDay, setIsGeneratingDay] = useState(false);
   const [isGeneratingBudget, setIsGeneratingBudget] = useState(false);
   const [isGeneratingSummary, setIsGeneratingSummary] = useState(false);
+  const [exchangeRate, setExchangeRate] = useState(1);
+  const [currencyMode, setCurrencyMode] = useState<'INR' | 'LOCAL'>('INR');
+
 
   const dayRefs = useRef<{ [key: number]: HTMLButtonElement | null }>({});
   const prevDay = useRef(activeDay);
+  const printRef = useRef<HTMLDivElement>(null);
 
   // Navigation Blocker Logic
   const blocker = useBlocker(
     ({ currentLocation, nextLocation }) =>
       isEditMode && currentLocation.pathname !== nextLocation.pathname
   );
+
+  const formatPrice = (amount: any) => {
+    // Clean the amount in case it's a string with symbols
+    const numericAmount = typeof amount === 'string' 
+      ? parseFloat(amount.replace(/[^0-9.]/g, '')) 
+      : amount;
+
+    if (isNaN(numericAmount)) return amount;
+
+    if (currencyMode === 'LOCAL' && data?.totalEstimate?.localCurrency) {
+      const converted = numericAmount * exchangeRate;
+      return `${data.totalEstimate.localCurrency.symbol}${Math.round(converted).toLocaleString()}`;
+    }
+    return `₹${Math.round(numericAmount).toLocaleString()}`;
+  };
 
   // If navigation is blocked, we show this beautiful modal
   const showBlockerModal = blocker.state === "blocked";
@@ -287,6 +300,24 @@ export default function TripResult({
   window.addEventListener("beforeunload", handleBeforeUnload);
   return () => window.removeEventListener("beforeunload", handleBeforeUnload);
 }, [isEditMode]);
+
+  useEffect(()=>{
+    const fetchRate = async () => {
+      const localCode = data?.totalEstimate?.localCurrency?.code;
+      if(localCode && localCode !== 'INR'){
+       try{
+        const response = await fetch(`http://localhost:8080/api/trip/exchange-rate/INR/${localCode}`);
+        const result = await response.json();
+        if(result.ok){
+          setExchangeRate(result.rate);
+        }
+       }catch(error){
+        console.error("Failed to fetch exchange rate:", error);
+       }
+      }
+    };
+    fetchRate();
+  }, [data?.totalEstimate?.localCurrency?.code])
 
 
   const handleUpdateActivity  = (dayNumber: number,activityIndex: number, updatedActivity: any) => {
@@ -393,13 +424,13 @@ export default function TripResult({
 
     const handleFetchNewWeather = async (newStartDate: string, newEndDate: string) => {
     try {
-      const url = `http://localhost:8080/api/trip/weather/${encodeURIComponent(data.Destination || '')}/${newStartDate}/${newEndDate}`;
+      const url = `http://localhost:8080/api/trip/weather/${encodeURIComponent(data?.Destination || '')}/${newStartDate}/${newEndDate}`;
       const response = await fetch(url);
       const result = await response.json();
       
       if (result.ok && result.weather) {
         // Send the new weather array up to your parent component to save it!
-        onUpdateTripData({ weather: result.weather });
+        onUpdateTripData?.({ weather: result.weather });
       }
     } catch (error) {
       console.error("Failed to update weather", error);
@@ -415,13 +446,13 @@ export default function TripResult({
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          destination: data.Destination,
-          type: data.type,
-          days: data.days,
-          budgetRange: data.budgetRange,
-          travelers: data.travelers,
-          currentTotalEstimate: data.totalEstimate,
-          currentBudgetEstimate: data.budgetEstimate,      
+          destination: data?.Destination,
+          type: data?.type,
+          days: data?.days,
+          budgetRange: data?.budgetRange,
+          travelers: data?.travelers,
+          currentTotalEstimate: data?.totalEstimate,
+          currentBudgetEstimate: data?.budgetEstimate,      
         })
       })
       const result = await response.json();
@@ -431,6 +462,10 @@ export default function TripResult({
             totalEstimate:result.budget.totalEstimate,
             budgetEstimate:result.budget.budgetEstimate,
           })
+          // Save the fresh exchange rate
+          if (result.exchangeRates) {
+            setExchangeRate(result.exchangeRates);
+          }
         }
       }
     } catch (error) {
@@ -442,7 +477,7 @@ export default function TripResult({
   }
 
   const handleGenerateSummary = async () => {
-    if(!data.Destination) return;
+    if(!data?.Destination) return;
     setIsGeneratingSummary(true);
     try {
       const response = await fetch('http://localhost:8080/api/trip/generate-summary',
@@ -451,15 +486,15 @@ export default function TripResult({
             'Content-Type': 'application/json',
           },
           body: JSON.stringify({
-            destination: data.Destination,
+            destination: data?.Destination,
             days: dayCount,
-            type: data.type,
-            travelers:data.travelers,
+            type: data?.type,
+            travelers:data?.travelers,
           }) 
         });
         const result = await response.json();
         if(result.ok){
-          onUpdateTripData({
+          onUpdateTripData?.({
             summary:result.summary.summary,
             summaryBullets:result.summary.summaryBullets,
           })
@@ -587,8 +622,26 @@ export default function TripResult({
     onUpdateTripData(newData);
   };
 
+  const handleDownloadPDF = () => {
+    const element = printRef.current;
+    if(!element) return;
+
+    const opt: any = {
+      margin:       10,
+      filename:     `Trip-to-${data?.Destination}.pdf`,
+      image:        { type: 'jpeg', quality: 0.98 },
+      html2canvas:  { scale: 2, useCORS: true, logging: false },
+      jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' },
+    };
+
+    html2pdf().set(opt).from(element).save();
+  }
+
   return (
-    <section id="trip-result" className={`py-16 md:py-24 bg-slate-50 overflow-hidden relative transition-colors duration-500 ${isEditMode ? 'bg-violet-50/30' : ''}`}>
+    <section 
+      ref={printRef}
+      id="trip-result" 
+      className={`py-16 md:py-24 bg-slate-50 overflow-hidden relative transition-colors duration-500 ${isEditMode ? 'bg-violet-50/30' : ''}`}>
       {/* Blueprint Grid Overlay (Only in Edit Mode) */}
       {isEditMode && (
         <div className="absolute inset-0 z-0 opacity-[0.03] pointer-events-none" 
@@ -794,14 +847,14 @@ export default function TripResult({
           <span className="absolute -top-10 -left-6 text-[15rem] font-serif text-slate-100/50 select-none pointer-events-none">“</span>
           
           <div className="relative z-10">
-            <p className="text-lg md:text-4xl text-slate-900 font-bold leading-[1.1] tracking-tight mb-16">
+            <div className="text-lg md:text-4xl text-slate-900 font-bold leading-[1.1] tracking-tight mb-16">
               <AnimatePresence mode="wait">
                 <GhostWriter 
                   key={data.summary}
                   text={data.summary ?? `A curated journey through ${destination}.`} 
                 />
               </AnimatePresence>
-            </p>
+            </div>
             
             <div className="grid sm:grid-cols-2 gap-x-12 gap-y-10">
               {(data.summaryBullets ?? []).map((item, idx) => (
@@ -824,12 +877,12 @@ export default function TripResult({
 
 
         {/* 2. Day-wise plan */}
-        <section className="mb-24 md:mb-32" aria-labelledby="day-plan-heading">
+        <section className="mb-24 md:mb-32 px-6" aria-labelledby="day-plan-heading">
           <SectionHeading id="day-plan-heading" eyebrow="Schedule" title="Day-wise plan" icon={calender} />
           
           <div className="max-w-5xl mx-auto px-4 md:px-0">
             {/* Horizontal Tabs - Refined sliding mechanism */}
-            <div className="relative mb-12 md:mb-16">
+            <div className="relative mb-8 md:mb-10">
               <div 
                 className="relative flex bg-white w-full md:w-fit p-2 rounded-[2.5rem] shadow-xl shadow-slate-200/40 border border-slate-100 overflow-x-auto snap-x no-scrollbar"
                 style={{
@@ -875,7 +928,7 @@ export default function TripResult({
               </div>
             </div>
 
-            <ItineraryDay 
+                     <ItineraryDay 
               dayNumber={activeDay}
               activities={localDayplan.find(dp => dp.day === activeDay)?.activities || []}
               onUpdateActivity={(idx, updated) => handleUpdateActivity(activeDay, idx, updated)}
@@ -885,8 +938,8 @@ export default function TripResult({
               isEditMode={isEditMode}
               onGenerateDayAI={(prompt) => handleGenerateDayAI(activeDay, prompt)}
               isGeneratingAI={isGeneratingDay}
-              weather={data.weather?.[activeDay - 1]}
-              date={data.startDate ? (() => {
+              weather={data?.weather?.[activeDay - 1]}
+              date={data?.startDate ? (() => {
                 const start = new Date(data.startDate);
                 const dayDate = new Date(start);
                 dayDate.setDate(start.getDate() + (activeDay - 1));
@@ -898,6 +951,20 @@ export default function TripResult({
                 });
               })() : undefined}
             />
+
+            {/* The Map: Now full width between Tabs and Activities */}
+            <div className="w-full h-[400px] md:h-[550px] mt-12 md:mt-16">
+              <div className="w-full h-full p-2 bg-white rounded-[3rem] shadow-2xl shadow-slate-200/50 border border-slate-100 overflow-hidden">
+                <TripMap 
+                  places={data?.suggestedPlaces || []}
+                  stays={data?.suggestedStays || []}
+                  activites={localDayplan.find(dp => dp.day === activeDay)?.activities || []}
+                  activeDay={activeDay}
+                />
+              </div>
+            </div>
+
+         
           </div>
         </section>
 
@@ -912,7 +979,7 @@ export default function TripResult({
               <button 
                 onClick={handleGenerateBudget}
                 disabled={isGeneratingBudget}
-                className="w-fit md:w-full px-4 py-2 bg-black text-white font-bold rounded-xl hover:bg-slate-800 transition-colors flex items-center gap-2 text-sm disabled:opacity-50"
+                className="w-fit px-4 py-2 bg-black text-white font-bold rounded-xl hover:bg-slate-800 transition-colors flex items-center gap-2 text-sm disabled:opacity-50 no-print"
               >
                 {isGeneratingBudget ? (
                   <> <span className="animate-spin">⏳</span> Updating... </>
@@ -937,25 +1004,62 @@ export default function TripResult({
                 <div className="absolute -bottom-10 -right-10 w-40 h-40 bg-violet-500/20 rounded-full blur-3xl group-hover:scale-150 transition-transform duration-1000" />
                 
                 <div className="relative z-10">
-                  <p className="text-[10px] font-black uppercase tracking-[0.4em] text-violet-400 mb-6">Total Strategy</p>
-                  <h4 className="text-4xl font-black text-white leading-tight mb-8">
-                    Your <br />Travel <br />Capital
+                  <div className="flex justify-between items-start mb-6">
+                    <p className="text-[10px] font-black uppercase tracking-[0.4em] text-violet-400">Total Strategy</p>
+                    
+                    {/* Premium Currency Dropdown */}
+                    <div className="relative group/currency no-print">
+                      <button 
+                        className="flex items-center gap-2 bg-white/10 hover:bg-white/20 px-3 py-1.5 rounded-xl border border-white/10 transition-all active:scale-95"
+                      >
+                        <span className="text-[10px] font-black text-white uppercase tracking-widest">
+                          {currencyMode === 'INR' ? 'INR' : (data?.totalEstimate?.localCurrency?.code || 'LOCAL')}
+                        </span>
+                        <svg className="w-3 h-3 text-violet-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M19 9l-7 7-7-7" />
+                        </svg>
+                      </button>
+                      
+                      <div className="absolute top-full right-0 mt-2 opacity-0 invisible group-hover/currency:opacity-100 group-hover/currency:visible transition-all duration-300 translate-y-2 group-hover/currency:translate-y-0 z-50">
+                        <div className="bg-white rounded-2xl shadow-2xl p-1.5 min-w-[120px] border border-slate-100">
+                          <button 
+                            onClick={() => setCurrencyMode('INR')}
+                            className={`w-full text-left px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-colors ${currencyMode === 'INR' ? 'bg-violet-50 text-violet-600' : 'text-slate-400 hover:bg-slate-50 hover:text-slate-900'}`}
+                          >
+                            Indian Rupee (INR)
+                          </button>
+                          <button 
+                            onClick={() => setCurrencyMode('LOCAL')}
+                            className={`w-full text-left px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-colors ${currencyMode === 'LOCAL' ? 'bg-violet-50 text-violet-600' : 'text-slate-400 hover:bg-slate-50 hover:text-slate-900'}`}
+                          >
+                            {data?.totalEstimate?.localCurrency?.name || 'Local Currency'}
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <h4 className="md:text-4xl text-2xl font-black text-white leading-tight mb-8">
+                    Your Travel Capital
                   </h4>
                   <div className="flex items-center gap-4 text-violet-400 mb-10">
                     <div className="h-[2px] w-12 bg-current" />
-                      <span className="text-sm font-bold uppercase tracking-widest">{budgetDisplay}</span>
+                      <span className="text-sm font-bold uppercase tracking-widest">
+                        {data?.type || 'Trip'} • {currencyMode === 'LOCAL' ? (data?.totalEstimate?.localCurrency?.name || 'Local') : 'INR'}
+                      </span>
                   </div>
                 </div>
 
-                <div className="relative z-10 bg-white/5 backdrop-blur-xl border border-white/10 p-8 rounded-[2rem]">
+                <div className="relative z-10 bg-white/5 backdrop-blur-xl border border-white/10 p-6 sm:p-8 rounded-[2rem] mt-auto">
                   {data.totalEstimate && (
-                    <>
-                      <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-2">Grand Total</p>
-                      <p className="text-3xl font-black text-white tracking-tighter">
-                        <span className="text-violet-400 text-xl mr-1">{data.totalEstimate.currency}</span>
-                        {data.totalEstimate.min?.toLocaleString() ?? '0'} — {data.totalEstimate.max?.toLocaleString() ?? '0'}
+                    <div className="flex flex-col">
+                      <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-1">Grand Total</p>
+                      <p className="text-2xl sm:text-3xl font-black text-white tracking-tighter flex items-center gap-2 flex-wrap">
+                        <span>{formatPrice(data.totalEstimate.min || 0)}</span>
+                        <span className="text-violet-500 opacity-50 text-sm">—</span>
+                        <span>{formatPrice(data.totalEstimate.max || 0)}</span>
                       </p>
-                    </>
+                    </div>
                   )}
                 </div>
               </div>
@@ -971,7 +1075,7 @@ export default function TripResult({
                     <div className="w-10 h-10 rounded-xl bg-slate-50 flex items-center justify-center font-black text-xs text-slate-400 group-hover:bg-violet-600 group-hover:text-white transition-all">
                       0{idx + 1}
                     </div>
-                    <span className="text-lg font-black text-slate-900 tracking-tight">{row.amount}</span>
+                    <span className="text-lg font-black text-slate-900 tracking-tight">{formatPrice(row.amount)}</span>
                   </div>
                   <h5 className="font-bold text-slate-900 text-xl mb-2">{row.label}</h5>
                   <p className="text-slate-500 text-sm leading-relaxed">{row.note}</p>
@@ -993,8 +1097,7 @@ export default function TripResult({
         </section>
 
         {/* Footer actions - Redesigned for Premium Feel */}
-        {!isEditMode && (
-          <div className="mt-20 md:mt-32 pb-20 max-w-4xl mx-auto px-6">
+        <div className="mt-20 md:mt-32 pb-20 max-w-4xl mx-auto px-6">
             <div className="relative p-8 md:p-12 rounded-[3rem] bg-white border border-slate-100 shadow-2xl shadow-slate-200/50 overflow-hidden text-center">
               {/* Background Accent */}
               <div className="absolute -top-24 -right-24 w-64 h-64 bg-violet-50 rounded-full blur-3xl opacity-50" />
@@ -1018,6 +1121,15 @@ export default function TripResult({
                       {isSaved ? 'See trip!' : 'Save Trip'} <span className="text-xl">✈️</span>
                     </button>
                     
+                    <button
+                      type="button"
+                      onClick={handleDownloadPDF}
+                      className="w-full md:w-auto py-2.5 sm:px-6 sm:py-5 bg-violet-600 text-white rounded-2xl font-bold text-sm sm:text-lg hover:bg-violet-700 hover:translate-y-[-2px] transition-all duration-300 shadow-xl shadow-violet-200 active:scale-95 flex items-center justify-center gap-2"
+                    >
+                      Download PDF
+                      <span className="text-xl">📄</span>
+                    </button>
+
                     <button
                       type="button"
                       onClick={() => {
@@ -1060,7 +1172,6 @@ export default function TripResult({
               </div>
             </div>
           </div>
-        )}
 
         {/* Editor HUD - Premium Floating Controls */}
         {isEditMode && (

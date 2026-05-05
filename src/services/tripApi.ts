@@ -51,6 +51,11 @@ export interface TotalEstimate {
   max: number;
   currency: string;
   note: string;
+  localCurrency?: {
+    code: string;
+    symbol: string;
+    name: string;
+  };
 }
 
 export interface TripPlanModel {

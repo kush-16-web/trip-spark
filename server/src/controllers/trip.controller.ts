@@ -7,6 +7,7 @@ import { getWeatherForecast } from '../services/weather.service';
 import { prisma } from '../lib/prisma';
 import { AuthRequest } from '../middlewares/auth.middleware';
 import { ok } from 'node:assert';
+import { exchangeRates } from '../services/currency.service';
 
 export const planTrip = async (
   req: AuthRequest,
@@ -35,7 +36,13 @@ export const planTrip = async (
     });
 
     const plan = await generateTripPlan(validatedInput);
-  
+
+    // Corrected name: localCurrency (not localCurrencyCode)
+    const localCode = plan.totalEstimate.localCurrency?.code || 'INR';
+
+    // Convert INR to Local (e.g. INR to JPY)
+    const rate = await exchangeRates('INR', localCode);
+    
     const weather = await getWeatherForecast(validatedInput.Destination, validatedInput.startDate, validatedInput.endDate);
 
     const savedTrip = await prisma.tripPlan.create({
@@ -61,6 +68,7 @@ export const planTrip = async (
       weather,
       tripId: savedTrip.id,
       shareId: savedTrip.shareId,
+      exchangeRates: rate,
     });
   } catch (error) {
     console.error('[trip.controller] Failed to plan trip:', error);
@@ -295,13 +303,17 @@ export const refineTrip = async (req: AuthRequest, res: Response) => {
 
     const updatedPlan = await refineTripWithAI(currentTrip.plan, instruction);
 
+    const localCode = updatedPlan.totalEstimate?.localCurrency?.code || 'INR';
+    const rate = await exchangeRates('INR', localCode);
+
     const saved = await prisma.tripPlan.update({
       where: {id},
       data: {plan: updatedPlan as any}
     });
     return res.status(200).json({
       ok:true,
-      plan: updatedPlan
+      plan: updatedPlan,
+      exchangeRates: rate,
     })
   }catch (error){
     console.error('[trip.controller] Failed to refine trip:', error);
@@ -336,7 +348,9 @@ export const generateSingleDay = async (req: Request, res: Response) => {
          DO NOT suggest any of these places again.
       3. Suggest 2-3 NEW activities that fit into the gaps of the current schedule (e.g., if they have a dinner, suggest a morning or afternoon activity).
       4. Ensure the timing doesn't overlap with the current schedule for Day ${daynumber}.
-      5. The user's specific request: "${customPrompt || 'Suggest a amazing, well-paced day.'}"
+      5. The user's specific request: "${customPrompt || 'Suggest an amazing, well-paced day.'}"
+      6. CRITICAL: For every activity, provide real-world geographic coordinates (Latitude and Longitude) in the 'coordinates' object.
+
       
       OUTPUT FORMAT:
       Return ONLY a JSON array of the NEW activities:
@@ -344,7 +358,11 @@ export const generateSingleDay = async (req: Request, res: Response) => {
         {
           "time": "String (e.g., '09:00 AM')",
           "title": "String (Short, catchy title)",
-          "desc": "String (2-3 sentences explaining why it fits the gaps)"
+          "desc": "String (2-3 sentences explaining why it fits the gaps)",
+          "coordinates": {
+            "lat": "Float (Real world latitude)",
+            "lng": "Float (Real world longitude)"
+          }
         }
       ]
     `;
