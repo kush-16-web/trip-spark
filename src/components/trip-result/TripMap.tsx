@@ -1,6 +1,9 @@
 import { useState, useRef, useEffect } from "react";
 import Map, { Marker, Source, Layer, NavigationControl } from "react-map-gl/mapbox";
 import 'mapbox-gl/dist/mapbox-gl.css';
+import mapboxgl from 'mapbox-gl';
+mapboxgl.accessToken = 'pk.eyJ1Ijoia3VzaC0xNiIsImEiOiJjbW9zdDNrNTgwMmVrMnJzMWtyMHV4aWhsIn0.G7L6LjqBCdAyqcx3fVpXug'
+// console.log("My Token is:", mapboxgl.accessToken);
 
 interface MapProps{
     places: any[]; // Must visit places
@@ -38,18 +41,18 @@ const TripMap = ({places, stays, activites, activeDay}: MapProps) =>{
         ref={mapRef}
         onMove={evt => setViewState(evt.viewState)}
         mapStyle="mapbox://styles/mapbox/light-v11" // Premium Muted style
-        mapboxAccessToken="PASTE_YOUR_TOKEN_HERE"
+        mapboxAccessToken={mapboxgl.accessToken}
       >
         <NavigationControl position="top-right" />
         
         {/* 3. Render Markers for Places (Must Visit) */}
         {places.map((place, i) => (
-          place.coordinates && (
-            <Marker key={`place-${i}`} latitude={place.coordinates.lat} longitude={place.coordinates.lng}>
+          place.coordinates?.lat && place.coordinates?.lng && (
+            <Marker key={`place-${i}`} latitude={Number(place.coordinates.lat)} longitude={Number(place.coordinates.lng)}>
               <div className="group relative">
-                <div className="w-6 h-6 bg-violet-600 rounded-full border-2 border-white shadow-lg cursor-pointer transform transition-transform hover:scale-125" />
+                <div className="w-6 h-6 bg-black rounded-full border-2 border-white shadow-lg cursor-pointer transform transition-transform hover:scale-125" />
                 <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-1 bg-slate-900 text-white text-[10px] rounded opacity-0 group-hover:opacity-100 whitespace-nowrap pointer-events-none transition-opacity">
-                  {place.title}
+                  {place.title || place.name}
                 </div>
               </div>
             </Marker>
@@ -58,8 +61,8 @@ const TripMap = ({places, stays, activites, activeDay}: MapProps) =>{
 
         {/* 4. Render Markers for Stays (Hotels) */}
         {stays.map((stay, i) => (
-          stay.coordinates && (
-            <Marker key={`stay-${i}`} latitude={stay.coordinates.lat} longitude={stay.coordinates.lng}>
+          stay.coordinates?.lat && stay.coordinates?.lng && (
+            <Marker key={`stay-${i}`} latitude={Number(stay.coordinates.lat)} longitude={Number(stay.coordinates.lng)}>
               <div className="group relative">
                 <div className="w-6 h-6 bg-emerald-500 rounded-full border-2 border-white shadow-lg cursor-pointer transform transition-transform hover:scale-125" />
                 <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-1 bg-slate-900 text-white text-[10px] rounded opacity-0 group-hover:opacity-100 whitespace-nowrap pointer-events-none transition-opacity">
@@ -81,8 +84,8 @@ const TripMap = ({places, stays, activites, activeDay}: MapProps) =>{
               geometry: {
                 type: 'LineString',
                 coordinates: activites
-                  .filter(a => a.coordinates)
-                  .map(a => [a.coordinates.lng, a.coordinates.lat])
+                  .filter(a => a.coordinates?.lng && a.coordinates?.lat)
+                  .map(a => [Number(a.coordinates.lng), Number(a.coordinates.lat)])
               }
             }}
           >

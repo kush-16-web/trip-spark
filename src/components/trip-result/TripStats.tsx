@@ -21,6 +21,9 @@ interface TripStatsProps {
   minBudget?: number;
   maxBudget?: number;
   currency?: string;
+  currencyMode: 'INR' | 'LOCAL';
+  exchangeRate: number;
+  localCurrency?: any;
 }
 
 const TripStats: React.FC<TripStatsProps> = ({ 
@@ -35,10 +38,22 @@ const TripStats: React.FC<TripStatsProps> = ({
   endDate,
   minBudget,
   maxBudget,
-  currency
+  currency,
+  currencyMode,
+  exchangeRate,
+  localCurrency
 }) => {
   const [isTypeMenuOpen, setIsTypeMenuOpen] = React.useState(false);
   const [isCurrencyOpen, setIsCurrencyOpen] = React.useState(false);
+
+  const formatInternalPrice = (amount: any) => {
+    const numericAmount = Number(amount) || 0;
+    if (currencyMode === 'LOCAL' && localCurrency) {
+      const converted = numericAmount * exchangeRate;
+      return `${localCurrency.symbol}${Math.round(converted).toLocaleString()}`;
+    }
+    return `₹${Math.round(numericAmount).toLocaleString()}`;
+  };
   const typeOptions = [
     { label: 'Solo', icon: soloTravel },
     { label: 'Couple', icon: Romantic },
@@ -242,7 +257,9 @@ const TripStats: React.FC<TripStatsProps> = ({
               />
             </div>
         ) : (
-          <h4 className="text-xl font-black text-slate-900 truncate">{budget}</h4>
+          <h4 className="text-xl font-black text-slate-900 truncate">
+            {formatInternalPrice(minBudget)} — {formatInternalPrice(maxBudget)}
+          </h4>
         )}
       </div>
     </div>

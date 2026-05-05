@@ -80,6 +80,9 @@ export interface TripResultData {
   suggestedStays?: StaySuggestion[];
   suggestedPlaces?: PlaceSuggestion[];
   weather?: Weather[] | null;
+  currencyMode?: 'INR' | 'LOCAL';
+  exchangeRate?: number;
+  localCurrency?: any;
 }
 
 interface TripResultProps {
@@ -572,12 +575,9 @@ export default function TripResult({
   const travelerCount = Number(data.travelers) || 1;
   const perPersonMin = Math.round((data.totalEstimate?.min ?? 0) / travelerCount);
   const perPersonMax = Math.round((data.totalEstimate?.max ?? 0) / travelerCount);
-  const budgetDisplay =
-    data.budgetRange
-      ? `₹${data.budgetRange.min?.toLocaleString() ?? '0'} - ₹${data.budgetRange.max?.toLocaleString() ?? '0'}`
-      : data.totalEstimate
-        ? `${data.totalEstimate.currency}${data.totalEstimate.min?.toLocaleString() ?? '0'} - ${data.totalEstimate.currency}${data.totalEstimate.max?.toLocaleString() ?? '0'}`
-        : '—';
+  const budgetDisplay = data.totalEstimate
+    ? `${formatPrice(data.totalEstimate.min)} — ${formatPrice(data.totalEstimate.max)}`
+    : '—';
   const destination = data.Destination?.trim() || 'your destination';
   const dayCount = Math.max(1, Number(data?.days) || data.dayPlan?.length || 1);
   const days = Array.from({ length: dayCount }, (_, i) => i + 1);
@@ -591,7 +591,7 @@ export default function TripResult({
       const start = field === 'startDate' ? value : data.startDate;
       const end = field === 'endDate' ? value : data.endDate;
       
-      newData[field as keyof TripResultData] = value;
+      (newData as any)[field] = value;
 
       if (start && end) {
         const s = new Date(start);
@@ -758,6 +758,9 @@ export default function TripResult({
           minBudget={data?.totalEstimate?.min ?? 0}
           maxBudget={data?.totalEstimate?.max ?? 0}
           currency={data?.totalEstimate?.currency ?? '₹'}
+          currencyMode={currencyMode}
+          exchangeRate={exchangeRate}
+          localCurrency={data?.totalEstimate?.localCurrency}
         />
 
         {data.totalEstimate && (
@@ -884,7 +887,7 @@ export default function TripResult({
             {/* Horizontal Tabs - Refined sliding mechanism */}
             <div className="relative mb-8 md:mb-10">
               <div 
-                className="relative flex bg-white w-full md:w-fit p-2 rounded-[2.5rem] shadow-xl shadow-slate-200/40 border border-slate-100 overflow-x-auto snap-x no-scrollbar"
+                className="relative flex bg-white w-full max-w-5xl mx-auto md:w-fit p-2 rounded-[2.5rem] scroll-smooth shadow-xl shadow-slate-200/40 border border-slate-100 overflow-x-auto snap-x no-scrollbar"
                 style={{
                   '--tab-w': '85px',
                   '--tab-gap': '8px',
