@@ -95,7 +95,7 @@ function ActivityItem({
         open={idx === 0}
         className="group/details border-b border-slate-100 last:border-0 pb-4 md:pb-6 last:pb-0"
       >
-        <summary className="list-none cursor-pointer flex items-center gap-4 md:gap-6">
+        <summary className="list-none cursor-pointer flex items-start md:items-center gap-4 md:gap-6">
           {/* Drag Handle - ONLY this badge triggers the drag */}
           <div 
             {...listeners} 
@@ -105,12 +105,34 @@ function ActivityItem({
           </div>
 
           <div className="flex-1 min-w-0">
-            <div className="flex items-center gap-2 md:gap-3 mb-0.5 md:mb-1">
+            {/* Title Section */}
+            <div className="mb-1 md:mb-0">
+              {isEditMode && editingIdx === idx ? (
+                <input
+                  className="w-full bg-transparent border-b border-slate-200 outline-none font-black text-slate-800 md:text-lg tracking-tight mb-2"
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                      e.preventDefault();
+                      setEditingIdx(null);
+                    }
+                  }}
+                  value={item.title}
+                  onChange={(e) => onUpdateActivity(idx, { ...item, title: e.target.value })}
+                  autoFocus
+                />
+              ) : (
+                <h5 className="text-base md:text-2xl font-black text-slate-900 tracking-tight group-hover/details:text-violet-600 transition-colors truncate">
+                  {item.title}
+                </h5>
+              )}
+            </div>
+
+            {/* Meta & Mobile Actions Row */}
+            <div className="flex items-center gap-2 md:gap-3">
               {isEditMode && editingIdx === idx ? (
                 <input
                   className="bg-transparent border-b border-violet-200 outline-none text-[10px] font-black text-violet-600 w-20"
                   value={item.time}
-                  autoFocus
                   onKeyDown={(e) => {
                     if (e.key === 'Enter') {
                       e.preventDefault();
@@ -124,41 +146,88 @@ function ActivityItem({
                   {item.time}
                 </span>
               )}
+
+              {/* Mobile Only Action Tray */}
+              {isEditMode && (
+                <div className="flex md:hidden items-center gap-1.5 ml-auto">
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setEditingIdx(editingIdx === idx ? null : idx);
+                    }}
+                    className={`p-2 rounded-lg transition-all duration-300 ${
+                      editingIdx === idx 
+                        ? "bg-emerald-600 text-white shadow-lg shadow-emerald-200" 
+                        : "bg-slate-100 text-slate-600 hover:bg-slate-200"
+                    }`}
+                  >
+                    {editingIdx === idx ? (
+                      <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
+                      </svg>
+                    ) : (
+                      <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7M18.5 2.5a2.121 2.121 0 113 3L12 15l-4 1 1-4 9.5-9.5z" />
+                      </svg>
+                    )}
+                  </button>
+
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      if (confirmDeleteIdx === idx) {
+                        onDeleteActivity(idx);
+                        setConfirmDeleteIdx(null);
+                      } else {
+                        setConfirmDeleteIdx(idx);
+                        setTimeout(() => setConfirmDeleteIdx(null), 3000);
+                      }
+                    }}
+                    className={`p-2 rounded-lg transition-all duration-300 ${
+                      confirmDeleteIdx === idx
+                        ? "bg-red-600 text-white animate-pulse"
+                        : "bg-red-50 text-red-500 hover:bg-red-100"
+                    }`}
+                  >
+                    {confirmDeleteIdx === idx ? (
+                      <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                      </svg>
+                    ) : (
+                      <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                      </svg>
+                    )}
+                  </button>
+                </div>
+              )}
             </div>
-            
-            {isEditMode && editingIdx === idx ? (
-              <input
-                className="w-full bg-transparent border-b border-slate-200 outline-none font-black text-slate-800 md:text-lg tracking-tight mb-2"
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter') {
-                    e.preventDefault();
-                    setEditingIdx(null);
-                  }
-                }}
-                value={item.title}
-                onChange={(e) => onUpdateActivity(idx, { ...item, title: e.target.value })}
-              />
-            ) : (
-              <h5 className="text-base md:text-2xl font-black text-slate-900 tracking-tight group-hover/details:text-violet-600 transition-colors truncate">
-                {item.title}
-              </h5>
-            )}
           </div>
 
+          {/* Desktop Only Action Tray */}
           {isEditMode && (
-            <div className="flex items-center gap-2">
+            <div className="hidden md:flex items-center gap-2">
               <button
                 onClick={(e) => {
                   e.stopPropagation();
                   setEditingIdx(editingIdx === idx ? null : idx);
                 }}
-                className={`font-black text-[10px] uppercase tracking-tighter px-3 py-1 rounded-lg transition-all duration-300 ${
+                className={`p-2.5 rounded-xl transition-all duration-300 ${
                   editingIdx === idx 
-                    ? "bg-emerald-600 text-white" 
+                    ? "bg-emerald-600 text-white shadow-lg shadow-emerald-200" 
                     : "bg-slate-100 text-slate-600 hover:bg-slate-200"
                 }`}
+                title={editingIdx === idx ? "Save" : "Edit"}
               >
-                {editingIdx === idx ? "Save" : "Edit"}
+                {editingIdx === idx ? (
+                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
+                  </svg>
+                ) : (
+                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7M18.5 2.5a2.121 2.121 0 113 3L12 15l-4 1 1-4 9.5-9.5z" />
+                  </svg>
+                )}
               </button>
 
               <button
@@ -172,23 +241,33 @@ function ActivityItem({
                     setTimeout(() => setConfirmDeleteIdx(null), 3000);
                   }
                 }}
-                className={`font-black text-[10px] uppercase tracking-tighter px-3 py-1 rounded-lg transition-all duration-300 ${
+                className={`p-2.5 rounded-xl transition-all duration-300 ${
                   confirmDeleteIdx === idx
                     ? "bg-red-600 text-white animate-pulse"
                     : "bg-red-50 text-red-500 hover:bg-red-100"
                 }`}
+                title={confirmDeleteIdx === idx ? "Confirm Delete" : "Delete"}
               >
-                {confirmDeleteIdx === idx ? "Sure?" : "Del"}
+                {confirmDeleteIdx === idx ? (
+                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                  </svg>
+                ) : (
+                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                  </svg>
+                )}
               </button>
             </div>
           )}
 
-          <div className="w-8 h-8 md:w-10 md:h-10 rounded-full border border-slate-100 flex items-center justify-center group-open/details:bg-slate-50 transition-colors">
+          <div className="w-8 h-8 md:w-10 md:h-10 rounded-full border border-slate-100 flex items-center justify-center group-open/details:bg-slate-50 transition-colors shrink-0">
             <svg className="w-4 h-4 md:w-5 md:h-5 text-slate-400 group-open/details:rotate-180 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M19 9l-7 7-7-7" />
             </svg>
           </div>
         </summary>
+
 
         <div className="mt-3 md:mt-4 pl-14 md:pl-20 pr-2 md:pr-10">
           {isEditMode && editingIdx === idx ? (
@@ -326,32 +405,57 @@ const ItineraryDay: React.FC<ItineraryDayProps> = ({
                   {isEditMode ? (
                     showAIInput ? (
                   <div className="w-full max-w-lg mx-auto animate-in fade-in slide-in-from-bottom-2 duration-300">
-                    <div className="relative group">
-                      <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                        {/* A sleek lightning bolt icon instead of sparkles */}
-                        <svg className="h-5 w-5 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
-                        </svg>
+                    <div className="flex flex-col gap-2">
+                      <div className="relative group">
+                        <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                          <svg className="h-5 w-5 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                          </svg>
+                        </div>
+                        <input 
+                          type="text" 
+                          maxLength={100}
+                          placeholder="E.g., A relaxing morning with local coffee..."
+                          className="w-full pl-12 pr-4 md:pr-[120px] py-4 bg-slate-50 hover:bg-slate-100 focus:bg-white border border-slate-200 focus:border-slate-900 rounded-2xl outline-none font-medium text-slate-700 transition-all shadow-sm focus:shadow-md text-sm md:text-base"
+                          value={aiPrompt}
+                          onChange={(e) => setAiPrompt(e.target.value)}
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter' && !isGeneratingAI && aiPrompt.trim()) {
+                              onGenerateDayAI?.(aiPrompt);
+                              setShowAIInput(false);
+                            }
+                          }}
+                          autoFocus
+                        />
+                        {/* Desktop Only Buttons */}
+                        <div className="hidden md:flex absolute inset-y-2 right-2 items-center gap-1">
+                          <button 
+                            onClick={() => setShowAIInput(false)}
+                            className="px-3 py-2 text-xs font-bold text-slate-400 hover:text-slate-600 transition-colors"
+                          >
+                            Cancel
+                          </button>
+                          <button 
+                            onClick={() => {
+                              if (!aiPrompt.trim()) return;
+                              onGenerateDayAI?.(aiPrompt);
+                              setShowAIInput(false);
+                            }} 
+                            disabled={isGeneratingAI || !aiPrompt.trim()}
+                            className="w-10 h-10 bg-slate-900 text-white rounded-xl hover:bg-slate-800 transition-all flex items-center justify-center shadow-md shadow-slate-900/20"
+                          >
+                            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M14 5l7 7m0 0l-7 7m7-7H3" />
+                            </svg>
+                          </button>
+                        </div>
                       </div>
-                      <input 
-                        type="text" 
-                        maxLength={100}
-                        placeholder="E.g., A relaxing morning with local coffee..."
-                        className="w-full pl-12 pr-[120px] py-4 bg-slate-50 hover:bg-slate-100 focus:bg-white border border-slate-200 focus:border-slate-900 rounded-2xl outline-none font-medium text-slate-700 transition-all shadow-sm focus:shadow-md"
-                        value={aiPrompt}
-                        onChange={(e) => setAiPrompt(e.target.value)}
-                        onKeyDown={(e) => {
-                          if (e.key === 'Enter' && !isGeneratingAI && aiPrompt.trim()) {
-                            onGenerateDayAI?.(aiPrompt);
-                            setShowAIInput(false);
-                          }
-                        }}
-                        autoFocus
-                      />
-                      <div className="absolute inset-y-2 right-2 flex items-center gap-1">
+                      
+                      {/* Mobile Only Buttons */}
+                      <div className="flex md:hidden items-center justify-end gap-2 mt-1">
                         <button 
                           onClick={() => setShowAIInput(false)}
-                          className="px-3 py-2 text-xs font-bold text-slate-400 hover:text-slate-600 transition-colors"
+                          className="px-4 py-2 text-xs font-black uppercase tracking-widest text-slate-400 hover:text-slate-600 transition-colors"
                         >
                           Cancel
                         </button>
@@ -362,22 +466,13 @@ const ItineraryDay: React.FC<ItineraryDayProps> = ({
                             setShowAIInput(false);
                           }} 
                           disabled={isGeneratingAI || !aiPrompt.trim()}
-                          className="w-10 h-10 bg-slate-900 text-white rounded-xl hover:bg-slate-800 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center shadow-md shadow-slate-900/20"
+                          className="px-6 py-2 bg-slate-900 text-white text-[10px] font-black uppercase tracking-widest rounded-xl hover:bg-slate-800 transition-all flex items-center gap-2 shadow-lg shadow-slate-900/20"
                         >
-                          {isGeneratingAI ? (
-                            <svg className="animate-spin h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                            </svg>
-                          ) : (
-                            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M14 5l7 7m0 0l-7 7m7-7H3" />
-                            </svg>
-                          )}
+                          Generate
                         </button>
                       </div>
                     </div>
-                    <p className="text-[10px] md:text-xs text-slate-400 font-medium mt-3 text-center">
+                    <p className="hidden md:block text-[10px] md:text-xs text-slate-400 font-medium mt-3 text-center">
                       Press <kbd className="font-sans px-1.5 py-0.5 bg-slate-100 border border-slate-200 rounded-md text-slate-500">Enter</kbd> to generate
                     </p>
                   </div>
@@ -453,41 +548,56 @@ const ItineraryDay: React.FC<ItineraryDayProps> = ({
 
                   {showAIInput ? (
                     <div className="animate-in fade-in slide-in-from-bottom-2 duration-300">
-                      <div className="relative group">
-                        <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                          <svg className="h-5 w-5 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
-                          </svg>
+                      <div className="flex flex-col gap-2">
+                        <div className="relative group">
+                          <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                            <svg className="h-5 w-5 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                            </svg>
+                          </div>
+                          <input 
+                            type="text" 
+                            placeholder="What should we add? E.g., A jazz bar..."
+                            className="w-full pl-12 pr-4 md:pr-[80px] py-4 bg-slate-50 border border-slate-200 focus:border-slate-900 rounded-2xl outline-none font-medium text-slate-700 transition-all shadow-sm focus:shadow-md text-sm md:text-base"
+                            value={aiPrompt}
+                            onChange={(e) => setAiPrompt(e.target.value)}
+                            onKeyDown={(e) => {
+                              if (e.key === 'Enter' && aiPrompt.trim()) {
+                                onGenerateDayAI?.(aiPrompt);
+                                setShowAIInput(false);
+                              }
+                            }}
+                            autoFocus
+                          />
+                          <button 
+                            onClick={() => {
+                              if (aiPrompt.trim()) {
+                                onGenerateDayAI?.(aiPrompt);
+                                setShowAIInput(false);
+                              }
+                            }}
+                            className="hidden md:block absolute right-2 top-2 bottom-2 px-4 bg-slate-900 text-white text-xs font-bold rounded-xl hover:bg-slate-800 transition-colors"
+                          >
+                            Fill
+                          </button>
                         </div>
-                        <input 
-                          type="text" 
-                          placeholder="What should we add? E.g., A jazz bar for the evening..."
-                          className="w-full pl-12 pr-[100px] py-4 bg-slate-50 border border-slate-200 focus:border-slate-900 rounded-2xl outline-none font-medium text-slate-700 transition-all shadow-sm focus:shadow-md"
-                          value={aiPrompt}
-                          onChange={(e) => setAiPrompt(e.target.value)}
-                          onKeyDown={(e) => {
-                            if (e.key === 'Enter' && aiPrompt.trim()) {
-                              onGenerateDayAI?.(aiPrompt);
-                              setShowAIInput(false);
-                            }
-                          }}
-                          autoFocus
-                        />
-                        <button 
-                          onClick={() => {
-                            if (aiPrompt.trim()) {
-                              onGenerateDayAI?.(aiPrompt);
-                              setShowAIInput(false);
-                            }
-                          }}
-                          className="absolute right-2 top-2 bottom-2 px-4 bg-slate-900 text-white text-xs font-bold rounded-xl hover:bg-slate-800 transition-colors"
-                        >
-                          Fill
-                        </button>
+                        <div className="flex md:hidden items-center justify-end gap-2">
+                           <button onClick={() => setShowAIInput(false)} className="text-[10px] text-slate-400 font-black uppercase tracking-widest px-2">
+                             Cancel
+                           </button>
+                           <button 
+                             onClick={() => {
+                               if (aiPrompt.trim()) {
+                                 onGenerateDayAI?.(aiPrompt);
+                                 setShowAIInput(false);
+                               }
+                             }}
+                             className="px-6 py-2 bg-slate-900 text-white text-[10px] font-black uppercase tracking-widest rounded-xl hover:bg-slate-800 transition-all shadow-lg shadow-slate-900/20"
+                           >
+                             Add
+                           </button>
+                        </div>
                       </div>
-                      <button onClick={() => setShowAIInput(false)} className="mt-2 text-[10px] text-slate-400 font-bold uppercase hover:text-slate-600 transition-colors">
-                        Cancel
-                      </button>
                     </div>
                   ) : (
                     <button 

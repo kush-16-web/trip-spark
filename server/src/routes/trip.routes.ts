@@ -11,6 +11,7 @@ import {
   generateBudgetOnly,
   generateSummaryOnly,
   getExchangeRate,
+  saveTrip,
 } from '../controllers/trip.controller';
 import { authenticate, optionalAuthenticate } from '../middlewares/auth.middleware';
 
@@ -32,3 +33,4 @@ tripRouter.get("/weather/:destination/:startDate/:endDate", getTripWeather);
 tripRouter.post("/generate-budget", generateBudgetOnly);
 tripRouter.post("/generate-summary", generateSummaryOnly);
 tripRouter.get("/exchange-rate/:base/:target", getExchangeRate);
+tripRouter.post("/save", authenticate, saveTrip);

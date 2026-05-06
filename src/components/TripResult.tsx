@@ -3,7 +3,9 @@ import { signInWithPopup } from 'firebase/auth';
 import { auth, googleProvider, getFriendlyAuthErrorMessage } from '../lib/firebase';
 import { loginWithGoogle } from '../services/authApi';
 import AuthModal from './AuthModal';
+import { toast } from "react-hot-toast";
 import { 
+  savedTrip,
   type BudgetEstimateRow,
   type DayPlan,
   type PlaceSuggestion,
@@ -547,20 +549,36 @@ export default function TripResult({
     }
   }
 
-  function onClickSaveTrip() {
-    if(isSaved && onViewMyTrips){
-      onViewMyTrips();
-      return;
-    }
-    const token = localStorage.getItem('auth_token');
-    if (!token) {
-      setPendingAction('save');
-      setShowLoginPrompt(true);
-      return;
-    }
-    setIsSaved(true);
-    setAuthError(undefined);
+async function onClickSaveTrip() {
+  // 1. FIRST CHECK: If the trip is already saved, just go to the dashboard
+  if (isSaved && onViewMyTrips) {
+    onViewMyTrips();
+    return;
   }
+
+  // 2. SECOND CHECK: If not logged in, show login prompt
+  const token = localStorage.getItem('auth_token');
+  
+  if (!token) {
+    setPendingAction('save');
+    setShowLoginPrompt(true);
+    return;
+  }
+
+    // 3. THIRD STEP: Actually save the trip
+  try {
+    const result = await savedTrip(data); 
+    
+    if (result.ok) {
+      onUpdateTripData?.({ id: result.tripId, shareId: result.shareId });
+      setIsSaved(true);
+      toast.success("Trip saved to your account! ✈️");
+    }
+  } catch (error) {
+    toast.error("Failed to save trip");
+  }
+}
+
 
   if (data == null) {
     return null;
@@ -905,7 +923,7 @@ export default function TripResult({
             {/* Horizontal Tabs - Refined sliding mechanism */}
             <div className="relative mb-8 md:mb-10">
               <div 
-                className="relative flex bg-white w-full max-w-5xl mx-auto md:w-fit p-2 rounded-[2.5rem] scroll-smooth shadow-xl shadow-slate-200/40 border border-slate-100 overflow-x-auto snap-x no-scrollbar"
+                className="relative flex bg-white w-full max-w-[calc(100vw-3rem)] lg:max-w-5xl mx-auto p-2 rounded-[2.5rem] scroll-smooth shadow-xl shadow-slate-200/40 border border-slate-100 overflow-x-auto snap-x custom-scrollbar"
                 style={{
                   '--tab-w': '85px',
                   '--tab-gap': '8px',
@@ -924,6 +942,20 @@ export default function TripResult({
                   />
 
                   <style>{`
+                    .custom-scrollbar::-webkit-scrollbar {
+                      height: 4px;
+                    }
+                    .custom-scrollbar::-webkit-scrollbar-track {
+                      background: transparent;
+                      margin: 0 40px;
+                    }
+                    .custom-scrollbar::-webkit-scrollbar-thumb {
+                      background: rgba(0, 0, 0, 0.05);
+                      border-radius: 20px;
+                    }
+                    .custom-scrollbar:hover::-webkit-scrollbar-thumb {
+                      background: rgba(0, 0, 0, 0.1);
+                    }
                     @media (min-width: 768px) {
                       [data-md-slider] {
                         width: var(--md-tab-w) !important;

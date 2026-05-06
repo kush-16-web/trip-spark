@@ -2,6 +2,8 @@ import { useEffect, useState } from 'react';
 import type { MyTripListItem } from '../services/tripApi';
 import { deletetrip, getMyTrips } from '../services/tripApi';
 import toast from 'react-hot-toast';
+import { auth } from '../lib/firebase';
+import { signOut } from 'firebase/auth';
 import deleteIcon from '../assets/bin.gif';
 import friends from '../assets/friends.gif';
 import family from '../assets/Family-travel.gif';
@@ -20,6 +22,7 @@ export default function MyTrips({ onOpenTrip, onBackToPlanner, onTripDeleted }: 
   const [error, setError] = useState<string | null>(null);
   const [tripToDelete, setTripToDelete] = useState<string | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
 
   const fetchTrips = async () => {
     try {
@@ -60,19 +63,44 @@ export default function MyTrips({ onOpenTrip, onBackToPlanner, onTripDeleted }: 
     }
   };
 
+  const handleSignOut = async () => {
+    try {
+      await signOut(auth);
+      localStorage.removeItem('auth_user');
+      localStorage.removeItem('auth_token');
+      window.location.href = '/';
+    } catch (error) {
+      console.error('Sign out failed:', error);
+      toast.error('Failed to sign out. Please try again.');
+    }
+  };
+
   return (
     <div className="min-h-screen bg-slate-50 pt-28 pb-20 px-6">
       <div className="max-w-7xl mx-auto">
 
         {/* Header Section */}
         <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-12">
-          <div>
-            <h1 className="text-4xl md:text-5xl font-black text-slate-900 mb-4 tracking-tight">
-              My <span className="text-violet-600">Adventures</span>
-            </h1>
-            <p className="text-slate-500 font-medium text-lg">
-              {loading ? 'Fetching your itineraries...' : `You have planned ${trips.length} amazing journeys.`}
-            </p>
+          <div className="flex justify-between items-start gap-4">
+            <div>
+              <h1 className="text-4xl md:text-5xl font-black text-slate-900 mb-4 tracking-tight">
+                My <span className="text-violet-600">Adventures</span>
+              </h1>
+              <p className="text-slate-500 font-medium text-lg">
+                {loading ? 'Fetching your itineraries...' : `You have planned ${trips.length} amazing journeys.`}
+              </p>
+            </div>
+            
+            {/* Mobile Sign Out Button */}
+            <button
+              onClick={() => setShowLogoutConfirm(true)}
+              className="md:hidden p-3.5 bg-red-50 text-red-500 rounded-2xl border border-red-100 hover:bg-red-100 transition-colors shadow-sm"
+              title="Sign Out"
+            >
+              <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+              </svg>
+            </button>
           </div>
           <button
             onClick={onBackToPlanner}
@@ -227,6 +255,41 @@ export default function MyTrips({ onOpenTrip, onBackToPlanner, onTripDeleted }: 
                   Keep It
                 </button>
               </div>
+            </div>
+          </div>
+        </div>
+      )}
+      {/* Sign Out Confirmation Modal */}
+      {showLogoutConfirm && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 animate-backdrop">
+          <div
+            className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm"
+            onClick={() => setShowLogoutConfirm(false)}
+          />
+          <div className="relative w-full max-w-md bg-white rounded-[2.5rem] p-10 shadow-2xl animate-modal overflow-hidden text-center">
+            <div className="absolute top-0 right-0 w-32 h-32 bg-red-50 rounded-bl-full -z-10" />
+            <div className="w-20 h-20 bg-red-50 text-red-500 rounded-3xl flex items-center justify-center mx-auto mb-6 shadow-inner">
+              <svg className="w-10 h-10" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+              </svg>
+            </div>
+            <h3 className="text-2xl font-black text-slate-900 mb-3 tracking-tight">Sign Out</h3>
+            <p className="text-slate-500 font-medium mb-8 leading-relaxed">
+              Are you sure you want to log out? You can always come back to see your trips.
+            </p>
+            <div className="flex flex-col gap-3">
+              <button
+                onClick={handleSignOut}
+                className="w-full py-4 bg-red-600 hover:bg-red-700 text-white rounded-2xl font-bold transition-all shadow-lg shadow-red-200 active:scale-95 flex items-center justify-center gap-2"
+              >
+                Yes, Sign Out
+              </button>
+              <button
+                onClick={() => setShowLogoutConfirm(false)}
+                className="w-full py-4 bg-slate-50 text-slate-500 rounded-2xl font-bold hover:bg-slate-100 transition-all active:scale-95"
+              >
+                Cancel
+              </button>
             </div>
           </div>
         </div>

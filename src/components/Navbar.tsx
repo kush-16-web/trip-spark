@@ -214,7 +214,10 @@ const Navbar: React.FC<NavbarProps> = ({ userEmail, userPicture, onLogoClick, is
 
       <AuthModal
         isOpen={showAuthModal}
-        onClose={() => setShowAuthModal(false)}
+        onClose={() => {
+          setShowAuthModal(false);
+          setAuthError(null);
+        }}
         onGoogleLogin={handleGoogleLogin}
         isSigningIn={isSigningIn}
         error={authError}
@@ -273,20 +276,24 @@ const Navbar: React.FC<NavbarProps> = ({ userEmail, userPicture, onLogoClick, is
       {/* Mobile Branding (Top Left) */}
       {/* Mobile/Tablet Dynamic Island Header */}
       <div className="md:hidden fixed top-2 left-[50%] -translate-x-1/2 z-50">
-        <div className="bg-black/40 backdrop-blur-2xl border border-white/10 rounded-[1.5rem] shadow-2xl overflow-hidden px-5 py-2.5 min-w-[140px] transition-all duration-500 ease-in-out">
-          <div className="relative h-6 flex items-center justify-center">
+        <div className={`bg-black/70 backdrop-blur-xl border border-white/10 rounded-[2rem] shadow-2xl overflow-hidden transition-all duration-700 cubic-bezier(0.4, 0, 0.2, 1) pointer-events-auto ${
+          hasToast 
+            ? 'px-6 py-4 w-[250px] max-w-[95vw] scale-105 shadow-violet-500/20' 
+            : 'px-3 py-2.5 w-[160px] scale-100'
+        }`}>
+          <div className={`relative transition-all duration-500 flex items-center justify-center ${hasToast ? 'h-auto min-h-[32px]' : 'h-6'}`}>
 
             {/* 1. The Normal State (Logo + Text) */}
             <div className={`flex items-center gap-2 transition-all duration-500 absolute ${hasToast ? 'opacity-0 -translate-y-10 scale-90' : 'opacity-100 translate-y-0 scale-100'
               }`} onClick={handleLogoClick}>
-              <img src={logo} alt="Logo" className="w-5 h-5" />
+              <img src={logo} alt="Logo" className="w-8 h-8" />
               <span className="font-['Outfit'] text-base font-black text-white">TripSpark</span>
             </div>
 
             {/* 2. The Notification State (The Message) */}
-            <div className={`flex items-center gap-2 transition-all duration-500 absolute whitespace-nowrap ${hasToast ? 'opacity-100 translate-y-0 scale-100' : 'opacity-0 translate-y-10 scale-90'
+            <div className={`flex items-center gap-2 transition-all duration-500 absolute ${hasToast ? 'opacity-100 translate-y-0 scale-100' : 'opacity-0 translate-y-10 scale-90'
               }`}>
-              <span className="text-white font-bold text-sm">
+              <span className="text-white font-bold text-sm tracking-tight text-center">
                 {toasts.find(t => t.visible && typeof t.message === 'string')?.message as string}
               </span>
             </div>

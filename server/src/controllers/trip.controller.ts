@@ -45,29 +45,12 @@ export const planTrip = async (
     
     const weather = await getWeatherForecast(validatedInput.Destination, validatedInput.startDate, validatedInput.endDate);
 
-    const savedTrip = await prisma.tripPlan.create({
-      data: {
-        destination: validatedInput.Destination,
-        days: validatedInput.days,
-        travelers: validatedInput.travelers,
-        type: validatedInput.type,
-        startDate: validatedInput.startDate,
-        endDate: validatedInput.endDate,
-        plan: plan as unknown as Prisma.InputJsonValue,
-        weather: weather ? (weather as unknown as Prisma.InputJsonValue) : undefined,
-        isPublic: true,
-        ownerId: req.userId || null,
-      },
-    });
-
 
     return res.status(200).json({
       ok: true,
       message: 'Plan created successfully',
       plan,
       weather,
-      tripId: savedTrip.id,
-      shareId: savedTrip.shareId,
       exchangeRates: rate,
     });
   } catch (error) {
@@ -78,6 +61,37 @@ export const planTrip = async (
     });
   }
 };
+
+export const saveTrip = async (req: AuthRequest, res: Response) => {
+  try{
+    const {destination,days,travelers,type,startDate,endDate,plan,weather} = req.body;
+    const savedTrip = await prisma.tripPlan.create({
+       data: {
+        destination,
+        days: Number(days),
+        travelers: Number(travelers),
+        type,
+        startDate,
+        endDate,
+        plan: plan as any,
+        weather: weather as any,
+        ownerId: req.userId, // Must be logged in to save
+        isPublic: true,
+      },
+    })
+    return res.status(200).json({
+      ok: true,
+      message: 'Trip saved successfully',
+      tripId: savedTrip.id,
+      shareId: savedTrip.shareId,
+    })
+  }catch(error){
+    return res.status(500).json({
+      ok: false,
+      message: 'Unable to save trip right now. Please try again.',
+    });
+  }
+}
 
 export const getMyTrips = async (req: AuthRequest, res: Response) => {
   try{

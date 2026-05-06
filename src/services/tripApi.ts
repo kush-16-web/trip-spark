@@ -215,3 +215,19 @@ export async function refineTrip(id: string, instruction: string){
   if(!response.ok) throw new Error(data.message);
   return data;
 }
+
+
+export async function savedTrip(tripData:any) {
+  const token = localStorage.getItem('auth_token');
+  const response = await fetch(`${API_BASE_URL}/api/trip/save`,{
+    method : 'POST',
+    headers : {
+      'Content-Type' : 'application/json',
+      'Authorization' : `Bearer ${token}`,
+    },
+    body: JSON.stringify(tripData)
+  })
+  const data = (await response.json()) as { ok: boolean; message: string; tripId: string; shareId: string };
+  if(!response.ok) throw new Error(data.message);
+  return data;
+}
