@@ -294,7 +294,7 @@ const Navbar: React.FC<NavbarProps> = ({ userEmail, userPicture, onLogoClick, is
       {/* Mobile Branding (Top Left) */}
       {/* Mobile/Tablet Dynamic Island Header */}
       <div className="md:hidden fixed top-2 left-[50%] -translate-x-1/2 z-50">
-        <div className={`bg-black/70 backdrop-blur-xl border border-white/10 rounded-[2rem] shadow-2xl overflow-hidden transition-all duration-700 cubic-bezier(0.4, 0, 0.2, 1) pointer-events-auto ${
+        <div className={`bg-black/40 backdrop-blur-2xl border border-white/10 rounded-[2rem] shadow-2xl overflow-hidden transition-all duration-700 cubic-bezier(0.4, 0, 0.2, 1) pointer-events-auto ${
           hasToast 
             ? 'px-6 py-2.5 w-fit min-w-fit max-w-[95vw] scale-105 shadow-violet-500/20' 
             : 'px-3 py-2.5 w-[160px] scale-100'

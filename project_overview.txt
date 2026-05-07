@@ -1,0 +1,19 @@
+Trip Spark AI ✈️✨
+-----------------
+Trip Spark is a premium AI-powered travel planner that turns vague ideas into professional itineraries.
+
+MAIN FEATURES:
+1. AI Studio: Generates multi-day trips using Google Gemini AI.
+2. Smart Map: Interactive Mapbox GL map with numbered routes and satellite views.
+3. Live Data: Real-time hotel ratings, reviews, and photos via Google Places API.
+4. Smart Cache: A backend system that saves hotel data in a database to reduce API costs and increase speed.
+5. Location Search: Premium city autocomplete for accurate travel planning.
+6. Financials: Real-time currency conversion (e.g., INR to JPY) and budget tracking.
+
+TECH STACK:
+- Frontend: React, TypeScript, Tailwind CSS, Mapbox, Framer Motion.
+- Backend: Node.js, Express, Prisma (PostgreSQL).
+- AI/APIs: Gemini AI, Google Places, Open-Meteo, Firebase.
+
+STATUS: 
+Backend caching and frontend UI are complete. Awaiting activation of the standard Google Places API in the cloud console.

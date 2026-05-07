@@ -37,3 +37,26 @@ model TripPlan {
   owner       User?    @relation(fields: [ownerId], references: [id])
   updatedAt   DateTime @updatedAt
 }
+
+model HotelCache {
+  id               String   @id @default(cuid())
+  hotelName        String   // The name AI gave us
+  city             String   // The destination city
+  
+  // Google Data
+  rating           Float?
+  userRatingsTotal Int?
+  address          String?
+  mapUrl           String?
+  photoReference   String?
+  lat              Float?
+  lng              Float?
+
+  // Housekeeping
+  updatedAt        DateTime @updatedAt
+
+  // The "Brain" of the cache: 
+  // This ensures we never store the same hotel in the same city twice.
+  @@unique([hotelName, city])
+}
+

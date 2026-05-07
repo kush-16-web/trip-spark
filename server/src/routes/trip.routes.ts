@@ -12,6 +12,9 @@ import {
   generateSummaryOnly,
   getExchangeRate,
   saveTrip,
+  getHotelDetails,
+  getHotelPhoto,
+  getLocationSuggestions
 } from '../controllers/trip.controller';
 import { authenticate, optionalAuthenticate } from '../middlewares/auth.middleware';
 
@@ -34,3 +37,6 @@ tripRouter.post("/generate-budget", generateBudgetOnly);
 tripRouter.post("/generate-summary", generateSummaryOnly);
 tripRouter.get("/exchange-rate/:base/:target", getExchangeRate);
 tripRouter.post("/save", authenticate, saveTrip);
+tripRouter.get("/hotel/details", getHotelDetails);
+tripRouter.get("/hotel/photo/:photoReference", getHotelPhoto);
+tripRouter.get("/location/suggestions", getLocationSuggestions);

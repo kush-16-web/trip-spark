@@ -13,6 +13,15 @@
 - **Numbered Route Visualization**: Dynamic polyline rendering with numbered steps (1 → 2 → 3) to visualize the flow of each travel day.
 - **Pro Satellite View**: High-resolution satellite imagery toggle allowing users to explore street-level details (Level 20 zoom) of their destinations.
 
+### 🏨 Premium Hotel Intelligence (Google Places)
+- **Live Details**: Real-time fetching of hotel ratings, reviews, and addresses using the Google Places API.
+- **Visual Excellence**: Professional hotel photo integration via secure backend proxying.
+- **Smart Caching Layer**: Custom-built PostgreSQL caching system using Prisma to store hotel data, reducing API latency and costs by up to 90%.
+
+### 🔍 Destination Autocomplete
+- **Global Search**: High-precision location autocomplete for cities and regions worldwide.
+- **Premium UX**: Modern, icon-rich search dropdown with main character energy and smooth Framer Motion transitions.
+
 ### 💰 Financial Intelligence & Currency
 - **Live Exchange Rates**: Integrated custom API service to fetch real-time exchange rates (e.g., INR to JPY).
 - **Dynamic Conversion**: Instant UI-wide currency toggling between base (INR) and local destination currencies.

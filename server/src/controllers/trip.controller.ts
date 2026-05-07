@@ -4,9 +4,11 @@ import { Prisma } from '../generated/prisma/client';
 import { tripPlanRequestSchema } from '../validators/trip.validator';
 import { generateTripPlan, refineTripWithAI, generateContentFromAI } from '../services/ai.service';
 import { getWeatherForecast } from '../services/weather.service';
+import { getHotelLiveDetails } from '../services/google.service';
 import { prisma } from '../lib/prisma';
 import { AuthRequest } from '../middlewares/auth.middleware';
 import { ok } from 'node:assert';
+import axios from 'axios';
 import { exchangeRates } from '../services/currency.service';
 
 export const planTrip = async (
@@ -525,3 +527,121 @@ export const getExchangeRate = async (req: Request, res: Response) => {
     return res.status(500).json({ ok: false, message: 'Failed to fetch exchange rate' });
   }
 }
+
+export const getHotelDetails = async (req: Request, res: Response) => {
+  try {
+    const { name, city } = req.query;
+    const hotelName = name as string;
+    const cityName = city as string;
+
+    if (!hotelName || !cityName) {
+      return res.status(400).json({
+        ok: false,
+        message: "Hotel name and city are required",
+      });
+    }
+
+    // 1. Check Cache first
+    const cached = await prisma.hotelCache.findUnique({
+      where: {
+        hotelName_city: {
+          hotelName: hotelName,
+          city: cityName,
+        },
+      },
+    });
+
+    if (cached) {
+      return res.status(200).json({
+        ok: true,
+        details: cached,
+      });
+    }
+
+    // 2. Not in cache? Fetch from Google
+    const details = await getHotelLiveDetails(hotelName, cityName);
+    
+    if (!details) {
+      return res.status(404).json({
+        ok: false,
+        message: "Hotel details not found from Google",
+      });
+    }
+
+    // 3. Save to Cache for next time
+    const saved = await prisma.hotelCache.create({
+      data: {
+        hotelName: hotelName,
+        city: cityName,
+        rating: details.rating,
+        userRatingsTotal: details.userRatingsTotal,
+        address: details.address,
+        mapUrl: details.mapUrl,
+        photoReference: details.photoReference,
+        lat: details.lat,
+        lng: details.lng,
+      },
+    });
+
+    return res.status(200).json({
+      ok: true,
+      details: saved,
+    });
+  } catch (error) {
+    console.error('[trip.controller] Error getting hotel details:', error);
+    return res.status(500).json({
+      ok: false,
+      message: "Failed to get hotel details",
+    });
+  }
+};
+
+export const getHotelPhoto = (req: Request, res: Response) => {
+  const { photoReference } = req.params;
+  const apiKey = process.env.GOOGLE_MAPS_API_KEY;
+
+  if (!photoReference || !apiKey) {
+    return res.status(400).send('Photo reference or API key missing');
+  }
+
+  // Construct the URL and redirect the browser to it
+  const url = `https://maps.googleapis.com/maps/api/place/photo?maxwidth=800&photoreference=${photoReference}&key=${apiKey}`;
+  res.redirect(url);
+};
+
+
+export const getLocationSuggestions = async (req: Request, res: Response) => {
+  try {
+    const { input } = req.query;
+    const apiKey = process.env.GOOGLE_MAPS_API_KEY;
+
+    if (!input) return res.status(400).json({ ok: false, message: 'Input is required' });
+
+    const response = await axios.get(
+      'https://maps.googleapis.com/maps/api/place/autocomplete/json',
+      {
+        params: {
+          input: input,
+          types: '(regions)',
+          key: apiKey
+        }
+      }
+    );
+
+    console.log("GOOGLE AUTOCOMPLETE RESPONSE:", response.data);
+
+    if (response.data.status !== "OK" && response.data.status !== "ZERO_RESULTS") {
+      console.error("GOOGLE AUTOCOMPLETE ERROR:", response.data.status, response.data.error_message);
+    }
+
+    return res.status(200).json({ 
+      ok: true, 
+      suggestions: response.data.predictions || []
+    });
+  } catch (error) {
+    console.error('Autocomplete error:', error);
+    return res.status(500).json({ ok: false });
+  }
+};
+
+

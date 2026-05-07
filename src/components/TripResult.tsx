@@ -1039,6 +1039,7 @@ async function onClickSaveTrip() {
                     stays={data?.suggestedStays || data.plan?.suggestedStays || []}
                     activites={localDayplan.find(dp => dp.day === activeDay)?.activities || []}
                     activeDay={activeDay}
+                    destination={destination}
                   />
                 </div>
               </div>
@@ -1170,7 +1171,10 @@ async function onClickSaveTrip() {
           <SectionHeading id="suggestions-heading" eyebrow="Discovery" title="Curated Suggestions" icon={compassIcon} />
           
           <div className="grid lg:grid-cols-2 gap-12 lg:gap-16">
-            <HotelSection hotels={hotelsToDisplay.length > 0 ? hotelsToDisplay : HARDCODED_STAYS} />
+            <HotelSection 
+              hotels={hotelsToDisplay.length > 0 ? hotelsToDisplay : HARDCODED_STAYS} 
+              city={destination}
+            />
 
             <MustVisitSection places={placesToDisplay.length > 0 ? placesToDisplay : HARDCODED_PLACES} />
           </div>
