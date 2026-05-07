@@ -65,9 +65,13 @@ export default function MyTrips({ onOpenTrip, onBackToPlanner, onTripDeleted }: 
 
   const handleSignOut = async () => {
     try {
+      setShowLogoutConfirm(false);
+      localStorage.setItem('pending_toast', 'logout_success');
+      
       await signOut(auth);
       localStorage.removeItem('auth_user');
       localStorage.removeItem('auth_token');
+      
       window.location.href = '/';
     } catch (error) {
       console.error('Sign out failed:', error);

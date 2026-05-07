@@ -1,5 +1,5 @@
 import React from 'react';
-import compassIcon from '../../assets/compass.gif';
+import destinationIcon from '../../assets/destination-map.gif';
 import walletIcon from '../../assets/wallet.gif';
 import calender from '../../assets/calendar-time.gif';
 import soloTravel from '../../assets/solo-traveller.gif';
@@ -85,7 +85,7 @@ const TripStats: React.FC<TripStatsProps> = ({
       <div className="p-5 rounded-[1.5rem] border border-slate-100 shadow-sm transition-all hover:border-violet-200">
         <div className="flex items-center gap-3 mb-3">
           <div className="w-10 h-10 md:w-12 md:h-12 flex items-center justify-center">
-            <img src={compassIcon} className="w-full h-full object-contain" alt="" />
+            <img src={destinationIcon} className="w-full h-full object-contain" alt="" />
           </div>
           <p className="text-[9px] uppercase tracking-widest font-black text-slate-400">Destination</p>
         </div>

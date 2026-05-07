@@ -5,7 +5,7 @@ import AuthModal from './AuthModal';
 import { auth, googleProvider, getFriendlyAuthErrorMessage } from '../lib/firebase';
 import { signInWithPopup, signOut } from 'firebase/auth';
 import { loginWithGoogle } from '../services/authApi';
-import { useToaster } from 'react-hot-toast';
+import toast, { useToaster } from 'react-hot-toast';
 
 
 interface NavbarProps {
@@ -47,6 +47,19 @@ const Navbar: React.FC<NavbarProps> = ({ userEmail, userPicture, onLogoClick, is
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
+  // Handle pending toasts after page reload
+  useEffect(() => {
+    const pendingToast = localStorage.getItem('pending_toast');
+    if (pendingToast) {
+      if (pendingToast === 'login_success') {
+        toast.success('Logged in successfully! 👋');
+      } else if (pendingToast === 'logout_success') {
+        toast.success('Logged out successfully! ✈️');
+      }
+      localStorage.removeItem('pending_toast');
+    }
+  }, []);
+
   const location = useLocation();
   const navLinks: Array<{ name: string; href: string; action?: () => void }> = [
     { name: 'Explore', href: '/' },
@@ -70,6 +83,7 @@ const Navbar: React.FC<NavbarProps> = ({ userEmail, userPicture, onLogoClick, is
       if (res.ok) {
         localStorage.setItem('auth_token', res.token!);
         localStorage.setItem('auth_user', JSON.stringify(res.user));
+        localStorage.setItem('pending_toast', 'login_success');
         setShowAuthModal(false);
         window.location.reload();
       }
@@ -86,9 +100,13 @@ const Navbar: React.FC<NavbarProps> = ({ userEmail, userPicture, onLogoClick, is
 
   const handleSignOut = async () => {
     try {
+      setShowLogoutConfirm(false);
+      localStorage.setItem('pending_toast', 'logout_success');
+      
       await signOut(auth);
       localStorage.removeItem('auth_user');
       localStorage.removeItem('auth_token');
+      
       window.location.reload();
     } catch (error) {
       console.error('Sign out failed:', error);
@@ -278,20 +296,22 @@ const Navbar: React.FC<NavbarProps> = ({ userEmail, userPicture, onLogoClick, is
       <div className="md:hidden fixed top-2 left-[50%] -translate-x-1/2 z-50">
         <div className={`bg-black/70 backdrop-blur-xl border border-white/10 rounded-[2rem] shadow-2xl overflow-hidden transition-all duration-700 cubic-bezier(0.4, 0, 0.2, 1) pointer-events-auto ${
           hasToast 
-            ? 'px-6 py-4 w-[250px] max-w-[95vw] scale-105 shadow-violet-500/20' 
+            ? 'px-6 py-2.5 w-fit min-w-fit max-w-[95vw] scale-105 shadow-violet-500/20' 
             : 'px-3 py-2.5 w-[160px] scale-100'
         }`}>
-          <div className={`relative transition-all duration-500 flex items-center justify-center ${hasToast ? 'h-auto min-h-[32px]' : 'h-6'}`}>
+          <div className="relative transition-all duration-500 flex items-center justify-center h-8">
 
             {/* 1. The Normal State (Logo + Text) */}
-            <div className={`flex items-center gap-2 transition-all duration-500 absolute ${hasToast ? 'opacity-0 -translate-y-10 scale-90' : 'opacity-100 translate-y-0 scale-100'
+            <div className={`flex items-center gap-2 transition-all duration-500 whitespace-nowrap ${
+              hasToast ? 'opacity-0 -translate-y-10 scale-90 absolute' : 'opacity-100 translate-y-0 scale-100 relative'
               }`} onClick={handleLogoClick}>
               <img src={logo} alt="Logo" className="w-8 h-8" />
               <span className="font-['Outfit'] text-base font-black text-white">TripSpark</span>
             </div>
 
             {/* 2. The Notification State (The Message) */}
-            <div className={`flex items-center gap-2 transition-all duration-500 absolute ${hasToast ? 'opacity-100 translate-y-0 scale-100' : 'opacity-0 translate-y-10 scale-90'
+            <div className={`flex items-center gap-2 transition-all duration-500 whitespace-nowrap ${
+              hasToast ? 'opacity-100 translate-y-0 scale-100 relative' : 'opacity-0 translate-y-10 scale-90 absolute'
               }`}>
               <span className="text-white font-bold text-sm tracking-tight text-center">
                 {toasts.find(t => t.visible && typeof t.message === 'string')?.message as string}
