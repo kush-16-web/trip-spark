@@ -12,6 +12,7 @@ import { useState, useEffect, useRef } from 'react'
 import finder from './assets/finder.gif'
 import TripResult from './components/TripResult'
 import { getTripById, planTrip, type TripFormPayload, type TripPlanModel, getSharedTrip, updatetrip } from './services/tripApi'
+import Features from './components/Features';
 
 interface TripState extends Partial<TripPlanModel> {
   Destination: string;
@@ -25,6 +26,7 @@ interface TripState extends Partial<TripPlanModel> {
   vibe?: string;
   shareId?: string;
   id?: string;
+
 }
 
 function App() {
@@ -195,6 +197,23 @@ function App() {
     }
   };
 
+  const handleSelectDestination = (city:string) => {
+      setShowResult(false);
+      setLoading(true);
+      formRef.current?.scrollIntoView({behavior:'smooth'});
+      setTimeout(() => {
+        setTrip({
+          Destination: city,
+          days: '',
+          travelers: '',
+          budgetRange: { min: 10000, max: 50000 },
+          startDate: '',
+          endDate: '',
+        });
+        setLoading(false);
+      }, 800);
+    }  
+
   const handleHomeClick = () => {
   setTrip(null);       // Clear the current trip
   setShowResult(false); // Hide the results
@@ -278,7 +297,7 @@ function App() {
                 </div>
               )}
 
-              {!loading && trip && !showResult && <TripForm trip={trip} onComplete={handleFormSubmit} />}
+              {!loading && trip && !showResult && <TripForm trip={trip} onComplete={handleFormSubmit} setTrip={setTrip} />}
               
               <div ref={resultRef} className="scroll-mt-24">
                 {!loading && showResult && (
@@ -294,8 +313,8 @@ function App() {
                 )}
               </div>
             </div>
-            <Destinations />
-            <Footer />
+            <Features />
+            <Destinations onSelectDestination={handleSelectDestination} />
           </>
         } />
 
@@ -339,6 +358,7 @@ function App() {
           </div>
         } />
       </Routes>
+      <Footer />
     </main>
   );
 }

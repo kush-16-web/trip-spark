@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { API_BASE_URL } from '../services/tripApi';
 import heroBanner from "../assets/trip_hero_banner.png";
 import tripGIF from '../assets/trip.gif'
 
@@ -55,10 +56,8 @@ export default function Hero({ onPlanTrip }: HeroProps) {
 
       try {
         setIsLoadingSuggestions(true);
-        const response = await fetch(`http://localhost:8080/api/trip/location/suggestions?input=${encodeURIComponent(Destination)}`);
+        const response = await fetch(`${API_BASE_URL}/api/trip/location/suggestions?input=${encodeURIComponent(Destination)}`);
         const data = await response.json();
-        
-        console.log("Autocomplete Response:", data); // Debugging
 
         if (data.ok && Array.isArray(data.suggestions)) {
           setSuggestions(data.suggestions);

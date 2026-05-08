@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import stayIcon from '../../assets/stay.gif';
+import { API_BASE_URL } from '../../services/tripApi';
 
 interface Hotel {
   name: string;
@@ -20,7 +21,7 @@ const HotelCard = ({ stay, city }: { stay: Hotel, city: string }) => {
     const fetchDetails = async () => {
       try {
         setIsLoading(true);
-        const res = await fetch(`http://localhost:8080/api/trip/hotel/details?name=${encodeURIComponent(stay.name)}&city=${encodeURIComponent(city)}`);
+        const res = await fetch(`${API_BASE_URL}/api/trip/hotel/details?name=${encodeURIComponent(stay.name)}&city=${encodeURIComponent(city)}`);
         const data = await res.json();
         if (data.ok) {
           setDetails(data.details);
@@ -35,7 +36,7 @@ const HotelCard = ({ stay, city }: { stay: Hotel, city: string }) => {
   }, [stay.name, city])
 
   const photoUrl = details?.photoReference 
-    ? `http://localhost:8080/api/trip/hotel/photo/${details.photoReference}`
+    ? `${API_BASE_URL}/api/trip/hotel/photo/${details.photoReference}`
     : "https://via.placeholder.com/400x300?text=No+Photo+Available";
 
   return (

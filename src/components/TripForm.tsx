@@ -19,9 +19,10 @@ interface TripFormProps {
     endDate: string;
   };
   onComplete: (formData: any) => void;
+  setTrip: (trip: any) => void;
 }
 
-export default function TripForm({ trip, onComplete }: TripFormProps) {
+export default function TripForm({ trip, onComplete, setTrip }: TripFormProps) {
   const [selectedType, setSelectedType] = useState('Solo');
   const [days, setDays] = useState(Number(trip.days) || 1);
   const [travelers, setTravelers] = useState(1);
@@ -109,7 +110,8 @@ const today = toDateInputValue(new Date());
                 <input 
                   type="text" 
                   placeholder="e.g. Kyoto, Japan" 
-                  defaultValue={trip.Destination}
+                  value={trip.Destination}
+                  onChange={(e) => setTrip({ ...trip, Destination: e.target.value })}
                   className="input-field text-xl py-6 pl-12 bg-white/50 backdrop-blur-sm group-focus-within:bg-white transition-all shadow-sm"
                 />
                 <span className="absolute left-4 top-1/2 -translate-y-1/2 text-2xl group-focus-within:scale-110 transition-transform">📍</span>

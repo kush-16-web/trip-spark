@@ -25,12 +25,6 @@ export async function getHotelLiveDetails(hotelName: string, city: string) {
       },
     });
 
-    console.log("GOOGLE DETAILS RESPONSE:", detailsResponse.data);
-
-    if (detailsResponse.data.status !== "OK") {
-      console.error("GOOGLE DETAILS ERROR STATUS:", detailsResponse.data.status, detailsResponse.data.error_message);
-    }
-
     const result = detailsResponse.data.result;
     
     if (!result) return null;

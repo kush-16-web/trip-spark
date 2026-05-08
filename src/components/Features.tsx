@@ -1,59 +1,130 @@
 import React from 'react';
-
-const features = [
-  {
-    title: 'AI-Powered Itineraries',
-    description: 'Get personalized travel plans in seconds, tailored to your interests and pace.',
-    icon: (
-      <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 text-indigo-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
-      </svg>
-    ),
-  },
-  {
-    title: 'Collaborative Planning',
-    description: 'Invite friends and family to plan together. Vote on activities and sync schedules.',
-    icon: (
-      <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 text-violet-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
-      </svg>
-    ),
-  },
-  {
-    title: 'Smart Budgeting',
-    description: 'Track your expenses in real-time. Get estimates for flights, stays, and more.',
-    icon: (
-      <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-      </svg>
-    ),
-  },
-];
+import { motion } from 'framer-motion';
 
 const Features: React.FC = () => {
   return (
-    <section className="py-24 bg-white">
-      <div className="max-w-7xl mx-auto px-6">
-        <div className="text-center mb-16">
-          <h2 className="text-4xl md:text-5xl font-bold mb-4">Why Choose TripSpark?</h2>
-          <p className="text-slate-600 max-w-2xl mx-auto text-lg">
-            We combine cutting-edge technology with travel expertise to make your 
-            planning experience as exciting as the trip itself.
-          </p>
+    <section className="py-32 bg-white relative overflow-hidden" id="features">
+      {/* Background Decorative Elements */}
+      <div className="absolute top-0 left-0 w-full h-full opacity-40 pointer-events-none">
+        <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-violet-200/50 rounded-full blur-[120px] animate-pulse" />
+        <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-indigo-200/50 rounded-full blur-[120px]" />
+      </div>
+
+      <div className="max-w-7xl mx-auto px-6 relative z-10">
+        <div className="mb-24">
+          <motion.div
+            initial={{ opacity: 0, x: -20 }}
+            whileInView={{ opacity: 1, x: 0 }}
+            viewport={{ once: true }}
+            className="flex items-center gap-3 mb-6"
+          >
+            <div className="h-[1px] w-12 bg-violet-600" />
+            <span className="text-violet-600 font-black uppercase tracking-[0.3em] text-[10px]">Capabilities</span>
+          </motion.div>
+
+          <motion.h2
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            className="text-6xl md:text-8xl font-black text-slate-900 tracking-tighter leading-[0.85]"
+          >
+            Smart Tech.<br />
+            <span className="text-transparent bg-clip-text bg-gradient-to-r from-violet-600 to-indigo-500 italic">Wild Journeys.</span>
+          </motion.h2>
         </div>
 
-        <div className="grid md:grid-cols-3 gap-10">
-          {features.map((feature, index) => (
-            <div key={index} className="p-8 rounded-3xl bg-slate-50 hover:bg-slate-100 transition-colors group">
-              <div className="w-16 h-16 bg-white rounded-2xl flex items-center justify-center mb-6 shadow-sm group-hover:shadow-md transition-shadow">
-                {feature.icon}
-              </div>
-              <h3 className="text-2xl font-bold mb-3">{feature.title}</h3>
-              <p className="text-slate-600 leading-relaxed">
-                {feature.description}
+        {/* Asymmetrical Feature Bento */}
+        <div className="grid grid-cols-1 md:grid-cols-12 gap-6 h-auto md:h-[600px]">
+
+          {/* Card 1: AI Spark (Large & Dominant) */}
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            whileInView={{ opacity: 1, scale: 1 }}
+            viewport={{ once: true }}
+            className="md:col-span-7 relative group rounded-[3rem] bg-slate-900 overflow-hidden p-12 flex flex-col justify-end"
+          >
+            <div className="absolute top-0 right-0 w-full h-full bg-gradient-to-br from-violet-600/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-700" />
+            <div className="absolute -top-12 -right-12 w-64 h-64 bg-violet-600/30 rounded-full blur-[80px] group-hover:scale-150 transition-transform duration-1000" />
+
+            <div className="relative z-20">
+              <div className="text-violet-400 text-xs font-black uppercase tracking-widest mb-4">01 // Artificial Intelligence</div>
+              <h3 className="text-4xl md:text-5xl font-bold text-white mb-6 tracking-tight">The Gemini Spark Engine</h3>
+              <p className="text-slate-400 text-lg max-w-md leading-relaxed">
+                We don't just generate lists. Our AI understands the "vibe" of your travel style to craft itineraries that feel human-made.
               </p>
             </div>
-          ))}
+          </motion.div>
+
+          {/* Card 2: Interactive Maps (Tall & Sleek) */}
+          <motion.div
+            initial={{ opacity: 0, x: 20 }}
+            whileInView={{ opacity: 1, x: 0 }}
+            viewport={{ once: true }}
+            transition={{ delay: 0.2 }}
+            className="md:col-span-5 relative group rounded-[3rem] bg-violet-50 border border-violet-100 overflow-hidden p-12"
+          >
+            <div className="relative z-10"> {/* Added z-10 to keep text on top */}
+              <div className="text-violet-600 text-right text-[10px] font-black uppercase tracking-widest mb-4">02 // Geospatial Data</div>
+              <h3 className="text-3xl text-right font-bold text-slate-900 mb-6 tracking-tight">Real-time Map Studio</h3>
+              <p className="text-slate-900 font-bold leading-relaxed mb-12">
+                Sync your itinerary with Mapbox GL. Fly-to animations, numbered routes, and satellite exploration.
+              </p>
+            </div>
+
+            {/* Visual element representing a map */}
+            <div className="absolute bottom-[-15%] right-[-10%] w-[110%] h-72 bg-white rounded-[2rem] shadow-2xl rotate-[-5deg] border border-slate-100 p-3 group-hover:rotate-0 group-hover:bottom-[-10%] transition-all duration-700 pointer-events-none overflow-hidden">
+              <div className="relative w-full h-full rounded-[1.5rem] overflow-hidden">
+                <img
+                  src="https://images.unsplash.com/photo-1524661135-423995f22d0b?auto=format&fit=crop&q=80&w=800"
+                  alt="Map Preview"
+                  className="w-full h-full object-cover grayscale-[0.2] group-hover:scale-110 transition-transform duration-1000"
+                />
+                <div className="absolute inset-0 bg-violet-600/10 mix-blend-overlay" />
+
+                {/* The GPS Marker */}
+                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2">
+                  <div className="w-10 h-10 rounded-full bg-violet-600 animate-ping opacity-30" />
+                  <div className="w-4 h-4 rounded-full bg-violet-600 border-2 border-white absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 shadow-lg" />
+                </div>
+
+                {/* Satellite Badge */}
+                <div className="absolute top-4 left-4 px-3 py-1 bg-black/50 backdrop-blur-md rounded-full border border-white/20 flex items-center gap-2">
+                  <div className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                  <span className="text-[8px] font-black text-white uppercase tracking-widest">Live Satellite</span>
+                </div>
+              </div>
+            </div>
+          </motion.div>
+
+          {/* Card 3: Budgeting (Wide & Minimal) */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ delay: 0.3 }}
+            className="md:col-span-12 relative group rounded-[3rem] bg-slate-50 border border-slate-200/60 overflow-hidden p-12 flex flex-col md:flex-row items-center justify-between gap-12"
+          >
+            <div className="max-w-xl">
+              <div className="text-indigo-600 text-[10px] font-black uppercase tracking-widest mb-4">03 // Finance</div>
+              <h3 className="text-3xl font-bold text-slate-900 mb-4 tracking-tight">Live Currency Intelligence</h3>
+              <p className="text-slate-500 text-lg leading-relaxed">
+                Plan in INR, spend in Yen. Our dynamic conversion engine handles real-time rates so you stay on budget globally.
+              </p>
+            </div>
+
+            <div className="flex gap-4">
+              {['$', '€', '¥', '₹'].map((symbol, i) => (
+                <motion.div
+                  key={i}
+                  whileHover={{ y: -10, rotate: 10, color: "rgb(124 58 237)" }}
+                  className="w-16 h-16 rounded-2xl bg-white shadow-lg flex items-center justify-center text-2xl font-black text-slate-900 border  border-slate-100"
+                >
+                  {symbol}
+                </motion.div>
+              ))}
+            </div>
+          </motion.div>
+
         </div>
       </div>
     </section>

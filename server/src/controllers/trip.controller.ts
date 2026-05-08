@@ -628,18 +628,11 @@ export const getLocationSuggestions = async (req: Request, res: Response) => {
       }
     );
 
-    console.log("GOOGLE AUTOCOMPLETE RESPONSE:", response.data);
-
-    if (response.data.status !== "OK" && response.data.status !== "ZERO_RESULTS") {
-      console.error("GOOGLE AUTOCOMPLETE ERROR:", response.data.status, response.data.error_message);
-    }
-
     return res.status(200).json({ 
       ok: true, 
       suggestions: response.data.predictions || []
     });
   } catch (error) {
-    console.error('Autocomplete error:', error);
     return res.status(500).json({ ok: false });
   }
 };

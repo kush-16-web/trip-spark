@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect } from "react";
+import { API_BASE_URL } from "../../services/tripApi";
 import Map, { Marker, Source, Layer, NavigationControl } from "react-map-gl/mapbox";
 import 'mapbox-gl/dist/mapbox-gl.css';
 import stayIcon from "../../assets/stay.gif";
@@ -21,7 +22,7 @@ const HotelMarker = ({ stay, destination, onMarkerClick }: { stay: any, destinat
     if (!coords?.lat || !coords?.lng) {
       const fetchCoords = async () => {
         try {
-          const res = await fetch(`http://localhost:8080/api/trip/hotel/details?name=${encodeURIComponent(stay.name)}&city=${encodeURIComponent(destination)}`);
+          const res = await fetch(`${API_BASE_URL}/api/trip/hotel/details?name=${encodeURIComponent(stay.name)}&city=${encodeURIComponent(destination)}`);
           const data = await res.json();
           if (data.ok && data.details?.lat && data.details?.lng) {
             setCoords({ lat: data.details.lat, lng: data.details.lng });

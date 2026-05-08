@@ -18,6 +18,10 @@ export interface DestinationEntry {
   gradient?: string;
 }
 
+interface DestinationsProps {
+  onSelectDestination: (city: string) => void;
+}
+
 /** Top three — high intent trips people search for right now in India. */
 const trendingDestinations: DestinationEntry[] = [
   {
@@ -80,10 +84,12 @@ function DestinationCard({
   dest,
   compact,
   className = "",
+  onSelect
 }: {
   dest: DestinationEntry;
   compact?: boolean;
   className?: string;
+  onSelect: (city: string) => void;
 }) {
   const height = compact ? 'h-[300px]' : 'h-full min-h-[400px] md:min-h-[500px]';
   const titleClass = compact ? 'text-2xl' : 'text-3xl md:text-5xl';
@@ -148,7 +154,7 @@ function DestinationCard({
   );
 }
 
-const Destinations: React.FC = () => {
+const Destinations = ({onSelectDestination}:DestinationsProps) => {
   const [showMore, setShowMore] = useState(false);
   const morePanelId = useId();
 
@@ -179,11 +185,11 @@ const Destinations: React.FC = () => {
         {/* Asymmetrical Bento Grid */}
         <div className="grid grid-cols-1 md:grid-cols-12 gap-6 md:h-[700px] mb-16">
           <div className="md:col-span-8 h-full">
-            <DestinationCard dest={trendingDestinations[0]} />
+            <DestinationCard dest={trendingDestinations[0]} onSelect={onSelectDestination} />
           </div>
           <div className="md:col-span-4 grid grid-cols-1 gap-6 h-full">
-            <DestinationCard dest={trendingDestinations[1]} compact className="h-full" />
-            <DestinationCard dest={trendingDestinations[2]} compact className="h-full" />
+            <DestinationCard dest={trendingDestinations[1]} onSelect={onSelectDestination} compact className="h-full" />
+            <DestinationCard dest={trendingDestinations[2]} onSelect={onSelectDestination} compact className="h-full" />
           </div>
         </div>
 
@@ -247,25 +253,25 @@ const Destinations: React.FC = () => {
                 <div className="md:col-span-4">
                   <div className="relative">
                     <span className="absolute -top-4 -left-4 z-30 text-6xl font-black text-slate-900/5 select-none italic">04</span>
-                    <DestinationCard dest={moreDestinations[0]} compact />
+                    <DestinationCard dest={moreDestinations[0]} onSelect={onSelectDestination} compact />
                   </div>
                 </div>
                 <div className="md:col-span-8">
                   <div className="relative h-full">
                     <span className="absolute -top-4 -left-4 z-30 text-6xl font-black text-slate-900/5 select-none italic">05</span>
-                    <DestinationCard dest={moreDestinations[1]} compact className="md:h-full" />
+                    <DestinationCard dest={moreDestinations[1]} onSelect={onSelectDestination} compact className="md:h-full" />
                   </div>
                 </div>
                 <div className="md:col-span-7">
                   <div className="relative h-full">
                     <span className="absolute -top-4 -left-4 z-30 text-6xl font-black text-slate-900/5 select-none italic">06</span>
-                    <DestinationCard dest={moreDestinations[2]} compact className="md:h-full" />
+                    <DestinationCard dest={moreDestinations[2]} onSelect={onSelectDestination} compact className="md:h-full" />
                   </div>
                 </div>
                 <div className="md:col-span-5">
                   <div className="relative h-full">
                     <span className="absolute -top-4 -left-4 z-30 text-6xl font-black text-slate-900/5 select-none italic">07</span>
-                    <DestinationCard dest={moreDestinations[3]} compact className="md:h-full" />
+                    <DestinationCard dest={moreDestinations[3]} onSelect={onSelectDestination} compact className="md:h-full" />
                   </div>
                 </div>
               </div>
