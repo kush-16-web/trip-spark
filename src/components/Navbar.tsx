@@ -13,9 +13,10 @@ interface NavbarProps {
   userPicture?: string;
   onLogoClick?: () => void;
   isEditMode?: boolean;
+  isViewingTrip?: boolean;
 }
 
-const Navbar: React.FC<NavbarProps> = ({ userEmail, userPicture, onLogoClick, isEditMode }) => {
+const Navbar: React.FC<NavbarProps> = ({ userEmail, userPicture, onLogoClick, isEditMode, isViewingTrip }) => {
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
   const [showNavGuard, setShowNavGuard] = useState(false);
@@ -60,11 +61,42 @@ const Navbar: React.FC<NavbarProps> = ({ userEmail, userPicture, onLogoClick, is
     }
   }, []);
 
+  const [activeSection, setActiveSection] = useState('/');
   const location = useLocation();
+
+  // Scroll detection logic
+  useEffect(() => {
+    const handleScroll = () => {
+      // 1. If we are on another page (like My Trips), or if we are VIEWING a trip
+      // stay on the correct tab
+      if (location.pathname !== '/' || isViewingTrip) {
+        setActiveSection(isViewingTrip ? '/my-trips' : location.pathname);
+        return;
+      }
+
+      // 2. Check for Features section (ONLY if not viewing a trip)
+      const featuresSection = document.getElementById('features');
+      if (featuresSection) {
+        const rect = featuresSection.getBoundingClientRect();
+        if (rect.top <= 300 && rect.bottom >= 300) {
+          setActiveSection('#features');
+          return;
+        }
+      }
+
+      // 3. Default fallback
+      setActiveSection('/');
+    };
+
+    window.addEventListener('scroll', handleScroll);
+    handleScroll(); // Initial check
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, [location.pathname]);
+
   const navLinks: Array<{ name: string; href: string; action?: () => void }> = [
     { name: 'Explore', href: '/' },
-    { name: 'Features', href: '/features' },
-    { name: 'Social', href: '/social' },
+    { name: 'Features', href: '#features' },
+    // { name: 'Social', href: '/social' },
     { name: 'My Trips', href: '/my-trips' },
   ];
 
@@ -148,18 +180,32 @@ const Navbar: React.FC<NavbarProps> = ({ userEmail, userPicture, onLogoClick, is
           </Link>
 
           <div className="flex items-center gap-7 text-white/90 font-semibold">
-            {filteredLinks.map((link) => (
-              <Link
-                key={link.name}
-                to={link.href}
-                className={`transition-all duration-300 py-1 relative group/link ${location.pathname === link.href ? 'text-violet-400' : 'hover:scale-95 active:scale-105 text-white/80'
-                  }`}
-              >
-                {link.name}
-                <span className={`absolute -bottom-1 left-0 h-[2px] bg-violet-500 transition-all duration-300 ${location.pathname === link.href ? 'w-full' : 'w-0 group-hover/link:w-full'
-                  }`} />
-              </Link>
-            ))}
+            {filteredLinks.map((link) => {
+              const isActive = activeSection === link.href;
+              return link.href.startsWith('#') ? (
+                <a
+                  key={link.name}
+                  href={link.href}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    document.querySelector(link.href)?.scrollIntoView({ behavior: 'smooth' });
+                  }}
+                  className={`transition-all duration-300 py-1 relative group/link cursor-pointer hover:scale-95 active:scale-105 ${isActive ? 'text-violet-400' : 'text-white/80'}`}
+                >
+                  {link.name}
+                  <span className={`absolute -bottom-1 left-0 h-[2px] bg-violet-500 transition-all duration-300 ${isActive ? 'w-full' : 'w-0 group-hover/link:w-full'}`} />
+                </a>
+              ) : (
+                <Link
+                  key={link.name}
+                  to={link.href}
+                  className={`transition-all duration-300 py-1 relative group/link ${isActive ? 'text-violet-400' : 'hover:scale-95 active:scale-105 text-white/80'}`}
+                >
+                  {link.name}
+                  <span className={`absolute -bottom-1 left-0 h-[2px] bg-violet-500 transition-all duration-300 ${isActive ? 'w-full' : 'w-0 group-hover/link:w-full'}`} />
+                </Link>
+              );
+            })}
           </div>
 
           <div className="flex items-center gap-3">
@@ -195,7 +241,7 @@ const Navbar: React.FC<NavbarProps> = ({ userEmail, userPicture, onLogoClick, is
           <div className="grid grid-cols-2 gap-2 relative">
             {/* Sliding Background Highlight */}
             <div
-              className={`absolute inset-y-0 w-[calc(50%-4px)] rounded-3xl transition-all duration-500 ease-out ${location.pathname === '/my-trips' ? 'bg-violet-600 shadow-lg shadow-violet-600/40' : 'bg-white'
+              className={`absolute inset-y-0 w-[calc(50%-4px)] rounded-3xl transition-all duration-500 ease-out ${location.pathname === '/my-trips' ? 'bg-violet-600 shadow-lg' : 'bg-white'
                 }`}
               style={{
                 transform: location.pathname === '/my-trips' ? 'translateX(calc(100% + 8px))' : 'translateX(0)'
@@ -204,16 +250,18 @@ const Navbar: React.FC<NavbarProps> = ({ userEmail, userPicture, onLogoClick, is
 
             <Link
               to="/"
-              className={`relative z-10 py-3 rounded-3xl font-bold text-sm transition-all duration-300 text-center ${location.pathname === '/' ? 'text-black' : 'text-white'
+              className={`relative z-10 py-3 rounded-3xl font-bold text-sm transition-all duration-300 text-center ${
+                (location.pathname === '/' || (location.pathname !== '/' && location.pathname !== '/my-trips')) ? 'text-black' : 'text-white'
                 }`}
             >
-              Explore
+              {location.pathname !== '/' && location.pathname !== '/my-trips' ? 'Back to Home' : 'Explore'}
             </Link>
 
             {userEmail ? (
               <Link
                 to="/my-trips"
-                className={`relative z-10 py-3 rounded-3xl font-bold text-sm transition-all duration-300 text-center ${location.pathname === '/my-trips' ? 'text-white' : 'text-white/70'
+                className={`relative z-10 py-3 rounded-3xl font-bold text-sm transition-all duration-300 text-center ${
+                  location.pathname === '/my-trips' ? 'text-white' : 'text-white/70'
                   }`}
               >
                 My Trips

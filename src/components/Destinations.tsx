@@ -96,7 +96,8 @@ function DestinationCard({
 
   return (
     <article
-      className={`group relative ${height} ${className} rounded-[2.5rem] overflow-hidden shadow-2xl transition-all duration-500 hover:shadow-violet-500/10 hover:-translate-y-1`}
+      onClick={() => onSelect(dest.name)}
+      className={`group relative ${height} ${className} rounded-[2.5rem] overflow-hidden shadow-2xl transition-all duration-500 hover:shadow-violet-500/10 hover:-translate-y-1 cursor-pointer`}
     >
       {dest.image ? (
         <img

@@ -13,6 +13,7 @@ import finder from './assets/finder.gif'
 import TripResult from './components/TripResult'
 import { getTripById, planTrip, type TripFormPayload, type TripPlanModel, getSharedTrip, updatetrip } from './services/tripApi'
 import Features from './components/Features';
+import NotFound from './components/NotFound';
 
 interface TripState extends Partial<TripPlanModel> {
   Destination: string;
@@ -96,6 +97,14 @@ function App() {
       }
     }
   },[])
+
+  useEffect(() => {
+    if(showResult && !loading){
+      setTimeout(() => {
+        resultRef.current?.scrollIntoView({ behavior: 'smooth' });
+      }, 800);
+    }
+  },[showResult, loading])
 
   const handleFormSubmit = async (formData: TripFormPayload) => {
     try {
@@ -282,6 +291,7 @@ function App() {
         userPicture={userPicture} 
         onLogoClick={handleHomeClick}
         isEditMode={isEditMode}
+        isViewingTrip={showResult}
       />
       
       <Routes>
@@ -357,6 +367,8 @@ function App() {
              )}
           </div>
         } />
+        {/* 404 Route - Catch All */}
+        <Route path="*" element={<NotFound />} />
       </Routes>
       <Footer />
     </main>

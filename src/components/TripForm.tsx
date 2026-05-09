@@ -1,11 +1,11 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import soloTravel from '../assets/solo-traveller.gif';
 import Romantic from '../assets/dating.gif'
 import family from '../assets/Family-travel.gif'
 import friends from '../assets/friends.gif'
 import hiddenGems from '../assets/hiddenGems.gif'
 import balanced from '../assets/balanced.gif'
-import mustSee from '../assets/mustSee.gif'
+import mustSee from '../assets/world.gif'
 
 interface TripFormProps {
   trip: {
@@ -48,6 +48,10 @@ export default function TripForm({ trip, onComplete, setTrip }: TripFormProps) {
 
   const [minBudget, setMinBudget] = useState(10000);
   const [maxBudget, setMaxBudget] = useState(50000);
+  const [showMinTooltip, setShowMinTooltip] = useState(false);
+  const [showMaxTooltip, setShowMaxTooltip] = useState(false);
+  const timeoutMinRef = useRef<number | null>(null);
+  const timeoutMaxRef = useRef<number | null>(null);
 
   const placeStyles = [
     { id: 'hidden_gems', label: 'Hidden Gems', icon: hiddenGems },
@@ -57,12 +61,12 @@ export default function TripForm({ trip, onComplete, setTrip }: TripFormProps) {
 
   const toDateInputValue = (date: Date) => date.toISOString().split('T')[0];
 
-const addDays = (startDate: string, days: number) => {
-  const date = new Date(startDate);
-  date.setDate(date.getDate() + (days - 1)); // inclusive range
-  return toDateInputValue(date);
-};
-const today = toDateInputValue(new Date());
+  const addDays = (startDate: string, days: number) => {
+    const date = new Date(startDate);
+    date.setDate(date.getDate() + (days - 1)); // inclusive range
+    return toDateInputValue(date);
+  };
+  const today = toDateInputValue(new Date());
 
   useEffect(() => {
     setEndDate(addDays(startDate, days));
@@ -92,7 +96,7 @@ const today = toDateInputValue(new Date());
     <section id='trip-result' className="py-24 bg-slate-50 overflow-hidden relative">
       {/* Decorative background element */}
       <div className="absolute top-0 right-0 -translate-y-1/2 translate-x-1/4 w-96 h-96 bg-indigo-100 rounded-full blur-3xl opacity-50"></div>
-      
+
       <div className="max-w-5xl mx-auto px-6 relative z-10">
         <div className="glass p-8 md:p-14 rounded-[3rem] shadow-2xl shadow-indigo-100/50 border border-white/40">
           <div className="text-center mb-12">
@@ -107,9 +111,9 @@ const today = toDateInputValue(new Date());
             <div className="space-y-4">
               <label className="text-sm font-black uppercase tracking-widest text-slate-400 ml-1">Where are you headed?</label>
               <div className="relative group">
-                <input 
-                  type="text" 
-                  placeholder="e.g. Kyoto, Japan" 
+                <input
+                  type="text"
+                  placeholder="e.g. Kyoto, Japan"
                   value={trip.Destination}
                   onChange={(e) => setTrip({ ...trip, Destination: e.target.value })}
                   className="input-field text-xl py-6 pl-12 bg-white/50 backdrop-blur-sm group-focus-within:bg-white transition-all shadow-sm"
@@ -121,10 +125,10 @@ const today = toDateInputValue(new Date());
             {/* Trip Type selection */}
             <div className="space-y-4">
               <label className="text-sm font-black uppercase tracking-widest text-slate-400 ml-1">What's the vibe?</label>
-              
+
               {/* Mobile Dropdown */}
               <div className="md:hidden relative">
-                <button 
+                <button
                   type="button"
                   onClick={() => setIsTypeOpen(!isTypeOpen)}
                   className="w-full flex items-center justify-between p-4 bg-white/50 backdrop-blur-sm rounded-2xl border-2 border-slate-100 shadow-sm active:scale-[0.98] transition-all"
@@ -139,11 +143,11 @@ const today = toDateInputValue(new Date());
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                   </svg>
                 </button>
-                
+
                 {isTypeOpen && (
                   <div className="absolute z-50 mt-2 w-full bg-white rounded-2xl border-2 border-slate-100 shadow-2xl overflow-hidden animate-in fade-in slide-in-from-top-2 duration-200">
                     {tripTypes.map((type) => (
-                      <div 
+                      <div
                         key={type.id}
                         onClick={() => {
                           setSelectedType(type.id);
@@ -164,7 +168,7 @@ const today = toDateInputValue(new Date());
               {/* Tablet/Desktop Grid */}
               <div className="hidden md:grid grid-cols-2 md:grid-cols-4 gap-4">
                 {tripTypes.map((type) => (
-                  <div 
+                  <div
                     key={type.id}
                     onClick={() => setSelectedType(type.id)}
                     className={`card-select h-32 ${selectedType === type.id ? 'active ring-4 ring-violet-500/10' : ''}`}
@@ -189,21 +193,21 @@ const today = toDateInputValue(new Date());
                     onClick={() => { setDays(days + 1) }}>+</button>
                 </div>
               </div>
-                <div className="space-y-4" style={{ display: selectedType === 'Solo' ? 'none' : 'block' }}>
-                  <label className="flex items-center gap-3 text-sm font-black uppercase tracking-widest text-slate-400 ml-1"><span>Travelers </span></label>
-                  <div className="relative flex items-center justify-between p-2 bg-white/50 backdrop-blur-sm rounded-2xl border-2 border-slate-100 focus-within:border-violet-300 transition-all">
-                    <button  type="button" className='w-14 h-14 rounded-xl bg-violet-100 text-violet-600 hover:bg-violet-500 hover:text-white transition-all font-black text-2xl flex items-center justify-center shadow-sm active:scale-95'
+              <div className="space-y-4" style={{ display: selectedType === 'Solo' ? 'none' : 'block' }}>
+                <label className="flex items-center gap-3 text-sm font-black uppercase tracking-widest text-slate-400 ml-1"><span>Travelers </span></label>
+                <div className="relative flex items-center justify-between p-2 bg-white/50 backdrop-blur-sm rounded-2xl border-2 border-slate-100 focus-within:border-violet-300 transition-all">
+                  <button type="button" className='w-14 h-14 rounded-xl bg-violet-100 text-violet-600 hover:bg-violet-500 hover:text-white transition-all font-black text-2xl flex items-center justify-center shadow-sm active:scale-95'
                     onClick={() => { if (travelers <= 1) return; setTravelers(travelers - 1) }}>-</button>
-                    <input 
-                      type='number'
-                      value={travelers}
-                      readOnly
-                      className='bg-transparent border-none focus:ring-0 text-3xl font-black text-center w-20 text-slate-800'
-                    />
-                    <button type="button" className='w-14 h-14 rounded-xl bg-violet-600 text-white hover:bg-violet-700 transition-all font-black text-2xl flex items-center justify-center shadow-md active:scale-95'
+                  <input
+                    type='number'
+                    value={travelers}
+                    readOnly
+                    className='bg-transparent border-none focus:ring-0 text-3xl font-black text-center w-20 text-slate-800'
+                  />
+                  <button type="button" className='w-14 h-14 rounded-xl bg-violet-600 text-white hover:bg-violet-700 transition-all font-black text-2xl flex items-center justify-center shadow-md active:scale-95'
                     onClick={() => { setTravelers(travelers + 1) }}>+</button>
-                  </div>
                 </div>
+              </div>
             </div>
 
             {/* Dates */}
@@ -231,7 +235,7 @@ const today = toDateInputValue(new Date());
 
             {/* Budget Range Slider */}
             {/* Budget Range Slider */}
-            <div className="space-y-8"> 
+            <div className="space-y-8">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
                   <div className="w-1.5 h-6 bg-violet-600 rounded-full" />
@@ -241,11 +245,11 @@ const today = toDateInputValue(new Date());
                   ₹{minBudget.toLocaleString()} - ₹{maxBudget.toLocaleString()}
                 </div>
               </div>
-              
+
               <div className="relative pt-12 pb-6 px-6 md:px-10 bg-white border border-slate-100 rounded-[3rem] shadow-2xl shadow-slate-200/50 group/container">
                 <div className="flex flex-col gap-12">
-                   {/* Min Budget Slider */}
-                   <div className="space-y-6">
+                  {/* Min Budget Slider */}
+                  <div className="space-y-6">
                     <div className="flex justify-between text-[11px] font-black text-slate-400 uppercase tracking-[0.4em]">
                       <span className="flex items-center gap-2">
                         <div className="w-1 h-1 rounded-full bg-violet-400" />
@@ -253,18 +257,18 @@ const today = toDateInputValue(new Date());
                       </span>
                       <span className="text-slate-900 bg-slate-50 px-3 py-1 rounded-lg border border-slate-100">₹{minBudget.toLocaleString()}</span>
                     </div>
-                    <div 
+                    <div
                       className="relative h-8 flex items-center group/slider cursor-crosshair"
                       onMouseMove={(e) => {
                         if (isDraggingMin) return;
                         const rect = e.currentTarget.getBoundingClientRect();
                         const percent = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
                         const currentPercent = (minBudget - 5000) / (100000 - 5000);
-                        
+
                         const rawVal = 5000 + percent * (100000 - 5000);
                         const steppedVal = Math.round(rawVal / 5000) * 5000;
                         const tooltip = e.currentTarget.querySelector('.hover-tooltip') as HTMLElement;
-                        
+
                         if (tooltip) {
                           tooltip.style.left = `${percent * 100}%`;
                           tooltip.innerText = `₹${steppedVal.toLocaleString()}`;
@@ -287,8 +291,8 @@ const today = toDateInputValue(new Date());
                       </div>
 
                       {/* Main Value Tooltip */}
-                      <div 
-                        className={`absolute -top-10 transition-all duration-300 pointer-events-none z-30 ${isDraggingMin ? 'scale-125' : ''}`}
+                      <div
+                        className={`absolute -top-10 transition-all duration-500 pointer-events-none z-30 ${isDraggingMin || showMinTooltip ? 'opacity-100 scale-100' : 'opacity-0 scale-75'}`}
                         style={{ left: `calc(${(minBudget - 5000) / (100000 - 5000) * 100}% - 35px)` }}
                       >
                         <div className="bg-slate-900 text-white text-[10px] font-black px-3 py-2 rounded-xl shadow-2xl whitespace-nowrap">
@@ -296,28 +300,40 @@ const today = toDateInputValue(new Date());
                           <div className="absolute top-full left-1/2 -translate-x-1/2 w-0 h-0 border-l-[5px] border-l-transparent border-r-[5px] border-r-transparent border-t-[5px] border-t-slate-900"></div>
                         </div>
                       </div>
-                      
+
                       {/* Bold Custom Track */}
                       <div className="absolute w-full h-4 bg-slate-100 rounded-full overflow-hidden border border-slate-200/50 shadow-inner">
-                        <div 
-                          className="h-full bg-indigo-600/50 shadow-[0_0_20px_rgba(124,58,237,0.3)] transition-all duration-300" 
+                        <div
+                          className="h-full bg-violet-500 shadow-[0_0_20px_rgba(124,58,237,0.3)] transition-all duration-300"
                           style={{ width: `${(minBudget - 5000) / (100000 - 5000) * 100}%` }}
                         />
                       </div>
 
-                      <input 
-                        type="range" 
-                        min="5000" 
-                        max="100000" 
+                      <input
+                        type="range"
+                        min="5000"
+                        max="100000"
                         step="5000"
                         value={minBudget}
-                        onMouseDown={() => setIsDraggingMin(true)}
-                        onMouseUp={() => setIsDraggingMin(false)}
+                        onMouseDown={() => {
+                          setIsDraggingMin(true);
+                          setShowMinTooltip(true);
+                        }}
+                        onMouseUp={() => {
+                          setIsDraggingMin(false);
+                          if (timeoutMinRef.current) clearTimeout(timeoutMinRef.current);
+                          timeoutMinRef.current = setTimeout(() => setShowMinTooltip(false), 2000);
+                        }}
                         onTouchStart={() => setIsDraggingMin(true)}
                         onTouchEnd={() => setIsDraggingMin(false)}
                         onChange={(e) => {
                           const val = Number(e.target.value);
-                          if (val < maxBudget) setMinBudget(val);
+                          if (val < maxBudget) {
+                            setMinBudget(val);
+                            setShowMinTooltip(true);
+                            if (timeoutMinRef.current) clearTimeout(timeoutMinRef.current);
+                            timeoutMinRef.current = setTimeout(() => setShowMinTooltip(false), 2000);
+                          }
                         }}
                         className="absolute w-full h-8 bg-transparent appearance-none cursor-pointer z-40 
                           [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-8 [&::-webkit-slider-thumb]:h-8 
@@ -337,18 +353,18 @@ const today = toDateInputValue(new Date());
                       </span>
                       <span className="text-slate-900 bg-slate-50 px-3 py-1 rounded-lg border border-slate-100">₹{maxBudget.toLocaleString()}</span>
                     </div>
-                    <div 
+                    <div
                       className="relative h-8 flex items-center group/slider cursor-crosshair"
                       onMouseMove={(e) => {
                         if (isDraggingMax) return;
                         const rect = e.currentTarget.getBoundingClientRect();
                         const percent = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
                         const currentPercent = (maxBudget - 10000) / (500000 - 10000);
-                        
+
                         const rawVal = 10000 + percent * (500000 - 10000);
                         const steppedVal = Math.round(rawVal / 5000) * 5000;
                         const tooltip = e.currentTarget.querySelector('.hover-tooltip-max') as HTMLElement;
-                        
+
                         if (tooltip) {
                           tooltip.style.left = `${percent * 100}%`;
                           tooltip.innerText = `₹${steppedVal.toLocaleString()}`;
@@ -371,8 +387,8 @@ const today = toDateInputValue(new Date());
                       </div>
 
                       {/* Main Value Tooltip */}
-                      <div 
-                        className={`absolute -top-10 transition-all duration-300 pointer-events-none z-30 ${isDraggingMax ? 'scale-125' : ''}`}
+                      <div
+                        className={`absolute -top-10 transition-all duration-500 pointer-events-none z-30 ${isDraggingMax || showMaxTooltip ? 'opacity-100 scale-100' : 'opacity-0 scale-75'}`}
                         style={{ left: `calc(${(maxBudget - 10000) / (500000 - 10000) * 100}% - 35px)` }}
                       >
                         <div className="bg-slate-900 text-white text-[10px] font-black px-3 py-2 rounded-xl shadow-2xl whitespace-nowrap">
@@ -383,25 +399,37 @@ const today = toDateInputValue(new Date());
 
                       {/* Bold Custom Track */}
                       <div className="absolute w-full h-4 bg-slate-100 rounded-full overflow-hidden border border-slate-200/50 shadow-inner">
-                        <div 
-                          className="h-full bg-indigo-600/50 shadow-[0_0_20px_rgba(124,58,237,0.3)] transition-all duration-300" 
+                        <div
+                          className="h-full bg-violet-500 shadow-[0_0_20px_rgba(124,58,237,0.3)] transition-all duration-300"
                           style={{ width: `${(maxBudget - 10000) / (500000 - 10000) * 100}%` }}
                         />
                       </div>
 
-                      <input 
-                        type="range" 
-                        min="10000" 
-                        max="500000" 
+                      <input
+                        type="range"
+                        min="10000"
+                        max="500000"
                         step="5000"
                         value={maxBudget}
-                        onMouseDown={() => setIsDraggingMax(true)}
-                        onMouseUp={() => setIsDraggingMax(false)}
+                        onMouseDown={() => {
+                          setIsDraggingMax(true);
+                          setShowMaxTooltip(true);
+                        }}
+                        onMouseUp={() => {
+                          setIsDraggingMax(false);
+                          if (timeoutMaxRef.current) clearTimeout(timeoutMaxRef.current);
+                          timeoutMaxRef.current = setTimeout(() => setShowMaxTooltip(false), 2000);
+                        }}
                         onTouchStart={() => setIsDraggingMax(true)}
                         onTouchEnd={() => setIsDraggingMax(false)}
                         onChange={(e) => {
                           const val = Number(e.target.value);
-                          if (val > minBudget) setMaxBudget(val);
+                          if (val > minBudget) {
+                            setMaxBudget(val);
+                            setShowMaxTooltip(true);
+                            if (timeoutMaxRef.current) clearTimeout(timeoutMaxRef.current);
+                            timeoutMaxRef.current = setTimeout(() => setShowMaxTooltip(false), 2000);
+                          }
                         }}
                         className="absolute w-full h-8 bg-transparent appearance-none cursor-pointer z-40 
                           [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-8 [&::-webkit-slider-thumb]:h-8 
@@ -412,7 +440,7 @@ const today = toDateInputValue(new Date());
                     </div>
                   </div>
                 </div>
-                
+
                 <div className="mt-10 flex items-center justify-center gap-3 py-3 px-6 rounded-2xl">
                   <span className="text-xl">💡</span>
                   <p className="text-slate-500 text-xs font-bold italic">
@@ -433,11 +461,10 @@ const today = toDateInputValue(new Date());
                     key={style.id}
                     type="button"
                     onClick={() => setSelectedPlaceStyle(style.id)}
-                    className={`flex items-center gap-4 p-4 rounded-2xl border-2 transition-all ${
-                      selectedPlaceStyle === style.id
+                    className={`flex items-center gap-4 p-4 rounded-2xl border-2 transition-all ${selectedPlaceStyle === style.id
                         ? 'border-violet-500 ring-4 ring-violet-500/10 bg-violet-50'
                         : 'border-slate-100 bg-white hover:border-violet-200'
-                    }`}
+                      }`}
                   >
                     <img src={style.icon} alt={style.label} className="w-10 h-10 object-contain" />
                     <span className="font-bold text-slate-800">{style.label}</span>

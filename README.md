@@ -1,63 +1,92 @@
-# Trip Spark AI ✈️✨
+# ✈️ TripSpark AI | Premium Travel Itinerary Studio
 
-**Trip Spark AI** is a premium, full-stack AI Travel Planner designed to transform vague travel ideas into detailed, interactive itineraries. It features a professional **Itinerary Studio** with side-by-side map synchronization, real-time financial tracking, and intelligent AI-powered refinement.
-
-## 🚀 Key Features
-
-### 🧠 AI-Driven Itinerary Generation
-- **Intelligent Planning**: Leverages Large Language Models (Gemini AI) to generate personalized multi-day trips based on destination, traveler type, and duration.
-- **Itinerary Studio**: A sophisticated, side-by-side editing interface allowing users to refine AI-generated days, add activities, and adjust schedules in real-time.
-
-### 🗺️ Advanced Map Studio (Mapbox GL)
-- **Interactive Synchronization**: Real-time "Fly-To" animations that link itinerary activities directly to map locations.
-- **Numbered Route Visualization**: Dynamic polyline rendering with numbered steps (1 → 2 → 3) to visualize the flow of each travel day.
-- **Pro Satellite View**: High-resolution satellite imagery toggle allowing users to explore street-level details (Level 20 zoom) of their destinations.
-
-### 🏨 Premium Hotel Intelligence (Google Places)
-- **Live Details**: Real-time fetching of hotel ratings, reviews, and addresses using the Google Places API.
-- **Visual Excellence**: Professional hotel photo integration via secure backend proxying.
-- **Smart Caching Layer**: Custom-built PostgreSQL caching system using Prisma to store hotel data, reducing API latency and costs by up to 90%.
-
-### 🔍 Destination Autocomplete
-- **Global Search**: High-precision location autocomplete for cities and regions worldwide.
-- **Premium UX**: Modern, icon-rich search dropdown with main character energy and smooth Framer Motion transitions.
-
-### 💰 Financial Intelligence & Currency
-- **Live Exchange Rates**: Integrated custom API service to fetch real-time exchange rates (e.g., INR to JPY).
-- **Dynamic Conversion**: Instant UI-wide currency toggling between base (INR) and local destination currencies.
-- **Budget Breakdown**: Intelligent categorization of travel costs including Stays, Food, Transport, and Activities.
-
-### ☁️ Cloud & Persistence
-- **Full-Stack Integration**: Robust Node.js/Express backend with a PostgreSQL database (Prisma ORM) for persistent trip storage.
-- **Firebase Auth**: Secure Google Authentication integration for personalized trip dashboards and sharing.
-- **PDF Export**: One-click professional itinerary export using high-quality PDF generation.
-
-## 🛠️ Tech Stack
-
-**Frontend:**
-- React 18 (TypeScript)
-- Vite (Build Tool)
-- Tailwind CSS (Premium Styling)
-- Framer Motion (Modern Animations)
-- Mapbox GL (Interactive Geospatial Data)
-- Firebase SDK (Authentication)
-
-**Backend:**
-- Node.js & Express
-- TypeScript
-- Prisma ORM (PostgreSQL)
-- Google Gemini AI (Itinerary Generation)
-- Open-Meteo API (Weather Synchronization)
+**TripSpark AI** is a high-fidelity, full-stack travel planning application that transforms vague travel ideas into detailed, interactive itineraries. Powered by **Google Gemini 1.5 Pro**, it handles complex logistics, real-time weather forecasting, and interactive mapping to create a seamless "Editorial-Grade" travel experience.
 
 ---
 
-## 📸 Technical Highlights for Resume
+## ✨ Key Features
 
-- **Geospatial Sync**: Implemented complex state management to synchronize a scrolling activity list with a sticky Mapbox instance using React refs and effects.
-- **API Optimization**: Engineered a custom backend caching layer for currency exchange rates and weather data to reduce external API latency.
-- **Data Architecture**: Designed a nested JSON schema for flexible AI responses, ensuring high data integrity across the Itinerary Studio.
-- **UX/UI Excellence**: Developed a mobile-first, glassmorphism-inspired design system focused on high-end user engagement and smooth micro-interactions.
+### 🧠 AI-Powered Itinerary Studio
+Leverages the **Gemini 1.5 Pro** model to generate logically structured, day-wise itineraries based on user preferences, budget, and travel dates.
+
+### 🗺️ Interactive Geospatial Mapping
+Integrated with **Google Maps JavaScript API**, featuring custom numbered markers, satellite toggles, and dynamic pathfinding to visualize the travel journey.
+
+### ⛅ Real-time Weather Insights
+Automated weather forecasting for the travel dates using the **Open-Meteo API**, ensuring travelers are prepared for the conditions on the ground.
+
+### 📓 Editorial Travel Journal
+A premium **My Trips** dashboard featuring staggered animations, glassmorphic design, and persistent storage of personal travel collections.
+
+### 📱 Responsive & Fluid UX
+Built with a mobile-first philosophy, utilizing **Framer Motion** for smooth layout transitions and context-aware navigation logic.
 
 ---
 
-*Developed with ❤️ by [Your Name]*
+## 🛠️ Technical Stack
+
+- **Frontend**: React 18, Tailwind CSS, Framer Motion, Lucide React
+- **Backend**: Node.js, Express, PostgreSQL
+- **AI Engine**: Google Gemini 1.5 Pro (via Google AI SDK)
+- **APIs**: Google Maps (JavaScript, Places), Open-Meteo API
+- **Deployment Ready**: Fully configured for Vercel/Netlify and Render/Heroku
+
+---
+
+## 🚀 Getting Started
+
+### 1. Prerequisites
+- Node.js (v18+)
+- PostgreSQL Database
+- Google AI (Gemini) API Key
+- Google Maps API Key
+
+### 2. Installation
+```bash
+# Clone the repository
+git clone https://github.com/kush-16-web/trip-spark.git
+
+# Install Frontend dependencies
+npm install
+
+# Install Backend dependencies
+cd server
+npm install
+```
+
+### 3. Environment Setup
+Create a `.env` file in both the root and `server/` directories.
+
+**Root `.env`:**
+```env
+VITE_GOOGLE_MAPS_API_KEY=your_key
+VITE_API_BASE_URL=http://localhost:5000
+```
+
+**Server `.env`:**
+```env
+DATABASE_URL=your_postgres_url
+GEMINI_API_KEY=your_gemini_key
+PORT=5000
+```
+
+---
+
+## 📐 Architecture
+
+TripSpark follows a modular **Proxy Architecture**. The frontend communicates with a specialized Express server which handles:
+1.  **AI Prompt Engineering**: Structured JSON output from Gemini.
+2.  **Weather Synchronization**: Mapping dates to forecast windows.
+3.  **Data Persistence**: Efficient CRUD operations on PostgreSQL.
+
+---
+
+## 👨‍💻 Author
+**Kush Pandya**
+- [GitHub](https://github.com/kush-16-web)
+- [LinkedIn](https://www.linkedin.com/in/kush-pandya-6544a6352)
+
+---
+
+> [!TIP]
+> **Showcase Tip**: This project was built to demonstrate the integration of Generative AI with real-world geospatial and weather data. It prioritizes "Defensive UX" and premium aesthetic standards.
