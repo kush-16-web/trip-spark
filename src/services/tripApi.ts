@@ -77,7 +77,7 @@ export interface PlanTripApiResponse {
   shareId: string;
 }
 
-export const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080';
+export const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8080/api';
 
 export interface MyTripListItem {
   id: string;
@@ -122,7 +122,7 @@ export async function planTrip(payload: TripFormPayload): Promise<PlanTripApiRes
   const headers: Record<string, string> = { 'Content-Type': 'application/json' };
   if (token) headers['Authorization'] = `Bearer ${token}`;
 
-  const response = await fetch(`${API_BASE_URL}/api/trip/plan`, {
+  const response = await fetch(`${API_BASE_URL}/trip/plan`, {
     method: 'POST',
     headers,
     body: JSON.stringify(payload),
@@ -143,7 +143,7 @@ export async function getMyTrips(): Promise<MyTripsApiResponse> {
   const headers: Record<string, string> = {};
   if (token) headers['Authorization'] = `Bearer ${token}`;
 
-  const response = await fetch(`${API_BASE_URL}/api/trip/my-trips`, {
+  const response = await fetch(`${API_BASE_URL}/trip/my-trips`, {
     headers
   });
   const data = (await response.json()) as MyTripsApiResponse | { message?: string };
@@ -156,7 +156,7 @@ export async function getMyTrips(): Promise<MyTripsApiResponse> {
 }
 
 export async function getTripById(id: string): Promise<TripByIdApiResponse> {
-  const response = await fetch(`${API_BASE_URL}/api/trip/${id}`);
+  const response = await fetch(`${API_BASE_URL}/trip/${id}`);
   const data = (await response.json()) as TripByIdApiResponse | { message?: string };
 
   if (!response.ok) {
@@ -167,7 +167,7 @@ export async function getTripById(id: string): Promise<TripByIdApiResponse> {
 }
 
 export async function getSharedTrip(shareId: string):Promise<TripByIdApiResponse>{
-  const response = await fetch(`${API_BASE_URL}/api/trip/share/${shareId}`);
+  const response = await fetch(`${API_BASE_URL}/trip/share/${shareId}`);
   const data = (await response.json() as TripByIdApiResponse | {message?: string});
   if(!response.ok){
     throw new Error((data as {message?: string}).message ?? 'Failed to get shared trip');
@@ -177,7 +177,7 @@ export async function getSharedTrip(shareId: string):Promise<TripByIdApiResponse
 
 export async function deletetrip(id: string){
   const token = localStorage.getItem('auth_token');
-  const response = await fetch(`${API_BASE_URL}/api/trip/delete/${id}`,{
+  const response = await fetch(`${API_BASE_URL}/trip/delete/${id}`,{
     method : 'DELETE',
     headers : {
       'Authorization' : `Bearer ${token}`,
@@ -189,7 +189,7 @@ export async function deletetrip(id: string){
 
 export async function updatetrip(id: string, update: any){
   const token = localStorage.getItem('auth_token');
-  const response = await fetch(`${API_BASE_URL}/api/trip/update/${id}`,{
+  const response = await fetch(`${API_BASE_URL}/trip/update/${id}`,{
     method : 'PUT',
     headers : {
       'Authorization' : `Bearer ${token}`,
@@ -203,7 +203,7 @@ export async function updatetrip(id: string, update: any){
 
 export async function refineTrip(id: string, instruction: string){
   const token = localStorage.getItem('auth_token');
-  const response = await fetch(`${API_BASE_URL}/api/trip/refine`, {
+  const response = await fetch(`${API_BASE_URL}/trip/refine`, {
     method : 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -219,7 +219,7 @@ export async function refineTrip(id: string, instruction: string){
 
 export async function savedTrip(tripData:any) {
   const token = localStorage.getItem('auth_token');
-  const response = await fetch(`${API_BASE_URL}/api/trip/save`,{
+  const response = await fetch(`${API_BASE_URL}/trip/save`,{
     method : 'POST',
     headers : {
       'Content-Type' : 'application/json',
