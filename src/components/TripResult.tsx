@@ -259,7 +259,7 @@ export default function TripResult({
   const [showLoginPrompt, setShowLoginPrompt] = useState(false);
   const [pendingAction, setPendingAction] = useState<'save' | null>(null);
   const [loginSuccessMessage, setLoginSuccessMessage] = useState<string | null>(null);
-  const [isSaved, setIsSaved] = useState(false);
+  const [isSaved, setIsSaved] = useState(!!data?.id);
   const [localDayplan, setLocalDayplan] = useState<DayPlan[]>(data?.dayPlan || data?.plan?.dayPlan || []);
   const [isGeneratingDay, setIsGeneratingDay] = useState(false);
   const [isGeneratingBudget, setIsGeneratingBudget] = useState(false);
@@ -313,6 +313,7 @@ export default function TripResult({
     if(planToUse){
       setLocalDayplan(planToUse);
     }
+    setIsSaved(!!data?.id);
   },[data?.id, data?.plan]);
 
   useEffect(() => {

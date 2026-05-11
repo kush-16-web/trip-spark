@@ -292,7 +292,7 @@ function App() {
         onLogoClick={handleHomeClick}
         isEditMode={isEditMode}
         isViewingTrip={showResult}
-        hasUnsavedChanges={!!(trip && !trip.id)}
+        hasUnsavedChanges={!!(trip && !trip.id && (trip.dayPlan || (trip as any).plan?.dayPlan))}
       />
       
       <Routes>

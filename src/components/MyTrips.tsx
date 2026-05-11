@@ -191,10 +191,10 @@ export default function MyTrips({ onOpenTrip, onBackToPlanner, onTripDeleted }: 
                 <div>
                   <div className="flex items-center gap-3 mb-8">
                     <div className="w-16 h-16 bg-slate-50 rounded-2xl flex items-center justify-center shadow-inner group-hover:scale-110 transition-transform duration-500">
-                      {trip.type === 'Solo' && <img src={solo} alt="Solo" className="w-10 h-10" />}
-                      {trip.type === 'Couple' && <img src={couple} alt="Couple" className="w-10 h-10" />}
-                      {trip.type === 'Family' && <img src={family} alt="Family" className="w-10 h-10" />}
-                      {trip.type === 'Friends' && <img src={friends} alt="Friends" className="w-10 h-10" />}
+                      {trip.type === 'Solo' && <img src={solo} alt="Solo" className="w-full h-full" />}
+                      {trip.type === 'Couple' && <img src={couple} alt="Couple" className="w-full h-full" />}
+                      {trip.type === 'Family' && <img src={family} alt="Family" className="w-full h-full" />}
+                      {trip.type === 'Friends' && <img src={friends} alt="Friends" className="w-full h-full" />}
                     </div>
                     <span className="px-4 py-1.5 bg-violet-50 text-violet-600 rounded-full text-[10px] font-black uppercase tracking-[0.2em] border border-violet-100">
                       {trip.days || 'Multi'} Days

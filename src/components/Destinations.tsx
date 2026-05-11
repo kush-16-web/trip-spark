@@ -43,7 +43,6 @@ const trendingDestinations: DestinationEntry[] = [
     country: 'India',
     image: goaImg,
     tag: 'Trending',
-    tagIcon: Trending,
     blurb: 'Nov–Feb — vibrant nightlife, golden sandy beaches, and charming Portuguese architecture.',
   },
 ];

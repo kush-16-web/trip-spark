@@ -92,7 +92,7 @@ const Navbar: React.FC<NavbarProps> = ({ userEmail, userPicture, onLogoClick, is
     window.addEventListener('scroll', handleScroll);
     handleScroll(); // Initial check
     return () => window.removeEventListener('scroll', handleScroll);
-  }, [location.pathname]);
+  }, [location.pathname, isViewingTrip]);
 
   const navLinks: Array<{ name: string; href: string; action?: () => void }> = [
     { name: 'Explore', href: '/' },
