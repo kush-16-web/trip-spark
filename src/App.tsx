@@ -127,6 +127,7 @@ function App() {
       }, 300);
     } catch (error) {
       console.error('Error while planning trip:', error);
+      toast.error("Our AI is currently taking a coffee break due to high demand. Please try again in a few minutes! ☕⚡");
     } finally {
       setLoading(false);
     }

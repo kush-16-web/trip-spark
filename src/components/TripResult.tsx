@@ -443,7 +443,7 @@ export default function TripResult({
 
     } catch (error) {
       console.error("Error generating day:", error);
-      alert("Failed to generate activities. Please try again.");
+      toast.error("Our AI is currently taking a coffee break due to high demand. Please try again in a few minutes! ☕⚡");
     } finally {
       setIsGeneratingDay(false);
     }
@@ -497,7 +497,7 @@ export default function TripResult({
       }
     } catch (error) {
       console.error("Error generating budget:", error);
-      alert("Failed to generate budget. Please try again.");
+      toast.error("Our AI is currently taking a coffee break due to high demand. Please try again in a few minutes! ☕⚡");
     } finally{
       setIsGeneratingBudget(false);
     }
@@ -528,7 +528,7 @@ export default function TripResult({
         }
     } catch (error) {
       console.error("Error generating summary:", error);
-      alert("Failed to generate summary. Please try again.");
+      toast.error("Our AI is currently taking a coffee break due to high demand. Please try again in a few minutes! ☕⚡");
     } finally{
       setIsGeneratingSummary(false);
     }
