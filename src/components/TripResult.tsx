@@ -443,7 +443,7 @@ export default function TripResult({
 
     } catch (error) {
       console.error("Error generating day:", error);
-      toast.error("Our AI is currently taking a coffee break due to high demand. Please try again in a few minutes! ☕⚡");
+      toast.error("Our AI is currently taking a coffee break due to high demand. Please try again in a few minutes! ", { icon: "☕⚡" });
     } finally {
       setIsGeneratingDay(false);
     }
