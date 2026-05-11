@@ -1195,9 +1195,9 @@ async function onClickSaveTrip() {
                       type="button"
                       onClick={onClickSaveTrip}
                       disabled={isSaving || showSavedState}
-                      className={`w-full md:w-auto py-4 px-10 rounded-2xl font-black text-lg transition-all duration-300 flex items-center justify-center gap-3 shadow-xl active:scale-95 ${
+                      className={`w-full md:w-auto py-4 px-10 rounded-2xl font-black text-lg transition-all duration-300 flex items-center justify-center gap-3 active:scale-95 ${
                         showSavedState 
-                        ? 'bg-emerald-50 text-emerald-600 border-2 border-emerald-100 cursor-default' 
+                        ? 'bg-white text-black border border-black cursor-default shadow-sm' 
                         : 'bg-slate-900 text-white hover:bg-slate-800 shadow-slate-900/20'
                       } ${isSaving ? 'opacity-70 cursor-wait' : ''}`}
                     >
@@ -1211,7 +1211,7 @@ async function onClickSaveTrip() {
                           <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
                           </svg>
-                          Saved to account
+                          Saved to account!
                         </>
                       ) : (
                         <>
@@ -1243,7 +1243,7 @@ async function onClickSaveTrip() {
                           alert('Link copied to clipboard!');
                         }
                       }}
-                      className="w-full md:w-auto py-2.5 sm:px-6 sm:py-5 bg-white text-slate-900 border-2 border-slate-200 rounded-2xl font-bold text-sm sm:text-lg hover:border-violet-400 hover:text-violet-600 hover:translate-y-[-2px] transition-all duration-300 active:scale-95 flex items-center justify-center gap-2"
+                      className="w-full md:w-auto py-2.5 sm:px-6 sm:py-4 bg-white text-slate-900 border-2 border-slate-200 rounded-2xl font-bold text-sm sm:text-lg hover:border-violet-400 hover:text-violet-600 hover:translate-y-[-2px] transition-all duration-300 active:scale-95 flex items-center justify-center gap-2"
                     >
                       Share Itinerary
                       <span className="text-xl">🔗</span>

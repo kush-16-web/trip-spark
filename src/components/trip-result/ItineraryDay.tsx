@@ -326,7 +326,7 @@ const ItineraryDay: React.FC<ItineraryDayProps> = ({
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 md:gap-6 mb-8 md:mb-10 border-b border-slate-50 pb-8">
           <div className="flex flex-col gap-1 md:gap-2">
             <div className="flex items-center gap-3">
-              <h4 className="text-3xl md:text-4xl font-black text-slate-900 tracking-tighter">
+              <h4 className="text-xl font-black text-slate-900 tracking-tighter">
                 Day {dayNumber}
               </h4>
               <div className="px-3 py-1 bg-violet-100 text-violet-700 rounded-full text-[8px] md:text-[10px] font-black uppercase tracking-widest">
@@ -373,7 +373,11 @@ const ItineraryDay: React.FC<ItineraryDayProps> = ({
                   </span>
                   <span className="text-[7px] md:text-[9px] font-bold text-violet-500 uppercase tracking-wider">
                     {weather.weatherCode === 0 ? "Hotter than your last selfie." :
-                      weather.weatherCode >= 1 && weather.weatherCode <= 3 ? "Perfect lighting for a date." :
+                      weather.weatherCode >= 1 && weather.weatherCode <= 3 ? (
+                        tripType?.toLowerCase() === 'couple' ? "Perfect lighting for a date." : 
+                        tripType?.toLowerCase() === 'family' ? "Perfect lighting for a family picnic" :
+                        tripType?.toLowerCase() === 'solo' ? "Perfect lighting for a solo adventure" : "Mild & Nice vibes"
+                      ) :
                       weather.weatherCode === 45 || weather.weatherCode === 48 ? "Wear sunglasses and a jacket" :
                         (weather.weatherCode >= 51 && weather.weatherCode <= 67) ? (tripType?.toLowerCase() === 'couple' ? "Perfect excuse to stay in and cuddle." : "Free hair wash day!") :
                         (weather.weatherCode >= 71 && weather.weatherCode <= 77 || weather.weatherCode === 85 || weather.weatherCode === 86) ? (tripType?.toLowerCase() === 'couple' ? "A winter wonderland is waiting for us." : "Prepare to look like a stylish penguin") :
