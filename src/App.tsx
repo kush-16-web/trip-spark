@@ -47,8 +47,8 @@ function App() {
     "Planning your trip...",
     "Researching destinations...",
     "Checking weather...",
+    "Cooking your trip...",
     "Building itinerary...",
-    "Adding hidden gems...",
     "Finalizing details...",
     "Voila! Your trip is ready..."
   ];
@@ -146,7 +146,7 @@ function App() {
         endDate: '',
       });
       setLoading(false);
-    }, 2500);
+    }, 1000);
   }
 
 
@@ -292,6 +292,7 @@ function App() {
         onLogoClick={handleHomeClick}
         isEditMode={isEditMode}
         isViewingTrip={showResult}
+        hasUnsavedChanges={!!(trip && !trip.id)}
       />
       
       <Routes>

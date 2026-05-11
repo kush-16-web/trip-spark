@@ -1,11 +1,8 @@
 import { useState, useRef, useEffect } from "react";
-import { API_BASE_URL } from "../../services/tripApi";
 import Map, { Marker, Source, Layer, NavigationControl } from "react-map-gl/mapbox";
 import 'mapbox-gl/dist/mapbox-gl.css';
-import stayIcon from "../../assets/stay.gif";
 import mapboxgl from 'mapbox-gl';
 mapboxgl.accessToken = 'pk.eyJ1Ijoia3VzaC0xNiIsImEiOiJjbW9zdDNrNTgwMmVrMnJzMWtyMHV4aWhsIn0.G7L6LjqBCdAyqcx3fVpXug'
-// console.log("My Token is:", mapboxgl.accessToken);
 
 interface MapProps {
   places: any[]; // Must visit places
@@ -18,6 +15,8 @@ interface MapProps {
 const HotelMarker = ({ stay, destination, onMarkerClick }: { stay: any, destination: string, onMarkerClick: (coords: any) => void }) => {
   const [coords, setCoords] = useState(stay.coordinates);
 
+  // Disabled for V1 to ensure production readiness without Google API verification
+  /*
   useEffect(() => {
     if (!coords?.lat || !coords?.lng) {
       const fetchCoords = async () => {
@@ -34,6 +33,7 @@ const HotelMarker = ({ stay, destination, onMarkerClick }: { stay: any, destinat
       fetchCoords();
     }
   }, [stay.name, destination, coords]);
+  */
 
   if (!coords?.lat || !coords?.lng) return null;
 
@@ -59,14 +59,13 @@ const HotelMarker = ({ stay, destination, onMarkerClick }: { stay: any, destinat
 const TripMap = ({ places, stays, activites, activeDay, destination }: MapProps) => {
   const mapRef = useRef<any>(null);
   const [viewState, setViewState] = useState({
-    latitude: 20, //Default start
+    latitude: 20, 
     longitude: 77,
     zoom: 2
   })
 
   const [mapStyle, setMapStyle] = useState("mapbox://styles/mapbox/light-v11");
 
-  //2. Logic to "fly" the map when the day changes
   useEffect(() => {
     if (activites.length > 0 && mapRef.current) {
       const firstCoord = activites[0].coordinates;
@@ -111,12 +110,11 @@ const TripMap = ({ places, stays, activites, activeDay, destination }: MapProps)
           {...viewState}
           ref={mapRef}
           onMove={evt => setViewState(evt.viewState)}
-          mapStyle={mapStyle} // Premium Muted style
+          mapStyle={mapStyle} 
           mapboxAccessToken={mapboxgl.accessToken}
         >
           <NavigationControl position="top-right" />
 
-          {/* 3. Render Markers for Places (Must Visit) */}
           {places.map((place, i) => (
             place.coordinates?.lat && place.coordinates?.lng && (
               <Marker
@@ -138,7 +136,6 @@ const TripMap = ({ places, stays, activites, activeDay, destination }: MapProps)
             )
           ))}
 
-          {/* 4. Render Markers for Stays (Hotels) */}
           {stays.map((stay, i) => (
             <HotelMarker
               key={`stay-${i}`}
@@ -148,7 +145,6 @@ const TripMap = ({ places, stays, activites, activeDay, destination }: MapProps)
             />
           ))}
 
-          {/* 5. Render Markers for Current Day Activities (Numbered) */}
           {activites.map((activity, i) => (
             activity.coordinates?.lat && activity.coordinates?.lng && (
               <Marker
@@ -161,12 +157,9 @@ const TripMap = ({ places, stays, activites, activeDay, destination }: MapProps)
                 }}
               >
                 <div className="group relative cursor-pointer">
-                  {/* The Numbered Pin */}
                   <div className="w-8 h-8 bg-violet-600 text-white rounded-full border-2 border-white shadow-lg flex items-center justify-center font-black text-xs group-hover:scale-125 group-hover:bg-black transition-all duration-300">
                     {i + 1}
                   </div>
-
-                  {/* Hover Label */}
                   <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-3 py-1.5 bg-slate-900 text-white text-[10px] font-bold rounded-lg opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none shadow-xl">
                     {activity.title}
                     <div className="absolute top-full left-1/2 -translate-x-1/2 border-4 border-transparent border-t-slate-900" />
@@ -176,7 +169,6 @@ const TripMap = ({ places, stays, activites, activeDay, destination }: MapProps)
             )
           ))}
 
-          {/* 6. Render the Route Line (Polyline) */}
           {activites.length > 1 && (
             <Source
               id="route"
@@ -197,9 +189,9 @@ const TripMap = ({ places, stays, activites, activeDay, destination }: MapProps)
                 id="route-layer"
                 type="line"
                 paint={{
-                  "line-color": "#000", // Your violet color
+                  "line-color": "#000",
                   "line-width": 4,
-                  "line-dasharray": [2, 1] // Makes it look like a dashed path
+                  "line-dasharray": [2, 1]
                 }}
               />
             </Source>

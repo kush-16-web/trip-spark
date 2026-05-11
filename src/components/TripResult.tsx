@@ -35,7 +35,7 @@ import html2pdf from 'html2pdf.js';
 
 const GhostWriter = ({ text, className }: { text: string; className?: string }) => {
   return (
-    <motion.div className={`inline-flex items-center ${className}`}>
+    <motion.div className={`inline leading-relaxed ${className}`}>
       {text.split("").map((char, i) => (
         <motion.span
           key={`${text}-${i}`}
@@ -47,18 +47,21 @@ const GhostWriter = ({ text, className }: { text: string; className?: string }) 
             ease: "easeIn"
           }}
         >
-          {char === " " ? "\u00A0" : char}
+          {char}
         </motion.span>
       ))}
       <motion.span
         initial={{ opacity: 1 }}
         animate={{ opacity: 0 }}
         transition={{
-          duration: 0.8,
-          repeat: Infinity,
+          duration: 0.6,
+          repeat: 10,
+          repeatType: "reverse",
           ease: "easeInOut"
         }}
-        className="ml-0.5 inline-block w-1.5 h-4 bg-violet-500 rounded-full"
+        onAnimationComplete={() => {}}
+        className="ml-1 inline-block w-1.5 h-4 bg-violet-500 rounded-full"
+        style={{ opacity: 0 }}
       />
     </motion.div>
   );
@@ -236,6 +239,21 @@ export default function TripResult({
   onSaveTripUpdates
 }: TripResultProps) {
   const [activeDay, setActiveDay] = useState(1);
+
+  // Prevention for accidental data loss (Unsaved changes)
+  useEffect(() => {
+    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+      // If we have trip data but NO id, it means it's newly generated and NOT saved.
+      if (data && !data.id && !isEditMode) {
+        e.preventDefault();
+        e.returnValue = ''; // Required for most browsers to show the prompt
+      }
+    };
+
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    return () => window.removeEventListener('beforeunload', handleBeforeUnload);
+  }, [data, isEditMode]);
+
   const [isSigningIn, setIsSigningIn] = useState(false);
   const [authError, setAuthError] = useState<string | undefined>(undefined);
   const [showLoginPrompt, setShowLoginPrompt] = useState(false);
@@ -819,7 +837,7 @@ async function onClickSaveTrip() {
                   <p className="text-sm text-slate-400 max-w-xl leading-relaxed">{data.totalEstimate.note}</p>
                 </div>
 
-                {data.travelers && Number(data.travelers) > 1 && (
+                {data.type?.toLowerCase() === 'friends' && Number(data.travelers) > 1 && (
                   <div className="flex flex-col gap-3 p-6 bg-white/5 backdrop-blur-xl rounded-3xl border border-white/10">
                     <p className="text-[10px] uppercase tracking-widest text-slate-400 font-bold">Per person split</p>
                     <p className="text-2xl font-black text-white">
@@ -833,90 +851,90 @@ async function onClickSaveTrip() {
         )}
 
         {/* 1. Trip summary */}
-<section className="mb-24 md:mb-48 px-4 md:px-0" aria-labelledby="trip-summary-heading">
-  <div className="flex flex-col lg:flex-row gap-16 lg:gap-24 items-start">
-    {/* Left Column: Title & Controls */}
-    <div className="lg:w-1/3 lg:sticky lg:top-32 w-full">
-      <div className="flex flex-row items-center justify-between">
-        <div className="inline-flex items-center gap-3 px-4 py-2 bg-slate-900 rounded-full mb-8 shadow-xl shadow-slate-900/10">
-          <div className="w-2 h-2 rounded-full bg-violet-400 animate-pulse" />
-          <span className="text-[10px] text-white font-black tracking-[0.3em] uppercase">Overview</span>
-        </div>
-      {isEditMode && (
-        <button
-          onClick={handleGenerateSummary}
-          disabled={isGeneratingSummary}
-          className="flex flex-col items-center gap-2 group"
-        >
-          <div className="p-1 bg-white shadow-2xl shadow-violet-100 border border-slate-100 rounded-[2rem] group-hover:scale-110 active:scale-95 transition-all relative overflow-hidden">
-            <div className="absolute inset-0 bg-violet-500/0 group-hover:bg-violet-500/5 transition-colors" />
-            <img src={magicWandIcon} className="md:w-10 md:h-10 w-8 h-8 relative z-10 group-hover:rotate-12 transition-transform" />
-          </div>
-          <span className="text-[10px] font-black uppercase tracking-widest text-slate-400 group-hover:text-violet-600 transition-colors">Refine AI</span>
-        </button>
-      )}
-    </div>    
-      <div className="flex flex-row lg:flex-col items-center lg:items-start justify-between lg:justify-start gap-6 mb-8">
-        <div>
-          <h3 id="trip-summary-heading" className="text-5xl md:text-7xl font-black text-slate-900 tracking-tighter leading-[0.9]">
-            The <br className="hidden lg:block" /> Experience
-          </h3>
-          <div className="w-24 h-2 bg-violet-600 rounded-full mt-6" />
-        </div>
+        <section className="mb-24 md:mb-48 px-4 md:px-0" aria-labelledby="trip-summary-heading">
+          <div className="flex flex-col lg:flex-row gap-16 lg:gap-24 items-start">
+            {/* Left Column: Title & Controls */}
+            <div className="lg:w-1/3 lg:sticky lg:top-32 w-full">
+              <div className="flex flex-row items-center justify-between">
+                <div className="inline-flex items-center gap-3 px-4 py-2 bg-slate-900 rounded-full mb-8 shadow-xl shadow-slate-900/10">
+                  <div className="w-2 h-2 rounded-full bg-violet-400 animate-pulse" />
+                  <span className="text-[10px] text-white font-black tracking-[0.3em] uppercase">Overview</span>
+                </div>
+              {isEditMode && (
+                <button
+                  onClick={handleGenerateSummary}
+                  disabled={isGeneratingSummary}
+                  className="flex flex-col items-center gap-2 group"
+                >
+                  <div className="p-1 bg-white shadow-2xl shadow-violet-100 border border-slate-100 rounded-[2rem] group-hover:scale-110 active:scale-95 transition-all relative overflow-hidden">
+                    <div className="absolute inset-0 bg-violet-500/0 group-hover:bg-violet-500/5 transition-colors" />
+                    <img src={magicWandIcon} className="md:w-10 md:h-10 w-8 h-8 relative z-10 group-hover:rotate-12 transition-transform" />
+                  </div>
+                  <span className="text-[10px] font-black uppercase tracking-widest text-slate-400 group-hover:text-violet-600 transition-colors">Refine AI</span>
+                </button>
+              )}
+            </div>    
+              <div className="flex flex-row lg:flex-col items-center lg:items-start justify-between lg:justify-start gap-6 mb-8">
+                <div>
+                  <h3 id="trip-summary-heading" className="text-5xl md:text-7xl font-black text-slate-900 tracking-tighter leading-[0.9]">
+                    The <br className="hidden lg:block" /> Experience
+                  </h3>
+                  <div className="w-24 h-2 bg-violet-600 rounded-full mt-6" />
+                </div>
 
-      </div>
-    </div>
-    
-    {/* Right Column: The Card */}
-    <div className="lg:w-2/3 relative w-full">
-       {/* Premium AI Loading Overlay */}
-       {isGeneratingSummary && (
-        <div className="absolute inset-0 bg-white/60 backdrop-blur-2xl z-50 flex flex-col items-center justify-center animate-in fade-in zoom-in-95 duration-500 rounded-[3rem] md:rounded-[4rem]">
-          <img src={magicWandIcon} className="w-24 h-24 mb-4" />
-          <p className="text-slate-900 font-black text-xs uppercase tracking-[0.4em] animate-pulse">Rewriting the story...</p>
-        </div>
-      )}
-
-      <div className="relative group">
-        {/* Decorative background glow */}
-        <div className="absolute -top-20 -right-20 w-64 h-64 bg-violet-200/40 rounded-full blur-[100px] opacity-50 group-hover:opacity-80 transition-opacity" />
-        
-        <div className="bg-white/60 backdrop-blur-xl border border-white p-8 md:p-16 rounded-[3rem] md:rounded-[4rem] shadow-[0_32px_64px_-16px_rgba(0,0,0,0.08)] relative overflow-hidden">
-          {/* Huge background quote mark */}
-          <span className="absolute -top-10 -left-6 text-[15rem] font-serif text-slate-100/50 select-none pointer-events-none">“</span>
-          
-          <div className="relative z-10">
-            <div className="text-lg md:text-4xl text-slate-900 font-bold leading-[1.1] tracking-tight mb-16">
-              <AnimatePresence mode="wait">
-                <GhostWriter 
-                  key={data.summary || data.plan?.summary}
-                  text={data.summary || data.plan?.summary || `A curated journey through ${destination}.`} 
-                />
-              </AnimatePresence>
+              </div>
             </div>
             
-            <div className="grid sm:grid-cols-2 gap-x-12 gap-y-10">
-              {(data.summaryBullets || data.plan?.summaryBullets || []).map((item: string, idx: number) => (
-                <div key={idx} className="group/item flex items-start gap-6">
-                  <div className="flex-shrink-0 w-12 h-12 rounded-2xl bg-slate-50 border border-slate-100 flex items-center justify-center group-hover/item:bg-slate-900 group-hover/item:border-slate-900 transition-all duration-300 shadow-sm">
-                    <span className="text-slate-400 font-black text-sm group-hover/item:text-white">0{idx + 1}</span>
-                  </div>
-                  <p className="text-slate-600 text-lg leading-relaxed font-medium pt-1">
-                    {item}
-                  </p>
+            {/* Right Column: The Card */}
+            <div className="lg:w-2/3 relative w-full">
+              {/* Premium AI Loading Overlay */}
+              {isGeneratingSummary && (
+                <div className="absolute inset-0 bg-white/60 backdrop-blur-2xl z-50 flex flex-col items-center justify-center animate-in fade-in zoom-in-95 duration-500 rounded-[3rem] md:rounded-[4rem]">
+                  <img src={magicWandIcon} className="w-24 h-24 mb-4" />
+                  <p className="text-slate-900 font-black text-xs uppercase tracking-[0.4em] animate-pulse">Rewriting the story...</p>
                 </div>
-              ))}
+              )}
+
+              <div className="relative group">
+                {/* Decorative background glow */}
+                <div className="absolute -top-20 -right-20 w-64 h-64 bg-violet-200/40 rounded-full blur-[100px] opacity-50 group-hover:opacity-80 transition-opacity" />
+                
+                <div className="bg-white/60 backdrop-blur-xl border border-white p-8 md:p-16 rounded-[3rem] md:rounded-[4rem] shadow-[0_32px_64px_-16px_rgba(0,0,0,0.08)] relative overflow-hidden">
+                  {/* Huge background quote mark */}
+                  <span className="absolute -top-10 -left-6 text-[10rem] md:text-[15rem] font-serif text-slate-100/50 select-none pointer-events-none">“</span>
+                  
+                  <div className="relative z-10">
+                    <div className="text-xl text-slate-900 font-bold leading-[1.2] lg:leading-[1.1] tracking-tight mb-12 md:mb-16">
+                      <AnimatePresence mode="wait">
+                        <GhostWriter 
+                          key={data.summary || data.plan?.summary}
+                          text={data.summary || data.plan?.summary || `A curated journey through ${destination}.`} 
+                        />
+                      </AnimatePresence>
+                    </div>
+                    
+                    <div className="grid sm:grid-cols-2 gap-x-8 lg:gap-x-12 gap-y-8 md:gap-y-10">
+                      {(data.summaryBullets || data.plan?.summaryBullets || []).map((item: string, idx: number) => (
+                        <div key={idx} className="group/item flex items-start gap-4 md:gap-6">
+                          <div className="flex-shrink-0 w-10 h-10 md:w-12 md:h-12 rounded-2xl bg-slate-50 border border-slate-100 flex items-center justify-center group-hover/item:bg-slate-900 group-hover/item:border-slate-900 transition-all duration-300 shadow-sm">
+                            <span className="text-slate-400 font-black text-xs md:text-sm group-hover/item:text-white">0{idx + 1}</span>
+                          </div>
+                          <p className="text-slate-600 text-sm md:text-lg leading-relaxed font-medium pt-1 md:pt-2">
+                            {item}
+                          </p>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
-        </div>
-      </div>
-    </div>
-  </div>
-</section>
+        </section>
 
 
         {/* 2. Day-wise plan */}
-        <section className="mb-24 md:mb-32 px-6" aria-labelledby="day-plan-heading">
+        <section className="mb-24 md:mb-32 md:px-6" aria-labelledby="day-plan-heading">
           <SectionHeading id="day-plan-heading" eyebrow="Schedule" title="Day-wise plan" icon={calender} />
           
           <div className="max-w-full mx-auto px-4 md:px-0">
@@ -984,7 +1002,7 @@ async function onClickSaveTrip() {
             {/* Split Layout: Activities & Map */}
             <div className="flex flex-col lg:flex-row gap-10 items-start">
               {/* Left Column: Activities (Scrollable) */}
-              <div className="w-full lg:w-1/2 order-2 lg:order-1">
+              <div className="w-[100%] lg:w-1/2 order-2 lg:order-1">
                 <ItineraryDay 
                   dayNumber={activeDay}
                   activities={localDayplan.find(dp => dp.day === activeDay)?.activities || []}
@@ -1170,7 +1188,7 @@ async function onClickSaveTrip() {
         <section className="mb-24 md:mb-32" aria-labelledby="suggestions-heading">
           <SectionHeading id="suggestions-heading" eyebrow="Discovery" title="Curated Suggestions" icon={compassIcon} />
           
-          <div className="grid lg:grid-cols-2 gap-12 lg:gap-16">
+          <div className="grid lg:grid-cols-2 gap-6 lg:gap-16">
             <HotelSection 
               hotels={hotelsToDisplay.length > 0 ? hotelsToDisplay : HARDCODED_STAYS} 
               city={destination}
@@ -1205,14 +1223,14 @@ async function onClickSaveTrip() {
                       {isSaved ? 'See trip!' : 'Save Trip'} <span className="text-xl">✈️</span>
                     </button>
                     
-                    <button
+                    {/* <button
                       type="button"
                       onClick={handleDownloadPDF}
                       className="w-full md:w-auto py-2.5 sm:px-6 sm:py-5 bg-violet-600 text-white rounded-2xl font-bold text-sm sm:text-lg hover:bg-violet-700 hover:translate-y-[-2px] transition-all duration-300 shadow-xl shadow-violet-200 active:scale-95 flex items-center justify-center gap-2"
                     >
                       Download PDF
                       <span className="text-xl">📄</span>
-                    </button>
+                    </button> */}
 
                     <button
                       type="button"
@@ -1236,7 +1254,7 @@ async function onClickSaveTrip() {
                   </div>
 
                   <div className="flex flex-wrap justify-center gap-3 mt-4">
-                    {onViewMyTrips && (
+                    {onViewMyTrips && loggedInUser?.email && (
                       <button
                         type="button"
                         onClick={onViewMyTrips}
@@ -1273,10 +1291,13 @@ async function onClickSaveTrip() {
                   <p className="text-slate-400 text-[10px] font-bold uppercase tracking-tighter">Refining your journey in real-time</p>
                 </div>
               </div>
-              <div className="flex items-center gap-4">
-                <div className="px-4 py-2 bg-white/5 rounded-xl border border-white/10 hidden md:block">
-                  <span className="text-[10px] font-black text-violet-400 uppercase tracking-widest">Saved to cloud</span>
-                </div>
+              <div className="flex items-center gap-3">
+                <button
+                  onClick={() => setIsEditMode(false)}
+                  className="px-4 py-2.5 md:px-6 md:py-3 bg-white/10 hover:bg-white/20 text-white border border-white/20 rounded-2xl font-black text-[10px] md:text-xs uppercase tracking-widest transition-all active:scale-95"
+                >
+                  Cancel
+                </button>
                 <button 
                   onClick={() => {
                     const finalData = {
@@ -1285,11 +1306,12 @@ async function onClickSaveTrip() {
                     };
                     if(onSaveTripUpdates){
                       onSaveTripUpdates(finalData);
-                      }
+                    }
                   }}
-                  className="px-6 py-3 bg-white text-slate-900 rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-slate-100 transition-colors shadow-lg active:scale-95"
+                  className="px-4 py-2.5 md:px-6 md:py-3 bg-violet-600 text-white rounded-2xl font-black text-[10px] md:text-xs uppercase tracking-widest hover:bg-violet-500 transition-all shadow-xl shadow-violet-500/20 active:scale-95 flex items-center gap-2"
                 >
-                  Finish Editing
+                  <span>Finish Editing</span>
+                  <span className="hidden md:inline">✨</span>
                 </button>
               </div>
             </div>

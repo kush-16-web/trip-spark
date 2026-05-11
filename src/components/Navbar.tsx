@@ -14,15 +14,16 @@ interface NavbarProps {
   onLogoClick?: () => void;
   isEditMode?: boolean;
   isViewingTrip?: boolean;
+  hasUnsavedChanges?: boolean;
 }
 
-const Navbar: React.FC<NavbarProps> = ({ userEmail, userPicture, onLogoClick, isEditMode, isViewingTrip }) => {
+const Navbar: React.FC<NavbarProps> = ({ userEmail, userPicture, onLogoClick, isEditMode, isViewingTrip, hasUnsavedChanges }) => {
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
   const [showNavGuard, setShowNavGuard] = useState(false);
 
   const handleLogoClick = () => {
-    if (isEditMode) {
+    if (isEditMode || hasUnsavedChanges) {
       setShowNavGuard(true);
     } else {
       onLogoClick?.();
@@ -187,6 +188,10 @@ const Navbar: React.FC<NavbarProps> = ({ userEmail, userPicture, onLogoClick, is
                   key={link.name}
                   href={link.href}
                   onClick={(e) => {
+                    if (hasUnsavedChanges && !window.confirm("You have unsaved changes. Your trip will be lost if you leave now. Continue?")) {
+                      e.preventDefault();
+                      return;
+                    }
                     e.preventDefault();
                     document.querySelector(link.href)?.scrollIntoView({ behavior: 'smooth' });
                   }}
@@ -199,6 +204,13 @@ const Navbar: React.FC<NavbarProps> = ({ userEmail, userPicture, onLogoClick, is
                 <Link
                   key={link.name}
                   to={link.href}
+                  onClick={(e) => {
+                    if (hasUnsavedChanges && !window.confirm("You have unsaved changes. Your trip will be lost if you leave now. Continue?")) {
+                      e.preventDefault();
+                      return;
+                    }
+                    setActiveSection(link.href);
+                  }}
                   className={`transition-all duration-300 py-1 relative group/link ${isActive ? 'text-violet-400' : 'hover:scale-95 active:scale-105 text-white/80'}`}
                 >
                   {link.name}
@@ -342,7 +354,9 @@ const Navbar: React.FC<NavbarProps> = ({ userEmail, userPicture, onLogoClick, is
       {/* Mobile Branding (Top Left) */}
       {/* Mobile/Tablet Dynamic Island Header */}
       <div className="md:hidden fixed top-2 left-[50%] -translate-x-1/2 z-50">
-        <div className={`bg-black/40 backdrop-blur-2xl border border-white/10 rounded-[2rem] shadow-2xl overflow-hidden transition-all duration-700 cubic-bezier(0.4, 0, 0.2, 1) pointer-events-auto ${
+        <div 
+          onClick={handleLogoClick}
+          className={`bg-black/40 backdrop-blur-2xl border border-white/10 rounded-[2rem] shadow-2xl overflow-hidden transition-all duration-700 cubic-bezier(0.4, 0, 0.2, 1) pointer-events-auto cursor-pointer ${
           hasToast 
             ? 'px-6 py-2.5 w-fit min-w-fit max-w-[95vw] scale-105 shadow-violet-500/20' 
             : 'px-3 py-2.5 w-[160px] scale-100'
@@ -352,15 +366,23 @@ const Navbar: React.FC<NavbarProps> = ({ userEmail, userPicture, onLogoClick, is
             {/* 1. The Normal State (Logo + Text) */}
             <div className={`flex items-center gap-2 transition-all duration-500 whitespace-nowrap ${
               hasToast ? 'opacity-0 -translate-y-10 scale-90 absolute' : 'opacity-100 translate-y-0 scale-100 relative'
-              }`} onClick={handleLogoClick}>
+              }`}>
               <img src={logo} alt="Logo" className="w-8 h-8" />
               <span className="font-['Outfit'] text-base font-black text-white">TripSpark</span>
             </div>
 
             {/* 2. The Notification State (The Message) */}
-            <div className={`flex items-center gap-2 transition-all duration-500 whitespace-nowrap ${
+            <div className={`flex items-center gap-3 transition-all duration-500 whitespace-nowrap ${
               hasToast ? 'opacity-100 translate-y-0 scale-100 relative' : 'opacity-0 translate-y-10 scale-90 absolute'
               }`}>
+              {/* Dynamic Status Dot */}
+              {toasts.find(t => t.visible)?.type && (
+                <div className={`w-2 h-2 rounded-full animate-pulse shrink-0 ${
+                  toasts.find(t => t.visible)?.type === 'error' ? 'bg-red-500 shadow-[0_0_8px_rgba(239,68,68,0.5)]' :
+                  toasts.find(t => t.visible)?.type === 'success' ? 'bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]' :
+                  'bg-violet-500 shadow-[0_0_8px_rgba(139,92,246,0.5)]'
+                }`} />
+              )}
               <span className="text-white font-bold text-sm tracking-tight text-center">
                 {toasts.find(t => t.visible && typeof t.message === 'string')?.message as string}
               </span>

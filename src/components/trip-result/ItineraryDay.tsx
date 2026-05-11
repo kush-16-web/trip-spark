@@ -269,13 +269,13 @@ function ActivityItem({
         </summary>
 
 
-        <div className="mt-3 md:mt-4 pl-14 md:pl-20 pr-2 md:pr-10">
+        <div className="mt-4 md:mt-4 pl-0 md:pl-20 pr-0 md:pr-10">
           {isEditMode && editingIdx === idx ? (
             <textarea
-              className="w-full bg-transparent border-b border-slate-200 outline-none font-medium text-slate-700 md:text-base leading-relaxed p-3 min-h-[100px]"
+              className="w-full bg-slate-50/50 border border-slate-200 rounded-2xl outline-none font-medium text-slate-700 text-sm md:text-base leading-relaxed p-4 min-h-[120px] focus:bg-white focus:border-violet-400 transition-all"
               value={item.desc}
               onKeyDown={(e) => {
-                if(e.key === "Enter") {
+                if(e.key === "Enter" && !e.shiftKey) {
                   e.preventDefault();
                   setEditingIdx(null);
                 }
@@ -283,7 +283,7 @@ function ActivityItem({
               onChange={(e) => onUpdateActivity(idx, { ...item, desc: e.target.value })}
             />
           ) : (
-            <p className="text-slate-600 leading-relaxed text-sm md:text-lg font-medium bg-slate-50/50 p-4 md:p-6 rounded-2xl md:rounded-3xl border border-slate-100/50">
+            <p className="text-slate-600 leading-relaxed text-[13px] md:text-lg font-medium bg-slate-50/40 p-4 md:p-6 rounded-2xl md:rounded-3xl border border-slate-100/30">
               {item.desc}
             </p>
           )}
@@ -317,7 +317,7 @@ const ItineraryDay: React.FC<ItineraryDayProps> = ({
       {/* Card Decoration */}
       <div className="absolute -inset-1 bg-gradient-to-r from-violet-600 to-indigo-600 rounded-[3.5rem] blur opacity-5 group-hover:opacity-10 transition duration-1000"></div>
 
-      <div className="relative p-5 md:p-8 rounded-[2.5rem] md:rounded-[3rem] bg-white border border-slate-100 shadow-2xl shadow-slate-200/50 transition-all overflow-hidden">
+      <div className="relative  p-5 md:p-8 rounded-[2.5rem] md:rounded-[3rem] bg-white border border-slate-100 shadow-2xl shadow-slate-200/50 transition-all overflow-hidden">
         <div className="absolute top-0 right-0 w-32 h-32 md:w-64 md:h-64 bg-violet-50/50 rounded-bl-[5rem] md:rounded-bl-[10rem] -z-10" />
 
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 md:gap-6 mb-8 md:mb-10 border-b border-slate-50 pb-8">
