@@ -1,4 +1,5 @@
 import React from 'react';
+import { GhostWriter } from '../GhostWriter';
 import mustSeeIcon from '../../assets/mustSee.gif';
 
 interface Place {
@@ -42,15 +43,9 @@ const MustVisitSection: React.FC<MustVisitSectionProps> = ({ places }) => {
                    </span>
                  </div>
                  <h5 className="font-black text-slate-900 text-lg md:text-2xl tracking-tight leading-tight">
-                   {place.name}
+                   <GhostWriter text={place.name} />
                  </h5>
                </div>
-
-               {/* <div className="hidden md:flex w-8 h-8 items-center justify-center text-slate-200 group-hover:text-violet-400 group-hover:translate-x-1 transition-all">
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M9 5l7 7-7 7" />
-                  </svg>
-               </div> */}
              </article>
           </div>
         ))}

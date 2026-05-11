@@ -4,6 +4,8 @@ import keralaImg from '../assets/destination_kerala.png';
 import goaImg from '../assets/destination_goa.png';
 import udaipurImg from '../assets/destination_udaipur.png';
 import andamanImg from '../assets/destination_andaman.png';
+import spitiImg from '../assets/destination_spiti.png';
+import rishikeshImg from '../assets/destination_rishikesh.png';
 
 export interface DestinationEntry {
   name: string;
@@ -67,14 +69,14 @@ const moreDestinations: DestinationEntry[] = [
     country: 'India',
     tag: 'Offbeat',
     blurb: 'Jun–Sep — rugged terrain, ancient monasteries, and remote Himalayan villages.',
-    gradient: 'bg-gradient-to-br from-slate-600 via-stone-700 to-zinc-900',
+    image: spitiImg,
   },
   {
     name: 'Rishikesh',
     country: 'India',
     tag: 'Spiritual',
     blurb: 'Mar–May & Sep–Nov — Yoga capital of the world and thrilling river rafting.',
-    gradient: 'bg-gradient-to-br from-emerald-500 via-teal-600 to-cyan-900',
+    image: rishikeshImg,
   },
 ];
 

@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { GhostWriter } from '../GhostWriter';
 import Sun from '../../assets/sun.gif';
 import Cloudy from '../../assets/cloudy.gif';
 import Fog from '../../assets/foggy.gif';
@@ -122,7 +123,7 @@ function ActivityItem({
                 />
               ) : (
                 <h5 className="text-base md:text-2xl font-black text-slate-900 tracking-tight group-hover/details:text-violet-600 transition-colors truncate">
-                  {item.title}
+                  <GhostWriter text={item.title} />
                 </h5>
               )}
             </div>
@@ -284,7 +285,7 @@ function ActivityItem({
             />
           ) : (
             <p className="text-slate-600 leading-relaxed text-[13px] md:text-lg font-medium bg-slate-50/40 p-4 md:p-6 rounded-2xl md:rounded-3xl border border-slate-100/30">
-              {item.desc}
+              <GhostWriter text={item.desc} />
             </p>
           )}
         </div>

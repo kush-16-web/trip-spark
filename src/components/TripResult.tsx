@@ -4,8 +4,10 @@ import { auth, googleProvider, getFriendlyAuthErrorMessage } from '../lib/fireba
 import { loginWithGoogle } from '../services/authApi';
 import AuthModal from './AuthModal';
 import { toast } from "react-hot-toast";
+import { GhostWriter } from './GhostWriter';
 import { 
   savedTrip,
+  API_BASE_URL,
   type BudgetEstimateRow,
   type DayPlan,
   type PlaceSuggestion,
@@ -33,39 +35,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import TripMap from './trip-result/TripMap';
 
 
-const GhostWriter = ({ text, className }: { text: string; className?: string }) => {
-  return (
-    <motion.div className={`inline leading-relaxed ${className}`}>
-      {text.split("").map((char, i) => (
-        <motion.span
-          key={`${text}-${i}`}
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{
-            duration: 0.05,
-            delay: i * 0.02,
-            ease: "easeIn"
-          }}
-        >
-          {char}
-        </motion.span>
-      ))}
-      <motion.span
-        initial={{ opacity: 1 }}
-        animate={{ opacity: 0 }}
-        transition={{
-          duration: 0.6,
-          repeat: 10,
-          repeatType: "reverse",
-          ease: "easeInOut"
-        }}
-        onAnimationComplete={() => {}}
-        className="ml-1 inline-block w-1.5 h-4 bg-violet-500 rounded-full"
-        style={{ opacity: 0 }}
-      />
-    </motion.div>
-  );
-};
+
 
 export interface TripResultData {
   id?: string;
@@ -259,7 +229,8 @@ export default function TripResult({
   const [showLoginPrompt, setShowLoginPrompt] = useState(false);
   const [pendingAction, setPendingAction] = useState<'save' | null>(null);
   const [loginSuccessMessage, setLoginSuccessMessage] = useState<string | null>(null);
-  const [isSaved, setIsSaved] = useState(!!data?.id);
+  const [isSaved, setIsSaved] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
   const [localDayplan, setLocalDayplan] = useState<DayPlan[]>(data?.dayPlan || data?.plan?.dayPlan || []);
   const [isGeneratingDay, setIsGeneratingDay] = useState(false);
   const [isGeneratingBudget, setIsGeneratingBudget] = useState(false);
@@ -333,7 +304,7 @@ export default function TripResult({
       const localCode = data?.totalEstimate?.localCurrency?.code;
       if(localCode && localCode !== 'INR'){
        try{
-        const response = await fetch(`http://localhost:8080/api/trip/exchange-rate/INR/${localCode}`);
+        const response = await fetch(`${API_BASE_URL}/trip/exchange-rate/INR/${localCode}`);
         const result = await response.json();
         if(result.ok){
           setExchangeRate(result.rate);
@@ -406,7 +377,7 @@ export default function TripResult({
       const otherDaysActivities = localDayplan.flatMap(dp => dp.day !== dayNumber ? dp.activities.map(a => a.title) : []);
       
       // 2. Call your backend endpoint
-      const response = await fetch('http://localhost:8080/api/trip/generate-day', {
+      const response = await fetch(`${API_BASE_URL}/trip/generate-day`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -451,7 +422,7 @@ export default function TripResult({
 
     const handleFetchNewWeather = async (newStartDate: string, newEndDate: string) => {
     try {
-      const url = `http://localhost:8080/api/trip/weather/${encodeURIComponent(data?.Destination || '')}/${newStartDate}/${newEndDate}`;
+      const url = `${API_BASE_URL}/trip/weather/${encodeURIComponent(data?.Destination || '')}/${newStartDate}/${newEndDate}`;
       const response = await fetch(url);
       const result = await response.json();
       
@@ -467,7 +438,7 @@ export default function TripResult({
   const handleGenerateBudget = async () => {
     setIsGeneratingBudget(true);
     try {
-      const response = await fetch('http://localhost:8080/api/trip/generate-budget',{
+      const response = await fetch(`${API_BASE_URL}/trip/generate-budget`,{
         method:'POST',
         headers:{
           'Content-Type': 'application/json',
@@ -507,7 +478,7 @@ export default function TripResult({
     if(!data?.Destination) return;
     setIsGeneratingSummary(true);
     try {
-      const response = await fetch('http://localhost:8080/api/trip/generate-summary',
+      const response = await fetch(`${API_BASE_URL}/trip/generate-summary`,
         {method:'POST',
           headers:{
             'Content-Type': 'application/json',
@@ -584,9 +555,14 @@ async function onClickSaveTrip() {
     return;
   }
 
-    // 3. THIRD STEP: Actually save the trip
+    setIsSaving(true);
   try {
-    const result = await savedTrip(data); 
+    const payload = {
+      ...data,
+      destination: data?.Destination || (data as any).destination,
+      plan: data?.plan || data, // Ensure plan object is present
+    };
+    const result = await savedTrip(payload); 
     
     if (result.ok) {
       onUpdateTripData?.({ id: result.tripId, shareId: result.shareId });
@@ -595,6 +571,8 @@ async function onClickSaveTrip() {
     }
   } catch (error) {
     toast.error("Failed to save trip");
+  } finally {
+    setIsSaving(false);
   }
 }
 
@@ -883,13 +861,18 @@ async function onClickSaveTrip() {
               <div className="relative group">
                 {/* Decorative background glow */}
                 <div className="absolute -top-20 -right-20 w-64 h-64 bg-violet-200/40 rounded-full blur-[100px] opacity-50 group-hover:opacity-80 transition-opacity" />
-                
-                <div className="bg-white/60 backdrop-blur-xl border border-white p-8 md:p-16 rounded-[3rem] md:rounded-[4rem] shadow-[0_32px_64px_-16px_rgba(0,0,0,0.08)] relative overflow-hidden">
-                  {/* Huge background quote mark */}
-                  <span className="absolute -top-10 -left-6 text-[10rem] md:text-[15rem] font-serif text-slate-100/50 select-none pointer-events-none">“</span>
+                {/* Summary Intro Section */}
+                <div className="mb-10 md:mb-16">
+                  <div className="flex items-center gap-3 mb-6 opacity-60">
+                    <div className="h-[1px] w-8 bg-slate-900" />
+                    <span className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-900">Executive Overview</span>
+                  </div>
                   
-                  <div className="relative z-10">
-                    <div className="text-xl text-slate-900 font-bold leading-[1.2] lg:leading-[1.1] tracking-tight mb-12 md:mb-16">
+                  <div className="relative">
+                    {/* Subtle quote mark for the intro */}
+                    <span className="absolute -top-12 -left-8 text-8xl font-serif text-slate-100 select-none pointer-events-none">“</span>
+                    
+                    <div className="text-xl md:text-3xl text-slate-900 font-bold leading-[1.3] tracking-tight relative z-10">
                       <AnimatePresence mode="wait">
                         <GhostWriter 
                           key={data.summary || data.plan?.summary}
@@ -897,15 +880,23 @@ async function onClickSaveTrip() {
                         />
                       </AnimatePresence>
                     </div>
-                    
+                  </div>
+                </div>
+
+                {/* Bullets Card Section */}
+                <div className="bg-white/60 backdrop-blur-xl border border-white p-8 md:p-16 rounded-[3.5rem] md:rounded-[4.5rem] shadow-[0_32px_64px_-16px_rgba(0,0,0,0.06)] relative overflow-hidden">
+                  {/* Huge background quote mark */}
+                  <span className="absolute -top-10 -left-6 text-[10rem] md:text-[15rem] font-serif text-slate-100/50 select-none pointer-events-none">“</span>
+                  
+                  <div className="relative z-10">  
                     <div className="grid sm:grid-cols-2 gap-x-8 lg:gap-x-12 gap-y-8 md:gap-y-10">
                       {(data.summaryBullets || data.plan?.summaryBullets || []).map((item: string, idx: number) => (
-                        <div key={idx} className="group/item flex items-start gap-4 md:gap-6">
+                        <div key={idx} className="group/item flex flex-col md:flex-row items-start gap-4 md:gap-6">
                           <div className="flex-shrink-0 w-10 h-10 md:w-12 md:h-12 rounded-2xl bg-slate-50 border border-slate-100 flex items-center justify-center group-hover/item:bg-slate-900 group-hover/item:border-slate-900 transition-all duration-300 shadow-sm">
                             <span className="text-slate-400 font-black text-xs md:text-sm group-hover/item:text-white">0{idx + 1}</span>
                           </div>
                           <p className="text-slate-600 text-sm md:text-lg leading-relaxed font-medium pt-1 md:pt-2">
-                            {item}
+                            <GhostWriter text={item} />
                           </p>
                         </div>
                       ))}
@@ -926,7 +917,7 @@ async function onClickSaveTrip() {
             {/* Horizontal Tabs - Refined sliding mechanism */}
             <div className="relative mb-8 md:mb-10">
               <div 
-                className="relative flex bg-white w-full max-w-[calc(100vw-3rem)] lg:max-w-5xl mx-auto p-2 rounded-[2.5rem] scroll-smooth shadow-xl shadow-slate-200/40 border border-slate-100 overflow-x-auto snap-x custom-scrollbar"
+                className="relative flex bg-white w-fit max-w-[calc(100vw-3rem)] lg:max-w-5xl mx-auto p-2 rounded-[2.5rem] scroll-smooth shadow-xl shadow-slate-200/40 border border-slate-100 overflow-x-auto snap-x custom-scrollbar"
                 style={{
                   '--tab-w': '85px',
                   '--tab-gap': '8px',
@@ -976,6 +967,7 @@ async function onClickSaveTrip() {
                         activeDay === day ? 'text-white' : 'text-slate-400 hover:text-slate-600'
                       }`}
                     >
+
                       <span className={`text-[8px] md:text-lg uppercase tracking-[0.3em] font-black ${activeDay === day ? 'opacity-100' : 'opacity-60'}`}>Day</span>
                       <span className={`text-xl md:text-2xl leading-none font-black ${activeDay === day ? 'text-white' : 'text-slate-400'}`}>{day}</span>
                     </button>
@@ -1203,9 +1195,30 @@ async function onClickSaveTrip() {
                     <button
                       type="button"
                       onClick={onClickSaveTrip}
-                      className={`w-full md:w-auto py-2.5 sm:px-10 sm:py-5 ${isSaved ? 'bg-white text-black border border-black' : 'bg-slate-900 hover:bg-slate-800 text-white'} rounded-2xl font-bold text-sm sm:text-lg hover:translate-y-[-2px] transition-all duration-300 shadow-xl shadow-slate-900/10 active:scale-95 flex items-center justify-center gap-2`}
+                      disabled={isSaving || isSaved}
+                      className={`w-full md:w-auto py-4 px-10 rounded-2xl font-black text-lg transition-all duration-300 flex items-center justify-center gap-3 shadow-xl active:scale-95 ${
+                        isSaved 
+                        ? 'bg-white text-black border-2 border-black cursor-pointer' 
+                        : 'bg-slate-900 text-white hover:bg-slate-800 shadow-slate-900/20'
+                      } ${isSaving ? 'opacity-70 cursor-wait' : ''}`}
                     >
-                      {isSaved ? 'See trip!' : 'Save Trip'} <span className="text-xl">✈️</span>
+                      {isSaving ? (
+                        <>
+                          <div className="w-5 h-5 border-2 border-white/20 border-t-white rounded-full animate-spin" />
+                          Saving...
+                        </>
+                      ) : isSaved ? (
+                        <>
+                          <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                          </svg>
+                          Saved!
+                        </>
+                      ) : (
+                        <>
+                          Save Itinerary <span className="text-xl">✈️</span>
+                        </>
+                      )}
                     </button>
                     
                     {/* <button
@@ -1248,12 +1261,7 @@ async function onClickSaveTrip() {
                         View all my trips
                       </button>
                     )}
-                    {loggedInUser?.email && (
-                      <div className="px-4 py-3 bg-slate-50 border border-slate-100 rounded-xl flex items-center gap-2">
-                        <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-                        <span className="text-xs text-slate-500 font-medium">Logged in as {loggedInUser.email}</span>
-                      </div>
-                    )}
+                    
                   </div>
                 </div>
               </div>

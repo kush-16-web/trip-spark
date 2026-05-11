@@ -80,12 +80,12 @@ const TripStats: React.FC<TripStatsProps> = ({
   return (
     <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-12">
       {/* 1. Journey Card (Destination) */}
-      <div className="p-5 rounded-[1.5rem] border border-slate-100 shadow-sm transition-all hover:border-violet-200">
+      <div className="p-3.5 md:p-5 bg-white rounded-[1.5rem] border border-slate-100 shadow-sm transition-all hover:border-violet-200">
         <div className="flex items-center gap-3 mb-3">
-          <div className="w-10 h-10 md:w-12 md:h-12 flex items-center justify-center">
+          <div className="w-12 h-12 flex items-center justify-center">
             <img src={destinationIcon} className="w-full h-full object-contain" alt="" />
           </div>
-          <p className="text-[9px] uppercase tracking-widest font-black text-slate-400">Destination</p>
+          <p className="text-[7px] sm:text-[9px] uppercase tracking-widest font-black text-slate-400">Destination</p>
         </div>
         <div className="min-h-[28px]">
           {isEditMode ? (
@@ -101,7 +101,7 @@ const TripStats: React.FC<TripStatsProps> = ({
       </div>
 
       {/* 2. Timeline Card (Smart Dates) */}
-      <div className="p-5 rounded-[1.5rem] border border-slate-100 shadow-sm transition-all hover:border-orange-200">
+      <div className="p-3.5 md:p-5 bg-white rounded-[1.5rem] border border-slate-100 shadow-sm transition-all hover:border-orange-200">
         <div className="flex flex-col items-start justify-between mb-3">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 md:w-12 md:h-12 flex items-center justify-center">
@@ -140,7 +140,7 @@ const TripStats: React.FC<TripStatsProps> = ({
       </div>
 
       {/* 3. Crew Card (Travelers & Type) */}
-      <div className="p-5 rounded-[1.5rem] border border-slate-100 shadow-sm transition-all hover:border-violet-200">
+      <div className="p-3.5 md:p-5 bg-white rounded-[1.5rem] border border-slate-100 shadow-sm transition-all hover:border-violet-200">
         <div className="relative flex items-center gap-3 mb-3">
           <button 
             type="button"
@@ -201,7 +201,7 @@ const TripStats: React.FC<TripStatsProps> = ({
       </div>
 
       {/* 4. Budget Card (Financials) */}
-      <div className="p-5 rounded-[1.5rem] border border-slate-100 shadow-sm transition-all hover:border-violet-200">
+      <div className="p-3.5 md:p-5 bg-white rounded-[1.5rem] border border-slate-100 shadow-sm transition-all hover:border-violet-200">
         <div className="relative flex items-center gap-3 mb-3">
           <div className="w-10 h-10 md:w-12 md:h-12 flex items-center justify-center">
             <img src={walletIcon} className="w-full h-full object-contain" alt="" />

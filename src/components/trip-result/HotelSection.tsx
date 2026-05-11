@@ -1,4 +1,5 @@
 import React from 'react';
+import { GhostWriter } from '../GhostWriter';
 import stayIcon from '../../assets/stay.gif';
 import hotel_sign from '../../assets/hotel-sign.gif'
 
@@ -21,7 +22,7 @@ const HotelCard = ({ stay }: { stay: Hotel }) => {
            <div className="flex justify-between items-start mb-4 gap-4">
              <div className="flex flex-col gap-1 min-w-0">
                <h5 className="text-xl md:text-3xl font-black text-slate-900 tracking-tight leading-tight group-hover:text-violet-600 transition-colors">
-                 {stay.name}
+                 <GhostWriter text={stay.name} />
                </h5>
                 <div className="flex flex-wrap items-center gap-2 mt-1.5">
                   <span className="text-[10px] font-black uppercase tracking-widest px-2 py-0.5 bg-violet-100 text-violet-600 rounded">
@@ -36,7 +37,7 @@ const HotelCard = ({ stay }: { stay: Hotel }) => {
            </div>
 
            <p className="text-slate-500 text-sm md:text-lg leading-relaxed font-medium">
-             {stay.blurb}
+             <GhostWriter text={stay.blurb} />
            </p>
         </div>
       </article>
