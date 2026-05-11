@@ -25,8 +25,8 @@ Built with a mobile-first philosophy, utilizing **Framer Motion** for smooth lay
 
 ## 🛠️ Technical Stack
 
-- **Frontend**: React 18, Tailwind CSS, Framer Motion, Lucide React
-- **Backend**: Node.js, Express, PostgreSQL
+- **Frontend**: React 19.2, Tailwind CSS, Framer Motion
+- **Backend**: Node.js, Express, PostgreSQL 8.20, Prisma 7.8
 - **AI Engine**: Google Gemini 1.5 Pro (via Google AI SDK)
 - **APIs**: Google Maps (JavaScript, Places), Open-Meteo API
 - **Deployment Ready**: Fully configured for Vercel/Netlify and Render/Heroku

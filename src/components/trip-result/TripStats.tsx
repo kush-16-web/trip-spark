@@ -10,7 +10,6 @@ import groupIcon from '../../assets/group.gif';
 
 interface TripStatsProps {
   location: string;
-  budget: string;
   travelers: string;
   days: number | string;
   tripType?: string;
@@ -28,7 +27,6 @@ interface TripStatsProps {
 
 const TripStats: React.FC<TripStatsProps> = ({ 
   location, 
-  budget, 
   travelers, 
   days, 
   tripType, 

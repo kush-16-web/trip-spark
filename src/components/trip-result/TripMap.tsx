@@ -12,8 +12,8 @@ interface MapProps {
   destination: string;
 }
 
-const HotelMarker = ({ stay, destination, onMarkerClick }: { stay: any, destination: string, onMarkerClick: (coords: any) => void }) => {
-  const [coords, setCoords] = useState(stay.coordinates);
+const HotelMarker = ({ stay, onMarkerClick }: { stay: any, onMarkerClick: (coords: any) => void }) => {
+  const [coords] = useState(stay.coordinates);
 
   // Disabled for V1 to ensure production readiness without Google API verification
   /*
@@ -56,7 +56,7 @@ const HotelMarker = ({ stay, destination, onMarkerClick }: { stay: any, destinat
   );
 };
 
-const TripMap = ({ places, stays, activites, activeDay, destination }: MapProps) => {
+const TripMap = ({ places, stays, activites, activeDay, destination: _destination }: MapProps) => {
   const mapRef = useRef<any>(null);
   const [viewState, setViewState] = useState({
     latitude: 20, 
@@ -111,7 +111,7 @@ const TripMap = ({ places, stays, activites, activeDay, destination }: MapProps)
           ref={mapRef}
           onMove={evt => setViewState(evt.viewState)}
           mapStyle={mapStyle} 
-          mapboxAccessToken={mapboxgl.accessToken}
+          mapboxAccessToken={mapboxgl.accessToken ?? ''}
         >
           <NavigationControl position="top-right" />
 
@@ -140,7 +140,6 @@ const TripMap = ({ places, stays, activites, activeDay, destination }: MapProps)
             <HotelMarker
               key={`stay-${i}`}
               stay={stay}
-              destination={destination}
               onMarkerClick={handleMarkerClick}
             />
           ))}

@@ -1,10 +1,9 @@
-import React, { useId, useState } from 'react';
+import { useId, useState } from 'react';
 import lehImg from '../assets/destination_leh.png';
 import keralaImg from '../assets/destination_kerala.png';
 import goaImg from '../assets/destination_goa.png';
 import udaipurImg from '../assets/destination_udaipur.png';
 import andamanImg from '../assets/destination_andaman.png';
-import Trending from "../assets/Trending.gif"
 
 export interface DestinationEntry {
   name: string;

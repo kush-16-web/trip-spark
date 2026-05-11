@@ -31,7 +31,7 @@ import EditModeToggle from './trip-result/EditModeToggle';
 import { useBlocker } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import TripMap from './trip-result/TripMap';
-import html2pdf from 'html2pdf.js';
+
 
 const GhostWriter = ({ text, className }: { text: string; className?: string }) => {
   return (
@@ -616,9 +616,7 @@ async function onClickSaveTrip() {
   const totalToUse = data.totalEstimate || data.plan?.totalEstimate;
   const perPersonMin = Math.round((totalToUse?.min ?? 0) / travelerCount);
   const perPersonMax = Math.round((totalToUse?.max ?? 0) / travelerCount);
-  const budgetDisplay = totalToUse
-    ? `${formatPrice(totalToUse.min)} — ${formatPrice(totalToUse.max)}`
-    : '—';
+
   const destination = data.Destination?.trim() || 'your destination';
   const dayCount = Math.max(1, Number(data?.days) || data.dayPlan?.length || 1);
   const days = Array.from({ length: dayCount }, (_, i) => i + 1);
@@ -665,20 +663,7 @@ async function onClickSaveTrip() {
     onUpdateTripData(newData);
   };
 
-  const handleDownloadPDF = () => {
-    const element = printRef.current;
-    if(!element) return;
 
-    const opt: any = {
-      margin:       10,
-      filename:     `Trip-to-${data?.Destination}.pdf`,
-      image:        { type: 'jpeg', quality: 0.98 },
-      html2canvas:  { scale: 2, useCORS: true, logging: false },
-      jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' },
-    };
-
-    html2pdf().set(opt).from(element).save();
-  }
 
   const hotelsToDisplay = (data.suggestedStays || data.plan?.suggestedStays || []).map((h: any) => ({
     name: h.name,
@@ -802,7 +787,6 @@ async function onClickSaveTrip() {
 
         <TripStats 
           location={data?.Destination ?? '—'}
-          budget={budgetDisplay}
           travelers={`${data?.travelers ?? '—'} people`}
           days={dayCount}
           tripType={data?.type ?? '—'}
@@ -832,17 +816,17 @@ async function onClickSaveTrip() {
               <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-8">
                 <div>
                   <p className="text-2xl md:text-6xl font-black items-center tracking-tighter mb-4">
-                    <span className="text-violet-400 text-xl md:text-4xl mr-2">{data.totalEstimate.currency}</span>
-                    {data.totalEstimate.min?.toLocaleString() ?? '0'} <span className="text-slate-500 mx-2 text-lg md:text-5xl">—</span> {data.totalEstimate.max?.toLocaleString() ?? '0'}
+                    <span className="text-violet-400 text-xl md:text-4xl mr-2">{data.totalEstimate?.currency}</span>
+                    {data.totalEstimate?.min?.toLocaleString() ?? '0'} <span className="text-slate-500 mx-2 text-lg md:text-5xl">—</span> {data.totalEstimate?.max?.toLocaleString() ?? '0'}
                   </p>
-                  <p className="text-sm text-slate-400 max-w-xl leading-relaxed">{data.totalEstimate.note}</p>
+                  <p className="text-sm text-slate-400 max-w-xl leading-relaxed">{data.totalEstimate?.note}</p>
                 </div>
 
                 {data.type?.toLowerCase() === 'friends' && Number(data.travelers) > 1 && (
                   <div className="flex flex-col gap-3 p-6 bg-white/5 backdrop-blur-xl rounded-3xl border border-white/10">
                     <p className="text-[10px] uppercase tracking-widest text-slate-400 font-bold">Per person split</p>
                     <p className="text-2xl font-black text-white">
-                      <span className='text-violet-400'>{data.totalEstimate.currency}</span> {perPersonMin.toLocaleString()} <span className="text-slate-600 font-normal text-lg">to</span> {perPersonMax.toLocaleString()}
+                      <span className='text-violet-400'>{data.totalEstimate?.currency}</span> {perPersonMin.toLocaleString()} <span className="text-slate-600 font-normal text-lg">to</span> {perPersonMax.toLocaleString()}
                     </p>
                   </div>
                 )}
