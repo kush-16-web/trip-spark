@@ -149,8 +149,8 @@ export default function MyTrips({ onOpenTrip, onBackToPlanner, onTripDeleted }: 
             className="text-center py-40 bg-slate-50/50 backdrop-blur-3xl rounded-[4rem] border border-white shadow-2xl shadow-slate-200/50 px-10 relative overflow-hidden"
           >
             <div className="absolute top-0 left-1/2 -translate-x-1/2 text-[15rem] font-black text-white select-none pointer-events-none opacity-50">EMPTY</div>
-            <div className="relative z-10">
-               <div className="text-8xl mb-10"><img src={airplane} alt="" className="w-40 h-40" /></div>
+            <div className="relative  z-10">
+               <img src={airplane} alt="" className="w-40 h-40 mx-auto" />
                <h2 className="text-4xl md:text-5xl font-black text-slate-900 mb-6 tracking-tighter">No adventures yet?</h2>
                <p className="text-slate-500 mb-12 max-w-md mx-auto text-xl font-medium leading-relaxed">
                  The world is massive and your story hasn't started. Spark your first AI itinerary today.
