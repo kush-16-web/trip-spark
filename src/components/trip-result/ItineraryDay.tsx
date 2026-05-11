@@ -47,6 +47,7 @@ interface ItineraryDayProps {
   onUpdateActivity: (index: number, updatedActivity: Activity) => void;
   onGenerateDayAI?: (prompt: string) => void; 
   isGeneratingAI?: boolean; 
+  tripType?: string;
 }
 
 interface ActivityItemProps {
@@ -305,7 +306,8 @@ const ItineraryDay: React.FC<ItineraryDayProps> = ({
   onUpdateActivity,
   onReorder,
   onGenerateDayAI,
-  isGeneratingAI
+  isGeneratingAI,
+  tripType
 }) => {
   const [confirmDeleteIdx, setConfirmDeleteIdx] = useState<number | null>(null);
   const [editingIdx, setEditingIdx] = useState<number | null>(null);
@@ -362,18 +364,21 @@ const ItineraryDay: React.FC<ItineraryDayProps> = ({
                                       weather.weatherCode === 80 || weather.weatherCode === 81 || weather.weatherCode === 82 ? <img src={Raining} alt="Raining" className='w-8 h-8 md:w-10 md:h-10' /> :
                                         weather.weatherCode === 85 || weather.weatherCode === 86 ? <img src={Snowing} alt="Snowing" className='w-8 h-8 md:w-10 md:h-10' /> :
                                           weather.weatherCode === 95 ? <img src={Thunderstorm} alt="Thunderstorm" className='w-8 h-8 md:w-10 md:h-10' /> :
-                                            weather.weatherCode === 96 || weather.weatherCode === 99 ? <img src={Thunderstorm} alt="Thunderstorm" className='w-8 h-8 md:w-10 md:h-10' /> : ''}
+                                            weather.weatherCode === 96 || weather.weatherCode === 99 ? <img src={Thunderstorm} alt="Thunderstorm" className='w-8 h-8 md:w-10 md:h-10' /> : ''
+                                            }
                 </div>
                 <div className="flex flex-col">
                   <span className="text-sm md:text-lg font-black text-slate-900 leading-none">
                     {weather.tempMax}° / {weather.tempMin}°
                   </span>
                   <span className="text-[7px] md:text-[9px] font-bold text-violet-500 uppercase tracking-wider">
-                    {weather.weatherCode === 0 ? "Perfect Sun" :
-                      weather.weatherCode >= 1 && weather.weatherCode <= 3 ? "Mild & Nice" :
-                        weather.weatherCode >= 51 && weather.weatherCode <= 67 ? "Rainy Outlook" :
-                          weather.weatherCode >= 80 && weather.weatherCode <= 82 ? "Showers Expected" :
-                            weather.weatherCode >= 95 ? "Storm Risk" : "Variable Sky"}
+                    {weather.weatherCode === 0 ? "Hotter than your last selfie." :
+                      weather.weatherCode >= 1 && weather.weatherCode <= 3 ? "Perfect lighting for a date." :
+                      weather.weatherCode === 45 || weather.weatherCode === 48 ? "Wear sunglasses and a jacket" :
+                        (weather.weatherCode >= 51 && weather.weatherCode <= 67) ? (tripType?.toLowerCase() === 'couple' ? "Perfect excuse to stay in and cuddle." : "Free hair wash day!") :
+                        (weather.weatherCode >= 71 && weather.weatherCode <= 77 || weather.weatherCode === 85 || weather.weatherCode === 86) ? (tripType?.toLowerCase() === 'couple' ? "A winter wonderland is waiting for us." : "Prepare to look like a stylish penguin") :
+                          (weather.weatherCode >= 80 && weather.weatherCode <= 82) ? (tripType?.toLowerCase() === 'couple' ? "We'll need a shared umbrella that day." : "Main character rain vibes") :
+                            weather.weatherCode >= 95 ? "Zeus is having a tantrum!!" : "Variable Sky"}
                   </span>
                 </div>
               </div>

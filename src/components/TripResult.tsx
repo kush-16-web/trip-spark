@@ -18,7 +18,7 @@ import {
 
 import walletIcon from '../assets/wallet.gif';
 import compassIcon from '../assets/compass.gif';
-import calender from '../assets/calendar-time.gif';
+import calender from '../assets/box.gif';
 import friends from '../assets/friends.gif';
 import family from '../assets/Family-travel.gif';
 import soloTravel from '../assets/solo-traveller.gif';
@@ -40,6 +40,7 @@ import TripMap from './trip-result/TripMap';
 export interface TripResultData {
   id?: string;
   shareId?: string;
+  ownerId?: string;
   Destination?: string;
   days?: number | string;
   travelers?: number | string;
@@ -231,6 +232,12 @@ export default function TripResult({
   const [loginSuccessMessage, setLoginSuccessMessage] = useState<string | null>(null);
   const [isSaved, setIsSaved] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  
+  const loggedInUser = auth.currentUser;
+  
+  // Check if current user is the owner
+  const isOwner = loggedInUser?.uid === data?.ownerId;
+  const showSavedState = isSaved || (isOwner && !!data?.id);
   const [localDayplan, setLocalDayplan] = useState<DayPlan[]>(data?.dayPlan || data?.plan?.dayPlan || []);
   const [isGeneratingDay, setIsGeneratingDay] = useState(false);
   const [isGeneratingBudget, setIsGeneratingBudget] = useState(false);
@@ -581,15 +588,6 @@ async function onClickSaveTrip() {
     return null;
   }
 
-  const loggedInUser = (() => {
-    try {
-      const raw = localStorage.getItem('auth_user');
-      return raw ? (JSON.parse(raw) as { email?: string; picture?: string }) : null;
-    } catch {
-      return null;
-    }
-  })();
-
   const travelerCount = Number(data.travelers) || 1;
   const totalToUse = data.totalEstimate || data.plan?.totalEstimate;
   const perPersonMin = Math.round((totalToUse?.min ?? 0) / travelerCount);
@@ -917,7 +915,7 @@ async function onClickSaveTrip() {
             {/* Horizontal Tabs - Refined sliding mechanism */}
             <div className="relative mb-8 md:mb-10">
               <div 
-                className="relative flex bg-white w-fit max-w-[calc(100vw-3rem)] lg:max-w-5xl mx-auto p-2 rounded-[2.5rem] scroll-smooth shadow-xl shadow-slate-200/40 border border-slate-100 overflow-x-auto snap-x custom-scrollbar"
+                className="relative flex bg-white w-fit max-w-[calc(100vw-3rem)] lg:max-w-5xl p-2 rounded-[2.5rem] scroll-smooth shadow-xl shadow-slate-200/40 border border-slate-100 overflow-x-auto snap-x custom-scrollbar"
                 style={{
                   '--tab-w': '85px',
                   '--tab-gap': '8px',
@@ -991,6 +989,7 @@ async function onClickSaveTrip() {
                   onGenerateDayAI={(prompt) => handleGenerateDayAI(activeDay, prompt)}
                   isGeneratingAI={isGeneratingDay}
                   weather={data?.weather?.[activeDay - 1]}
+                  tripType={data?.type}
                   date={data?.startDate ? (() => {
                     const start = new Date(data.startDate);
                     const dayDate = new Date(start);
@@ -1195,10 +1194,10 @@ async function onClickSaveTrip() {
                     <button
                       type="button"
                       onClick={onClickSaveTrip}
-                      disabled={isSaving || isSaved}
+                      disabled={isSaving || showSavedState}
                       className={`w-full md:w-auto py-4 px-10 rounded-2xl font-black text-lg transition-all duration-300 flex items-center justify-center gap-3 shadow-xl active:scale-95 ${
-                        isSaved 
-                        ? 'bg-white text-black border-2 border-black cursor-pointer' 
+                        showSavedState 
+                        ? 'bg-emerald-50 text-emerald-600 border-2 border-emerald-100 cursor-default' 
                         : 'bg-slate-900 text-white hover:bg-slate-800 shadow-slate-900/20'
                       } ${isSaving ? 'opacity-70 cursor-wait' : ''}`}
                     >
@@ -1207,16 +1206,16 @@ async function onClickSaveTrip() {
                           <div className="w-5 h-5 border-2 border-white/20 border-t-white rounded-full animate-spin" />
                           Saving...
                         </>
-                      ) : isSaved ? (
+                      ) : showSavedState ? (
                         <>
                           <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
                           </svg>
-                          Saved!
+                          Saved to account
                         </>
                       ) : (
                         <>
-                          Save Itinerary <span className="text-xl">✈️</span>
+                          Save to my account <span className="text-xl">✈️</span>
                         </>
                       )}
                     </button>

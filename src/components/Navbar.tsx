@@ -22,11 +22,13 @@ const Navbar: React.FC<NavbarProps> = ({ userEmail, userPicture, onLogoClick, is
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
   const [showNavGuard, setShowNavGuard] = useState(false);
 
-  const handleLogoClick = () => {
+  const handleLogoClick = (e: React.MouseEvent) => {
     if (isEditMode || hasUnsavedChanges) {
+      e.preventDefault();
       setShowNavGuard(true);
-    } else {
-      onLogoClick?.();
+    } else if (onLogoClick) {
+      e.preventDefault();
+      onLogoClick();
     }
   };
   const [isSigningIn, setIsSigningIn] = useState(false);
@@ -170,7 +172,7 @@ const Navbar: React.FC<NavbarProps> = ({ userEmail, userPicture, onLogoClick, is
   ${isScrolled ? 'w-[98%] lg:w-[95%] xl:w-[70%]' : 'w-[95%] lg:w-[90%] xl:w-[60%]'}
 `}>
         <div className="max-w-7xl mx-auto px-6 flex justify-between items-center">
-          <Link to='/' onClick={(e) => { e.preventDefault(); handleLogoClick(); }} className="flex items-center gap-2 group shrink-0">
+          <Link to='/' onClick={handleLogoClick} className="flex items-center gap-2 group shrink-0">
             <div className="w-10 h-10 rounded-xl flex items-center justify-center bg-white/10 p-1 group-hover:bg-white/20 transition-all">
               <img src={logo} alt="Logo" className="w-full h-full object-contain" />
             </div>
@@ -205,11 +207,11 @@ const Navbar: React.FC<NavbarProps> = ({ userEmail, userPicture, onLogoClick, is
                   key={link.name}
                   to={link.href}
                   onClick={(e) => {
-                    if (hasUnsavedChanges && !window.confirm("You have unsaved changes. Your trip will be lost if you leave now. Continue?")) {
-                      e.preventDefault();
-                      return;
+                    if (hasUnsavedChanges) {
+                      if (!window.confirm("You have unsaved changes. Your trip will be lost if you leave now. Continue?")) {
+                        e.preventDefault();
+                      }
                     }
-                    setActiveSection(link.href);
                   }}
                   className={`transition-all duration-300 py-1 relative group/link ${isActive ? 'text-violet-400' : 'hover:scale-95 active:scale-105 text-white/80'}`}
                 >
