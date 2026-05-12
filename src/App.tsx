@@ -302,7 +302,7 @@ function App() {
           <>
             <Hero onPlanTrip={handlePlanTrip} />
             <div ref={formRef} className="scroll-mt-24">
-              {loading && (
+              {loading && !showResult && (
                 <div className="flex flex-col justify-center bg-white items-center h-screen">
                   <img src={finder} alt="trip-icon" className="w-24 h-24 ease-out"/>
                   <p className="font-lexend text-xl font-semibold mt-4">{loadingMessage}</p>
@@ -312,7 +312,7 @@ function App() {
               {!loading && trip && !showResult && <TripForm trip={trip} onComplete={handleFormSubmit} setTrip={setTrip} />}
               
               <div ref={resultRef} className="scroll-mt-24">
-                {!loading && showResult && (
+                {showResult && (
                   <TripResult
                     data={trip}
                     onCopyLink={() => toast('Link copied! 🔗')}
@@ -335,7 +335,7 @@ function App() {
           <div className="pt-20">
              <MyTrips 
                onOpenTrip={handleOpenTrip} 
-               onBackToPlanner={() => navigate('/')} 
+               onBackToPlanner={handleHomeClick} 
                onTripDeleted={handleTripDeleted}
              />
           </div>
@@ -350,7 +350,7 @@ function App() {
                   <p className="text-slate-400 mt-4">Fetching shared itinerary...</p>
                 </div>
              )}
-             {!loading && showResult && (
+             {showResult && (
                 <div className="max-w-7xl mx-auto px-6">
                    <TripResult 
                      data={trip} 

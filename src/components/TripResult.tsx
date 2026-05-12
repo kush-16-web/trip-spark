@@ -715,6 +715,24 @@ async function onClickSaveTrip() {
         </div>
       )}
 
+      {/* Global Saving Overlay */}
+      {isSaving && (
+        <div className="fixed inset-0 z-[100] bg-white/60 backdrop-blur-md flex items-center justify-center animate-in fade-in duration-300">
+          <div className="flex flex-col items-center gap-6">
+            {/* Premium Loader */}
+            <div className="relative">
+              <div className="w-20 h-20 border-4 border-violet-100 border-t-violet-600 rounded-full animate-spin" />
+              <img src={magicWandIcon} className="absolute inset-0 m-auto w-10 h-10 animate-pulse" />
+            </div>
+            <div className="text-center">
+              <h3 className="text-2xl font-black text-slate-900 tracking-tight">Saving your journey...</h3>
+              <p className="text-slate-500 font-medium">Syncing changes to your cloud itinerary</p>
+            </div>
+          </div>
+        </div>
+      )}
+
+
       <div className="absolute top-0 left-0 w-full h-96 bg-gradient-to-b from-indigo-50 to-transparent -z-10" />
       <div className="absolute bottom-0 right-0 w-96 h-96 bg-violet-100/30 rounded-full blur-3xl -z-10" />
 
@@ -871,12 +889,7 @@ async function onClickSaveTrip() {
                     <span className="absolute -top-12 -left-8 text-8xl font-serif text-slate-100 select-none pointer-events-none">“</span>
                     
                     <div className="text-xl md:text-3xl text-slate-900 font-bold leading-[1.3] tracking-tight relative z-10">
-                      <AnimatePresence mode="wait">
-                        <GhostWriter 
-                          key={data.summary || data.plan?.summary}
-                          text={data.summary || data.plan?.summary || `A curated journey through ${destination}.`} 
-                        />
-                      </AnimatePresence>
+                      {data.summary || data.plan?.summary || `A curated journey through ${destination}.`}
                     </div>
                   </div>
                 </div>
@@ -979,6 +992,7 @@ async function onClickSaveTrip() {
               {/* Left Column: Activities (Scrollable) */}
               <div className="w-[100%] lg:w-1/2 order-2 lg:order-1">
                 <ItineraryDay 
+                  key={activeDay}
                   dayNumber={activeDay}
                   activities={localDayplan.find(dp => dp.day === activeDay)?.activities || []}
                   onUpdateActivity={(idx, updated) => handleUpdateActivity(activeDay, idx, updated)}
@@ -1195,7 +1209,7 @@ async function onClickSaveTrip() {
                       type="button"
                       onClick={onClickSaveTrip}
                       disabled={isSaving || showSavedState}
-                      className={`w-full md:w-auto py-4 px-10 rounded-2xl font-black text-lg transition-all duration-300 flex items-center justify-center gap-3 active:scale-95 ${
+                      className={`w-full md:w-auto py-4 px-10 rounded-2xl font-black text-sm md:text-lg transition-all duration-300 flex items-center justify-center gap-3 active:scale-95 ${
                         showSavedState 
                         ? 'bg-white text-black border border-black cursor-default shadow-sm' 
                         : 'bg-slate-900 text-white hover:bg-slate-800 shadow-slate-900/20'
@@ -1291,14 +1305,18 @@ async function onClickSaveTrip() {
                   Cancel
                 </button>
                 <button 
-                  onClick={() => {
+                  onClick={async () => {
+                    setIsSaving(true);
                     const finalData = {
                       ...data,
                       dayPlan: localDayplan,
                     };
                     if(onSaveTripUpdates){
+                      await 
                       onSaveTripUpdates(finalData);
                     }
+                    setIsSaving(false);
+                    setIsEditMode(false);
                   }}
                   className="px-4 py-2.5 md:px-6 md:py-3 bg-violet-600 text-white rounded-2xl font-black text-[10px] md:text-xs uppercase tracking-widest hover:bg-violet-500 transition-all shadow-xl shadow-violet-500/20 active:scale-95 flex items-center gap-2"
                 >

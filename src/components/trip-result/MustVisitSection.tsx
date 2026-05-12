@@ -43,7 +43,7 @@ const MustVisitSection: React.FC<MustVisitSectionProps> = ({ places }) => {
                    </span>
                  </div>
                  <h5 className="font-black text-slate-900 text-lg md:text-2xl tracking-tight leading-tight">
-                   <GhostWriter text={place.name} />
+                   {place.name}
                  </h5>
                </div>
              </article>
