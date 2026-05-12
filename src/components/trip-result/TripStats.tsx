@@ -88,15 +88,7 @@ const TripStats: React.FC<TripStatsProps> = ({
           <p className="text-[7px] sm:text-[9px] uppercase tracking-widest font-black text-slate-400">Destination</p>
         </div>
         <div className="min-h-[28px]">
-          {isEditMode ? (
-            <input
-              className="w-full bg-transparent border-b border-violet-200 outline-none font-black text-slate-900 text-sm"
-              value={location}
-              onChange={(e) => onUpdate('Destination', e.target.value)}
-            />
-          ) : (
-            <h4 className="text-sm md:text-base font-black text-slate-900 truncate">{location}</h4>
-          )}
+          <h4 className="text-sm md:text-base font-black text-slate-900 truncate">{location}</h4>
         </div>
       </div>
 

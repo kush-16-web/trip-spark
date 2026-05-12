@@ -184,7 +184,7 @@ export default function MyTrips({ onOpenTrip, onBackToPlanner, onTripDeleted }: 
                 {/* Delete Button (Floating) */}
                 <button 
                   onClick={() => setTripToDelete(trip.id)} 
-                  className="absolute top-6 right-6 w-12 h-12 bg-white rounded-2xl border border-slate-100 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all group-hover:translate-x-0 translate-x-4"
+                  className="absolute top-6 right-6 w-12 h-12 bg-white rounded-2xl border border-slate-100 flex items-center justify-center lg:opacity-0 lg:group-hover:opacity-100 transition-all lg:group-hover:translate-x-0 lg:translate-x-4 opacity-100 translate-x-0"
                 >
                   <img className="w-6 h-6 transition-all" src={deleteIcon} alt="Delete" />
                 </button>

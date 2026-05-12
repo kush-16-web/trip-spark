@@ -10,7 +10,7 @@ import chair from '../../assets/beach-chair.gif';
 import crystalBall from '../../assets/crystal-ball.gif';
 
 import {
-  DndContext, 
+  DndContext,
   closestCenter,
   PointerSensor,
   TouchSensor,
@@ -48,9 +48,11 @@ interface ItineraryDayProps {
   onAddActivity: () => void;
   onDeleteActivity: (index: number) => void;
   onUpdateActivity: (index: number, updatedActivity: Activity) => void;
-  onGenerateDayAI?: (prompt: string) => void; 
-  isGeneratingAI?: boolean; 
+  onGenerateDayAI?: (prompt: string) => void;
+  isGeneratingAI?: boolean;
   tripType?: string;
+  needsSync: boolean;
+  onSync: () => void;
 }
 
 interface ActivityItemProps {
@@ -102,8 +104,8 @@ function ActivityItem({
       >
         <summary className="list-none cursor-pointer flex items-start md:items-center gap-4 md:gap-6">
           {/* Drag Handle - ONLY this badge triggers the drag */}
-          <div 
-            {...listeners} 
+          <div
+            {...listeners}
             className={`w-10 h-10 md:w-14 md:h-14 rounded-xl md:rounded-2xl bg-slate-900 text-white font-black text-sm md:text-lg flex items-center justify-center shrink-0 shadow-lg shadow-slate-200 transition-transform ${isEditMode ? 'cursor-grab active:cursor-grabbing hover:scale-105' : ''}`}
           >
             {idx + 1}
@@ -160,11 +162,10 @@ function ActivityItem({
                       e.stopPropagation();
                       setEditingIdx(editingIdx === idx ? null : idx);
                     }}
-                    className={`p-2 rounded-lg transition-all duration-300 ${
-                      editingIdx === idx 
-                        ? "bg-emerald-600 text-white shadow-lg shadow-emerald-200" 
+                    className={`p-2 rounded-lg transition-all duration-300 ${editingIdx === idx
+                        ? "bg-emerald-600 text-white shadow-lg shadow-emerald-200"
                         : "bg-slate-100 text-slate-600 hover:bg-slate-200"
-                    }`}
+                      }`}
                   >
                     {editingIdx === idx ? (
                       <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -188,11 +189,10 @@ function ActivityItem({
                         setTimeout(() => setConfirmDeleteIdx(null), 3000);
                       }
                     }}
-                    className={`p-2 rounded-lg transition-all duration-300 ${
-                      confirmDeleteIdx === idx
+                    className={`p-2 rounded-lg transition-all duration-300 ${confirmDeleteIdx === idx
                         ? "bg-red-600 text-white animate-pulse"
                         : "bg-red-50 text-red-500 hover:bg-red-100"
-                    }`}
+                      }`}
                   >
                     {confirmDeleteIdx === idx ? (
                       <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -217,11 +217,10 @@ function ActivityItem({
                   e.stopPropagation();
                   setEditingIdx(editingIdx === idx ? null : idx);
                 }}
-                className={`p-2.5 rounded-xl transition-all duration-300 ${
-                  editingIdx === idx 
-                    ? "bg-emerald-600 text-white shadow-lg shadow-emerald-200" 
+                className={`p-2.5 rounded-xl transition-all duration-300 ${editingIdx === idx
+                    ? "bg-emerald-600 text-white shadow-lg shadow-emerald-200"
                     : "bg-slate-100 text-slate-600 hover:bg-slate-200"
-                }`}
+                  }`}
                 title={editingIdx === idx ? "Save" : "Edit"}
               >
                 {editingIdx === idx ? (
@@ -246,11 +245,10 @@ function ActivityItem({
                     setTimeout(() => setConfirmDeleteIdx(null), 3000);
                   }
                 }}
-                className={`p-2.5 rounded-xl transition-all duration-300 ${
-                  confirmDeleteIdx === idx
+                className={`p-2.5 rounded-xl transition-all duration-300 ${confirmDeleteIdx === idx
                     ? "bg-red-600 text-white animate-pulse"
                     : "bg-red-50 text-red-500 hover:bg-red-100"
-                }`}
+                  }`}
                 title={confirmDeleteIdx === idx ? "Confirm Delete" : "Delete"}
               >
                 {confirmDeleteIdx === idx ? (
@@ -280,7 +278,7 @@ function ActivityItem({
               className="w-full bg-slate-50/50 border border-slate-200 rounded-2xl outline-none font-medium text-slate-700 text-sm md:text-base leading-relaxed p-4 min-h-[120px] focus:bg-white focus:border-violet-400 transition-all"
               value={item.desc}
               onKeyDown={(e) => {
-                if(e.key === "Enter" && !e.shiftKey) {
+                if (e.key === "Enter" && !e.shiftKey) {
                   e.preventDefault();
                   setEditingIdx(null);
                 }
@@ -310,7 +308,9 @@ const ItineraryDay: React.FC<ItineraryDayProps> = ({
   onReorder,
   onGenerateDayAI,
   isGeneratingAI,
-  tripType
+  tripType,
+  needsSync,
+  onSync
 }) => {
   const [confirmDeleteIdx, setConfirmDeleteIdx] = useState<number | null>(null);
   const [editingIdx, setEditingIdx] = useState<number | null>(null);
@@ -383,7 +383,7 @@ const ItineraryDay: React.FC<ItineraryDayProps> = ({
                                         weather.weatherCode === 85 || weather.weatherCode === 86 ? <img src={Snowing} alt="Snowing" className='w-8 h-8 md:w-10 md:h-10' /> :
                                           weather.weatherCode === 95 ? <img src={Thunderstorm} alt="Thunderstorm" className='w-8 h-8 md:w-10 md:h-10' /> :
                                             weather.weatherCode === 96 || weather.weatherCode === 99 ? <img src={Thunderstorm} alt="Thunderstorm" className='w-8 h-8 md:w-10 md:h-10' /> : ''
-                                            }
+                  }
                 </div>
                 <div className="flex flex-col">
                   <span className="text-sm md:text-lg font-black text-slate-900 leading-none">
@@ -392,15 +392,15 @@ const ItineraryDay: React.FC<ItineraryDayProps> = ({
                   <span className="text-[7px] md:text-[9px] font-bold text-violet-500 uppercase tracking-wider">
                     {weather.weatherCode === 0 ? "Hotter than your last selfie." :
                       weather.weatherCode >= 1 && weather.weatherCode <= 3 ? (
-                        tripType?.toLowerCase() === 'couple' ? "Perfect lighting for a date." : 
-                        tripType?.toLowerCase() === 'family' ? "Perfect lighting for a family picnic" :
-                        tripType?.toLowerCase() === 'solo' ? "Perfect lighting for a solo adventure" : "Mild & Nice vibes"
+                        tripType?.toLowerCase() === 'couple' ? "Perfect lighting for a date." :
+                          tripType?.toLowerCase() === 'family' ? "Perfect lighting for a family picnic" :
+                            tripType?.toLowerCase() === 'solo' ? "Perfect lighting for a solo adventure" : "Mild & Nice vibes"
                       ) :
-                      weather.weatherCode === 45 || weather.weatherCode === 48 ? "Wear sunglasses and a jacket" :
-                        (weather.weatherCode >= 51 && weather.weatherCode <= 67) ? (tripType?.toLowerCase() === 'couple' ? "Perfect excuse to stay in and cuddle." : "Free hair wash day!") :
-                        (weather.weatherCode >= 71 && weather.weatherCode <= 77 || weather.weatherCode === 85 || weather.weatherCode === 86) ? (tripType?.toLowerCase() === 'couple' ? "A winter wonderland is waiting for us." : "Prepare to look like a stylish penguin") :
-                          (weather.weatherCode >= 80 && weather.weatherCode <= 82) ? (tripType?.toLowerCase() === 'couple' ? "We'll need a shared umbrella that day." : "Main character rain vibes") :
-                            weather.weatherCode >= 95 ? "Zeus is having a tantrum!!" : "Variable Sky"}
+                        weather.weatherCode === 45 || weather.weatherCode === 48 ? "Wear sunglasses and a jacket" :
+                          (weather.weatherCode >= 51 && weather.weatherCode <= 67) ? (tripType?.toLowerCase() === 'couple' ? "Perfect excuse to stay in and cuddle." : "Free hair wash day!") :
+                            (weather.weatherCode >= 71 && weather.weatherCode <= 77 || weather.weatherCode === 85 || weather.weatherCode === 86) ? (tripType?.toLowerCase() === 'couple' ? "A winter wonderland is waiting for us." : "Prepare to look like a stylish penguin") :
+                              (weather.weatherCode >= 80 && weather.weatherCode <= 82) ? (tripType?.toLowerCase() === 'couple' ? "We'll need a shared umbrella that day." : "Main character rain vibes") :
+                                weather.weatherCode >= 95 ? "Zeus is having a tantrum!!" : "Variable Sky"}
                   </span>
                 </div>
               </div>
@@ -408,19 +408,38 @@ const ItineraryDay: React.FC<ItineraryDayProps> = ({
           </div>
         </div>
 
+        {needsSync && (
+          <div className="mb-8 p-5 bg-amber-50/50 border border-amber-100 rounded-[2rem] flex flex-col md:flex-row items-center justify-between gap-6 animate-in slide-in-from-top-4 duration-700">
+            <div className="flex items-center gap-4 text-center md:text-left">
+              <div className="w-12 h-12 bg-amber-100 rounded-2xl flex items-center justify-center text-xl shadow-inner">✨</div>
+              <div>
+                <p className="text-[10px] font-black text-amber-800 uppercase tracking-widest mb-0.5">Context Mismatch</p>
+                <p className="text-xs font-bold text-amber-600 leading-tight">This day was planned for your previous trip type. Want to refresh it?</p>
+              </div>
+            </div>
+            <button 
+              onClick={onSync}
+              className="w-full md:w-auto px-6 py-3 bg-amber-600 text-white text-[10px] font-black uppercase tracking-widest rounded-xl hover:bg-amber-700 transition-all shadow-xl shadow-amber-200 active:scale-95"
+            >
+              Update for {tripType}
+            </button>
+          </div>
+        )}
+
         <div className="space-y-6">
           {(!activities || activities.length === 0) ? (
             <div className="bg-white rounded-[2.5rem] border border-slate-100 p-8 md:p-12 text-center shadow-sm relative overflow-hidden">
               {isGeneratingAI ? (
-                <div className="flex flex-col items-center justify-center animate-in fade-in zoom-in duration-500 py-8">
-                  <div className="w-24 h-24 md:w-32 md:h-32 bg-indigo-50/50 rounded-full flex items-center justify-center mb-6 shadow-inner relative">
-                    <div className="absolute inset-0 rounded-full border-4 border-indigo-500/20 border-t-indigo-500 animate-spin" />
-                    <img src={crystalBall} alt="Generating..." className="w-16 h-16 md:w-20 md:h-20 object-contain animate-pulse" />
-                  </div>
-                  <h4 className="text-2xl font-black text-slate-900 mb-2">Consulting the Oracle...</h4>
-                  <p className="text-slate-500 font-medium max-w-sm mx-auto">
-                    Crafting the perfect day based on your vibe. Hang tight!
-                  </p>
+                <div className="space-y-6 w-full max-w-2xl mx-auto">
+                   {Array.from({ length: 3 }).map((_, i) => (
+                     <div key={`itinerary-skeleton-${i}`} className="bg-white border border-slate-100 p-8 rounded-[2.5rem] shadow-sm animate-pulse flex items-center gap-6">
+                       <div className="w-14 h-14 bg-slate-100 rounded-2xl" />
+                       <div className="flex-1 space-y-3">
+                         <div className="w-1/3 h-5 bg-slate-100 rounded-lg" />
+                         <div className="w-full h-3 bg-slate-50 rounded-lg" />
+                       </div>
+                     </div>
+                   ))}
                 </div>
               ) : (
                 <div className="animate-in fade-in duration-500">
@@ -429,105 +448,105 @@ const ItineraryDay: React.FC<ItineraryDayProps> = ({
                   </div>
                   <h4 className="text-2xl font-black text-slate-900 mb-2">You have a free day!</h4>
                   <p className="text-slate-500 font-medium mb-8 max-w-sm mx-auto">This day is completely empty. How would you like to plan it?</p>
-                  
+
                   {isEditMode ? (
                     showAIInput ? (
-                  <div className="w-full max-w-lg mx-auto animate-in fade-in slide-in-from-bottom-2 duration-300">
-                    <div className="flex flex-col gap-2">
-                      <div className="relative group">
-                        <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                          <svg className="h-5 w-5 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <div className="w-full max-w-lg mx-auto animate-in fade-in slide-in-from-bottom-2 duration-300">
+                        <div className="flex flex-col gap-2">
+                          <div className="relative group">
+                            <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                              <svg className="h-5 w-5 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                              </svg>
+                            </div>
+                            <input
+                              type="text"
+                              maxLength={100}
+                              placeholder="E.g., A relaxing morning with local coffee..."
+                              className="w-full pl-12 pr-4 md:pr-[120px] py-4 bg-slate-50 hover:bg-slate-100 focus:bg-white border border-slate-200 focus:border-slate-900 rounded-2xl outline-none font-medium text-slate-700 transition-all shadow-sm focus:shadow-md text-sm md:text-base"
+                              value={aiPrompt}
+                              onChange={(e) => setAiPrompt(e.target.value)}
+                              onKeyDown={(e) => {
+                                if (e.key === 'Enter' && !isGeneratingAI && aiPrompt.trim()) {
+                                  onGenerateDayAI?.(aiPrompt);
+                                  setShowAIInput(false);
+                                }
+                              }}
+                              autoFocus
+                            />
+                            {/* Desktop Only Buttons */}
+                            <div className="hidden md:flex absolute inset-y-2 right-2 items-center gap-1">
+                              <button
+                                onClick={() => setShowAIInput(false)}
+                                className="px-3 py-2 text-xs font-bold text-slate-400 hover:text-slate-600 transition-colors"
+                              >
+                                Cancel
+                              </button>
+                              <button
+                                onClick={() => {
+                                  if (!aiPrompt.trim()) return;
+                                  onGenerateDayAI?.(aiPrompt);
+                                  setShowAIInput(false);
+                                }}
+                                disabled={isGeneratingAI || !aiPrompt.trim()}
+                                className="w-10 h-10 bg-slate-900 text-white rounded-xl hover:bg-slate-800 transition-all flex items-center justify-center shadow-md shadow-slate-900/20"
+                              >
+                                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M14 5l7 7m0 0l-7 7m7-7H3" />
+                                </svg>
+                              </button>
+                            </div>
+                          </div>
+
+                          {/* Mobile Only Buttons */}
+                          <div className="flex md:hidden items-center justify-end gap-2 mt-1">
+                            <button
+                              onClick={() => setShowAIInput(false)}
+                              className="px-4 py-2 text-xs font-black uppercase tracking-widest text-slate-400 hover:text-slate-600 transition-colors"
+                            >
+                              Cancel
+                            </button>
+                            <button
+                              onClick={() => {
+                                if (!aiPrompt.trim()) return;
+                                onGenerateDayAI?.(aiPrompt);
+                                setShowAIInput(false);
+                              }}
+                              disabled={isGeneratingAI || !aiPrompt.trim()}
+                              className="px-6 py-2 bg-slate-900 text-white text-[10px] font-black uppercase tracking-widest rounded-xl hover:bg-slate-800 transition-all flex items-center gap-2 shadow-lg shadow-slate-900/20"
+                            >
+                              Generate
+                            </button>
+                          </div>
+                        </div>
+                        <p className="hidden md:block text-[10px] md:text-xs text-slate-400 font-medium mt-3 text-center">
+                          Press <kbd className="font-sans px-1.5 py-0.5 bg-slate-100 border border-slate-200 rounded-md text-slate-500">Enter</kbd> to generate
+                        </p>
+                      </div>
+                    ) : (
+                      <div className="flex flex-col md:flex-row gap-4 justify-center animate-in fade-in duration-300">
+                        <button
+                          onClick={onAddActivity}
+                          className="px-8 py-3.5 bg-white border border-slate-200 text-slate-600 font-bold rounded-full hover:border-slate-400 hover:text-slate-900 transition-all"
+                        >
+                          Add manually
+                        </button>
+                        <button
+                          onClick={() => setShowAIInput(true)}
+                          className="px-8 py-3.5 bg-slate-900 text-white font-bold rounded-full hover:bg-slate-800 transition-all shadow-lg shadow-slate-900/20 flex items-center justify-center gap-2"
+                        >
+                          <svg className="w-4 h-4 opacity-70" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
                           </svg>
-                        </div>
-                        <input 
-                          type="text" 
-                          maxLength={100}
-                          placeholder="E.g., A relaxing morning with local coffee..."
-                          className="w-full pl-12 pr-4 md:pr-[120px] py-4 bg-slate-50 hover:bg-slate-100 focus:bg-white border border-slate-200 focus:border-slate-900 rounded-2xl outline-none font-medium text-slate-700 transition-all shadow-sm focus:shadow-md text-sm md:text-base"
-                          value={aiPrompt}
-                          onChange={(e) => setAiPrompt(e.target.value)}
-                          onKeyDown={(e) => {
-                            if (e.key === 'Enter' && !isGeneratingAI && aiPrompt.trim()) {
-                              onGenerateDayAI?.(aiPrompt);
-                              setShowAIInput(false);
-                            }
-                          }}
-                          autoFocus
-                        />
-                        {/* Desktop Only Buttons */}
-                        <div className="hidden md:flex absolute inset-y-2 right-2 items-center gap-1">
-                          <button 
-                            onClick={() => setShowAIInput(false)}
-                            className="px-3 py-2 text-xs font-bold text-slate-400 hover:text-slate-600 transition-colors"
-                          >
-                            Cancel
-                          </button>
-                          <button 
-                            onClick={() => {
-                              if (!aiPrompt.trim()) return;
-                              onGenerateDayAI?.(aiPrompt);
-                              setShowAIInput(false);
-                            }} 
-                            disabled={isGeneratingAI || !aiPrompt.trim()}
-                            className="w-10 h-10 bg-slate-900 text-white rounded-xl hover:bg-slate-800 transition-all flex items-center justify-center shadow-md shadow-slate-900/20"
-                          >
-                            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M14 5l7 7m0 0l-7 7m7-7H3" />
-                            </svg>
-                          </button>
-                        </div>
-                      </div>
-                      
-                      {/* Mobile Only Buttons */}
-                      <div className="flex md:hidden items-center justify-end gap-2 mt-1">
-                        <button 
-                          onClick={() => setShowAIInput(false)}
-                          className="px-4 py-2 text-xs font-black uppercase tracking-widest text-slate-400 hover:text-slate-600 transition-colors"
-                        >
-                          Cancel
-                        </button>
-                        <button 
-                          onClick={() => {
-                            if (!aiPrompt.trim()) return;
-                            onGenerateDayAI?.(aiPrompt);
-                            setShowAIInput(false);
-                          }} 
-                          disabled={isGeneratingAI || !aiPrompt.trim()}
-                          className="px-6 py-2 bg-slate-900 text-white text-[10px] font-black uppercase tracking-widest rounded-xl hover:bg-slate-800 transition-all flex items-center gap-2 shadow-lg shadow-slate-900/20"
-                        >
-                          Generate
+                          Auto-fill schedule
                         </button>
                       </div>
-                    </div>
-                    <p className="hidden md:block text-[10px] md:text-xs text-slate-400 font-medium mt-3 text-center">
-                      Press <kbd className="font-sans px-1.5 py-0.5 bg-slate-100 border border-slate-200 rounded-md text-slate-500">Enter</kbd> to generate
-                    </p>
-                  </div>
-                ) : (
-                  <div className="flex flex-col md:flex-row gap-4 justify-center animate-in fade-in duration-300">
-                    <button 
-                      onClick={onAddActivity}
-                      className="px-8 py-3.5 bg-white border border-slate-200 text-slate-600 font-bold rounded-full hover:border-slate-400 hover:text-slate-900 transition-all"
-                    >
-                      Add manually
-                    </button>
-                    <button 
-                      onClick={() => setShowAIInput(true)}
-                      className="px-8 py-3.5 bg-slate-900 text-white font-bold rounded-full hover:bg-slate-800 transition-all shadow-lg shadow-slate-900/20 flex items-center justify-center gap-2"
-                    >
-                      <svg className="w-4 h-4 opacity-70" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
-                      </svg>
-                      Auto-fill schedule
-                    </button>
-                  </div>
-                )
-              ) : (
-                <div className="text-sm font-bold text-slate-400 bg-slate-50 px-4 py-2 rounded-full inline-block">No plans yet. Enter Edit Mode to add some!</div>
+                    )
+                  ) : (
+                    <div className="text-sm font-bold text-slate-400 bg-slate-50 px-4 py-2 rounded-full inline-block">No plans yet. Enter Edit Mode to add some!</div>
+                  )}
+                </div>
               )}
-              </div>
-            )}
             </div>
           ) : (
             <>
@@ -548,21 +567,33 @@ const ItineraryDay: React.FC<ItineraryDayProps> = ({
                   strategy={verticalListSortingStrategy}
                 >
                   <div className="space-y-6">
-                    {activities.map((item, idx) => (
-                      <ActivityItem
-                        key={`activity-item-${idx}`} 
-                        id={`activity-${idx}`}
-                        item={item}
-                        idx={idx}
-                        isEditMode={isEditMode}
-                        editingIdx={editingIdx}
-                        setEditingIdx={setEditingIdx}
-                        confirmDeleteIdx={confirmDeleteIdx}
-                        setConfirmDeleteIdx={setConfirmDeleteIdx}
-                        onUpdateActivity={onUpdateActivity}
-                        onDeleteActivity={onDeleteActivity}
-                      />
-                    ))}
+                    {isGeneratingAI ? (
+                      Array.from({ length: 3 }).map((_, i) => (
+                        <div key={`sync-skeleton-${i}`} className="bg-white border border-slate-100 p-8 rounded-[2.5rem] shadow-sm animate-pulse flex items-center gap-6">
+                          <div className="w-14 h-14 bg-slate-100 rounded-2xl" />
+                          <div className="flex-1 space-y-3">
+                            <div className="w-1/3 h-5 bg-slate-100 rounded-lg" />
+                            <div className="w-full h-3 bg-slate-50 rounded-lg" />
+                          </div>
+                        </div>
+                      ))
+                    ) : (
+                      activities.map((item, idx) => (
+                        <ActivityItem
+                          key={`activity-item-${idx}`}
+                          id={`activity-${idx}`}
+                          item={item}
+                          idx={idx}
+                          isEditMode={isEditMode}
+                          editingIdx={editingIdx}
+                          setEditingIdx={setEditingIdx}
+                          confirmDeleteIdx={confirmDeleteIdx}
+                          setConfirmDeleteIdx={setConfirmDeleteIdx}
+                          onUpdateActivity={onUpdateActivity}
+                          onDeleteActivity={onDeleteActivity}
+                        />
+                      ))
+                    )}
                   </div>
                 </SortableContext>
               </DndContext>
@@ -583,8 +614,8 @@ const ItineraryDay: React.FC<ItineraryDayProps> = ({
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
                             </svg>
                           </div>
-                          <input 
-                            type="text" 
+                          <input
+                            type="text"
                             placeholder="What should we add? E.g., A jazz bar..."
                             className="w-full pl-12 pr-4 md:pr-[80px] py-4 bg-slate-50 border border-slate-200 focus:border-slate-900 rounded-2xl outline-none font-medium text-slate-700 transition-all shadow-sm focus:shadow-md text-sm md:text-base"
                             value={aiPrompt}
@@ -597,7 +628,7 @@ const ItineraryDay: React.FC<ItineraryDayProps> = ({
                             }}
                             autoFocus
                           />
-                          <button 
+                          <button
                             onClick={() => {
                               if (aiPrompt.trim()) {
                                 onGenerateDayAI?.(aiPrompt);
@@ -610,25 +641,25 @@ const ItineraryDay: React.FC<ItineraryDayProps> = ({
                           </button>
                         </div>
                         <div className="flex md:hidden items-center justify-end gap-2">
-                           <button onClick={() => setShowAIInput(false)} className="text-[10px] text-slate-400 font-black uppercase tracking-widest px-2">
-                             Cancel
-                           </button>
-                           <button 
-                             onClick={() => {
-                               if (aiPrompt.trim()) {
-                                 onGenerateDayAI?.(aiPrompt);
-                                 setShowAIInput(false);
-                               }
-                             }}
-                             className="px-6 py-2 bg-slate-900 text-white text-[10px] font-black uppercase tracking-widest rounded-xl hover:bg-slate-800 transition-all shadow-lg shadow-slate-900/20"
-                           >
-                             Add
-                           </button>
+                          <button onClick={() => setShowAIInput(false)} className="text-[10px] text-slate-400 font-black uppercase tracking-widest px-2">
+                            Cancel
+                          </button>
+                          <button
+                            onClick={() => {
+                              if (aiPrompt.trim()) {
+                                onGenerateDayAI?.(aiPrompt);
+                                setShowAIInput(false);
+                              }
+                            }}
+                            className="px-6 py-2 bg-slate-900 text-white text-[10px] font-black uppercase tracking-widest rounded-xl hover:bg-slate-800 transition-all shadow-lg shadow-slate-900/20"
+                          >
+                            Add
+                          </button>
                         </div>
                       </div>
                     </div>
                   ) : (
-                    <button 
+                    <button
                       onClick={() => setShowAIInput(true)}
                       className="w-full px-8 py-3.5 bg-slate-900 text-white font-bold rounded-full hover:bg-slate-800 transition-all shadow-lg shadow-slate-900/20 flex items-center justify-center gap-2 group"
                     >

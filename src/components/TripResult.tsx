@@ -244,6 +244,9 @@ export default function TripResult({
   const [isGeneratingSummary, setIsGeneratingSummary] = useState(false);
   const [exchangeRate, setExchangeRate] = useState(1);
   const [currencyMode, setCurrencyMode] = useState<'INR' | 'LOCAL'>('INR');
+  const [originalType, setOriginalType] = useState(data?.type);
+
+  const isTypeMismatched = originalType !== data?.type;
 
 
   const dayRefs = useRef<{ [key: number]: HTMLButtonElement | null }>({});
@@ -756,16 +759,7 @@ async function onClickSaveTrip() {
               />
             </div>
             <div className='flex md:flex-col justify-between items-center'>
-              {isEditMode ? (
-                <input
-                  className="bg-transparent border-b border-violet-200 outline-none text-5xl md:text-8xl font-black text-slate-900 leading-none tracking-tight w-full max-w-full md:max-w-[90%]"
-                  value={destination}
-                  onChange={(e) => handleUpdateStats('Destination', e.target.value)}
-                  autoFocus
-                />
-              ) : (
                 <h2 className="text-5xl md:text-8xl font-black text-slate-900 leading-none tracking-tight">{destination}</h2>
-              )}
             </div>
           </div>
           <div className="shrink-0">
@@ -1015,6 +1009,14 @@ async function onClickSaveTrip() {
                       year: 'numeric'
                     });
                   })() : undefined}
+                  needsSync={isTypeMismatched}
+                   onSync={() => {
+                        // 1. Tell the AI to rewrite the day for the NEW trip type
+                        handleGenerateDayAI(activeDay, `Rewrite this itinerary day specifically for a ${data.type} trip.`);
+                        
+                        // 2. IMPORTANT: Update the originalType so the warning disappears after sync
+                        setOriginalType(data.type);
+                    }}        
                 />
               </div>
 
@@ -1080,14 +1082,7 @@ async function onClickSaveTrip() {
           </div>
 
           <div className="grid lg:grid-cols-3 gap-8 relative overflow-hidden">
-            {isGeneratingBudget && (
-    <div className="absolute inset-0 bg-white/60 backdrop-blur-md z-20 flex flex-col items-center justify-center animate-in fade-in duration-500 rounded-[3rem]">
-       <div className="w-12 h-12 border-4 border-slate-900 border-t-violet-500 rounded-full animate-spin mb-4" />
-       <p className="text-slate-900 font-black text-xs uppercase tracking-widest animate-pulse">
-         Syncing with AI...
-       </p>
-    </div>
-  )}
+
             <div className="lg:col-span-1">
               <div className="h-full bg-slate-900 rounded-[3rem] p-10 flex flex-col justify-between relative overflow-hidden group">
                 <div className="absolute -bottom-10 -right-10 w-40 h-40 bg-violet-500/20 rounded-full blur-3xl group-hover:scale-150 transition-transform duration-1000" />
@@ -1154,22 +1149,38 @@ async function onClickSaveTrip() {
               </div>
             </div>
 
-            <div className="lg:col-span-2 grid sm:grid-cols-2 gap-6">
-              {((data.budgetEstimate?.length ? data.budgetEstimate : data.plan?.budgetEstimate?.length ? data.plan.budgetEstimate : null) || HARDCODED_BUDGET_ROWS).map((row: any, idx: number) => (
-                <article
-                  key={row.label || row.category || `budget-${idx}`}
-                  className="group relative bg-white border border-slate-100 p-8 rounded-[2.5rem] shadow-xl shadow-slate-200/30 hover:border-violet-200 transition-all duration-300"
-                >
-                  <div className="flex items-center justify-between mb-6">
-                    <div className="w-10 h-10 rounded-xl bg-slate-50 flex items-center justify-center font-black text-xs text-slate-400 group-hover:bg-violet-600 group-hover:text-white transition-all">
-                      0{idx + 1}
+            <div className="lg:col-span-2 grid sm:grid-cols-2 gap-6 relative">
+              {isGeneratingBudget ? (
+                // Premium Skeleton Grid
+                Array.from({ length: 6 }).map((_, i) => (
+                  <div key={`skeleton-${i}`} className="bg-white border border-slate-100 p-8 rounded-[2.5rem] shadow-xl shadow-slate-200/20 animate-pulse">
+                    <div className="flex items-center justify-between mb-6">
+                      <div className="w-10 h-10 rounded-xl bg-slate-100" />
+                      <div className="w-24 h-6 bg-slate-100 rounded-lg" />
                     </div>
-                    <span className="text-lg font-black text-slate-900 tracking-tight">{formatPrice(row.amount)}</span>
+                    <div className="w-3/4 h-5 bg-slate-100 rounded-lg mb-3" />
+                    <div className="w-full h-3 bg-slate-50 rounded-lg mb-2" />
+                    <div className="w-2/3 h-3 bg-slate-50 rounded-lg" />
                   </div>
-                  <h5 className="font-bold text-slate-900 text-xl mb-2">{row.label || row.category}</h5>
-                  <p className="text-slate-500 text-sm leading-relaxed">{row.note}</p>
-                </article>
-              ))}
+                ))
+              ) : (
+                // Actual Budget Cards
+                ((data.budgetEstimate?.length ? data.budgetEstimate : data.plan?.budgetEstimate?.length ? data.plan.budgetEstimate : null) || HARDCODED_BUDGET_ROWS).map((row: any, idx: number) => (
+                  <article
+                    key={row.label || row.category || `budget-${idx}`}
+                    className="group relative bg-white border border-slate-100 p-8 rounded-[2.5rem] shadow-xl shadow-slate-200/30 hover:border-violet-200 transition-all duration-300"
+                  >
+                    <div className="flex items-center justify-between mb-6">
+                      <div className="w-10 h-10 rounded-xl bg-slate-50 flex items-center justify-center font-black text-xs text-slate-400 group-hover:bg-violet-600 group-hover:text-white transition-all">
+                        0{idx + 1}
+                      </div>
+                      <span className="text-lg font-black text-slate-900 tracking-tight">{formatPrice(row.amount)}</span>
+                    </div>
+                    <h5 className="font-bold text-slate-900 text-xl mb-2">{row.label || row.category}</h5>
+                    <p className="text-slate-500 text-sm leading-relaxed">{row.note}</p>
+                  </article>
+                ))
+              )}
             </div>
           </div>
         </section>
