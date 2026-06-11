@@ -922,7 +922,7 @@ async function onClickSaveTrip() {
             {/* Horizontal Tabs - Refined sliding mechanism */}
             <div className="relative mb-8 md:mb-10">
               <div 
-                className="relative flex bg-white w-fit max-w-[calc(100vw-3rem)] lg:max-w-5xl p-2 rounded-[2.5rem] scroll-smooth shadow-xl shadow-slate-200/40 border border-slate-100 overflow-x-auto snap-x custom-scrollbar"
+                className="relative flex bg-white w-full md:w-fit md:max-w-5xl p-2 rounded-[2.5rem] scroll-smooth shadow-xl shadow-slate-200/40 border border-slate-100 overflow-x-auto snap-x custom-scrollbar"
                 style={{
                   '--tab-w': '85px',
                   '--tab-gap': '8px',

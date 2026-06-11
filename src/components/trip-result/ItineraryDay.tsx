@@ -106,6 +106,7 @@ function ActivityItem({
           {/* Drag Handle - ONLY this badge triggers the drag */}
           <div
             {...listeners}
+            style={{ touchAction: isEditMode ? 'none' : 'auto' }}
             className={`w-10 h-10 md:w-14 md:h-14 rounded-xl md:rounded-2xl bg-slate-900 text-white font-black text-sm md:text-lg flex items-center justify-center shrink-0 shadow-lg shadow-slate-200 transition-transform ${isEditMode ? 'cursor-grab active:cursor-grabbing hover:scale-105' : ''}`}
           >
             {idx + 1}
