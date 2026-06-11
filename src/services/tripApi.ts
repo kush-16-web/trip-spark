@@ -79,6 +79,23 @@ export interface PlanTripApiResponse {
 
 export const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8080/api';
 
+/** Thrown when the server returns 401 – the user's session/token has expired. */
+export class AuthExpiredError extends Error {
+  constructor(message = 'Your session has expired. Please log in again.') {
+    super(message);
+    this.name = 'AuthExpiredError';
+  }
+}
+
+/** Clears stale auth data and throws AuthExpiredError on 401 responses. */
+function handleUnauthorized(response: Response): void {
+  if (response.status === 401) {
+    localStorage.removeItem('auth_token');
+    localStorage.removeItem('auth_user');
+    throw new AuthExpiredError();
+  }
+}
+
 export interface MyTripListItem {
   id: string;
   shareId: string;
@@ -128,6 +145,7 @@ export async function planTrip(payload: TripFormPayload): Promise<PlanTripApiRes
     body: JSON.stringify(payload),
   });
 
+  handleUnauthorized(response);
   const data = (await response.json()) as PlanTripApiResponse | { message?: string };
 
   if (!response.ok) {
@@ -146,6 +164,7 @@ export async function getMyTrips(): Promise<MyTripsApiResponse> {
   const response = await fetch(`${API_BASE_URL}/trip/my-trips`, {
     headers
   });
+  handleUnauthorized(response);
   const data = (await response.json()) as MyTripsApiResponse | { message?: string };
 
   if (!response.ok) {
@@ -183,6 +202,7 @@ export async function deletetrip(id: string){
       'Authorization' : `Bearer ${token}`,
     }
   });
+  handleUnauthorized(response);
   if(!response.ok) throw new Error('Failed to delete trip');
   return response.json();
 }
@@ -197,6 +217,7 @@ export async function updatetrip(id: string, update: any){
     },
     body: JSON.stringify(update)
   });
+  handleUnauthorized(response);
   if(!response.ok) throw new Error('failed to update trip');
   return response.json();
 }
@@ -211,6 +232,7 @@ export async function refineTrip(id: string, instruction: string){
     },
     body: JSON.stringify({ id, instruction })
   })
+  handleUnauthorized(response);
   const data = (await response.json()) as { ok: boolean; message: string; plan: TripPlanModel };
   if(!response.ok) throw new Error(data.message);
   return data;
@@ -227,6 +249,7 @@ export async function savedTrip(tripData:any) {
     },
     body: JSON.stringify(tripData)
   })
+  handleUnauthorized(response);
   const data = (await response.json()) as { ok: boolean; message: string; tripId: string; shareId: string };
   if(!response.ok) throw new Error(data.message);
   return data;

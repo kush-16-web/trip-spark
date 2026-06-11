@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import type { MyTripListItem } from '../services/tripApi';
-import { deletetrip, getMyTrips } from '../services/tripApi';
+import { deletetrip, getMyTrips, AuthExpiredError } from '../services/tripApi';
 import toast from 'react-hot-toast';
 import { auth } from '../lib/firebase';
 import { signOut } from 'firebase/auth';
@@ -22,6 +22,7 @@ export default function MyTrips({ onOpenTrip, onBackToPlanner, onTripDeleted }: 
   const [trips, setTrips] = useState<MyTripListItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [isAuthExpired, setIsAuthExpired] = useState(false);
   const [tripToDelete, setTripToDelete] = useState<string | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
@@ -30,10 +31,16 @@ export default function MyTrips({ onOpenTrip, onBackToPlanner, onTripDeleted }: 
     try {
       setLoading(true);
       setError(null);
+      setIsAuthExpired(false);
       const response = await getMyTrips();
       setTrips(response.trips);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Unable to load trips');
+      if (err instanceof AuthExpiredError) {
+        setIsAuthExpired(true);
+        setError(err.message);
+      } else {
+        setError(err instanceof Error ? err.message : 'Unable to load trips');
+      }
     } finally {
       setLoading(false);
     }
@@ -72,6 +79,12 @@ export default function MyTrips({ onOpenTrip, onBackToPlanner, onTripDeleted }: 
       console.error('Sign out failed:', error);
       toast.error('Failed to sign out.');
     }
+  };
+
+  const handleReLogin = () => {
+    // Tokens are already cleared by AuthExpiredError handler in tripApi.
+    // Reload the page — user will land on home as logged-out and can log in again.
+    window.location.href = '/';
   };
 
   return (
@@ -128,12 +141,38 @@ export default function MyTrips({ onOpenTrip, onBackToPlanner, onTripDeleted }: 
               <div key={i} className="h-80 bg-slate-50 rounded-[3rem] animate-pulse" />
             ))}
           </div>
+        ) : error && isAuthExpired ? (
+          <motion.div 
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="text-center py-32 bg-white rounded-[3rem] border border-slate-100 shadow-2xl shadow-slate-200/50 px-10 max-w-2xl mx-auto"
+          >
+            <div className="w-24 h-24 bg-amber-50 rounded-[2rem] flex items-center justify-center mx-auto mb-8 shadow-inner">
+              <svg className="w-12 h-12 text-amber-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m0 0v2m0-2h2m-2 0H10m9.364-7.364A9 9 0 1112 3a9 9 0 017.364 4.636z" />
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 7a3 3 0 11-6 0 3 3 0 016 0z" />
+              </svg>
+            </div>
+            <h2 className="text-3xl font-black text-slate-900 mb-4 tracking-tight">Session Expired</h2>
+            <p className="text-slate-500 font-medium mb-4 text-lg">
+              You've been away for a while and your login session has expired.
+            </p>
+            <p className="text-slate-400 font-medium mb-12 text-base">
+              No worries — your trips are safe! Just log in again to access them.
+            </p>
+            <button
+              onClick={handleReLogin}
+              className="px-10 py-5 bg-violet-600 text-white rounded-2xl font-black uppercase tracking-widest text-xs hover:bg-violet-700 transition-all shadow-xl shadow-violet-200 hover:shadow-2xl hover:shadow-violet-300 active:scale-95"
+            >
+              Log In Again
+            </button>
+          </motion.div>
         ) : error ? (
           <div className="text-center py-32 bg-white rounded-[3rem] border border-slate-100 shadow-2xl shadow-slate-200/50 px-10 max-w-2xl mx-auto">
             <div className="text-6xl mb-8">⚠️</div>
-            <h2 className="text-3xl font-black text-slate-900 mb-4 tracking-tight">Sync Issue</h2>
+            <h2 className="text-3xl font-black text-slate-900 mb-4 tracking-tight">Connection Issue</h2>
             <p className="text-slate-500 font-medium mb-12 text-lg">
-              We couldn't reach your cloud storage. Check your connection and try again.
+              We couldn't reach the server. Check your connection and try again.
             </p>
             <button
               onClick={() => fetchTrips()}
