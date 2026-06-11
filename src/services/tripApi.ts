@@ -131,6 +131,7 @@ export interface TripByIdApiResponse {
     isPublic: boolean;
     plan: TripPlanModel;
     weather: Weather[] | null;
+    shareMessage?: string;
   };
 }
 

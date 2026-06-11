@@ -66,7 +66,7 @@ export const planTrip = async (
 
 export const saveTrip = async (req: AuthRequest, res: Response) => {
   try{
-    const {destination,days,travelers,type,startDate,endDate,plan,weather} = req.body;
+    const {destination,days,travelers,type,startDate,endDate,plan,weather,shareMessage} = req.body;
     const savedTrip = await prisma.tripPlan.create({
        data: {
         destination,
@@ -77,6 +77,7 @@ export const saveTrip = async (req: AuthRequest, res: Response) => {
         endDate,
         plan: plan as any,
         weather: weather as any,
+        shareMessage: shareMessage || null,
         ownerId: req.userId, // Must be logged in to save
         isPublic: true,
       },
@@ -149,6 +150,7 @@ export const getTripById = async (req: Request<{ id: string }>, res: Response) =
         isPublic: true,
         plan: true,
         weather: true,
+        shareMessage: true,
       },
     })
 
@@ -192,6 +194,7 @@ try {
       isPublic: true,
       plan: true,
       weather: true,
+      shareMessage: true,
     },
   })
   if(!trip){
@@ -278,7 +281,8 @@ export const updatetrip = async (req: AuthRequest<{id: string}>, res:Response) =
       startDate,
       endDate,
       plan,
-      weather
+      weather,
+      shareMessage
     } = req.body;
     
     // We explicitly map the properties to avoid crashing Prisma with unknown frontend fields
@@ -293,6 +297,7 @@ export const updatetrip = async (req: AuthRequest<{id: string}>, res:Response) =
         endDate: endDate || undefined,
         plan: plan ? plan : undefined,
         weather: weather ? weather : undefined,
+        shareMessage: shareMessage !== undefined ? shareMessage : undefined,
       }
     });
     

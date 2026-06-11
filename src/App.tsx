@@ -27,6 +27,7 @@ interface TripState extends Partial<TripPlanModel> {
   vibe?: string;
   shareId?: string;
   id?: string;
+  shareMessage?: string;
 
 }
 
@@ -170,6 +171,7 @@ function App() {
         ...plan,
         weather: plannedTrip.weather,
         shareId: plannedTrip.shareId,
+        shareMessage: plannedTrip.shareMessage,
       } as TripState);
       setShowResult(true);
       navigate('/'); // Go back to planner to show the result
@@ -198,6 +200,7 @@ function App() {
         endDate: plannedTrip.endDate,
         weather: plannedTrip.weather,
         shareId: plannedTrip.shareId,
+        shareMessage: plannedTrip.shareMessage,
       } as TripState);
       setShowResult(true);
     } catch (error) {

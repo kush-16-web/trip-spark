@@ -32,11 +32,14 @@ model TripPlan {
   plan        Json
   weather     Json?
   shareId     String   @unique @default(cuid())
+  shareMessage String?
   isPublic    Boolean  @default(true)
   ownerId     String?
   owner       User?    @relation(fields: [ownerId], references: [id])
   updatedAt   DateTime @updatedAt
 }
+
+
 
 model HotelCache {
   id               String   @id @default(cuid())

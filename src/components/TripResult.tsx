@@ -60,6 +60,7 @@ export interface TripResultData {
   exchangeRate?: number;
   localCurrency?: any;
   plan?: Partial<TripResultData>;
+  shareMessage?: string;
 }
 
 interface TripResultProps {
@@ -239,6 +240,12 @@ export default function TripResult({
   const isOwner = loggedInUser?.uid === data?.ownerId;
   const showSavedState = isSaved || (isOwner && !!data?.id);
   const [localDayplan, setLocalDayplan] = useState<DayPlan[]>(data?.dayPlan || data?.plan?.dayPlan || []);
+  const [isDeletingActivity, setIsDeletingActivity] = useState(false);
+
+  const [showShareModal, setShowShareModal] = useState(false);
+  const [customMessage, setCustomMessage] = useState("");
+  const [hasRevealed, setHasRevealed] = useState(false);
+
   const [isGeneratingDay, setIsGeneratingDay] = useState(false);
   const [isGeneratingBudget, setIsGeneratingBudget] = useState(false);
   const [isGeneratingSummary, setIsGeneratingSummary] = useState(false);
@@ -571,12 +578,14 @@ async function onClickSaveTrip() {
       ...data,
       destination: data?.Destination || (data as any).destination,
       plan: data?.plan || data, // Ensure plan object is present
+      shareMessage: customMessage
     };
     const result = await savedTrip(payload); 
     
     if (result.ok) {
-      onUpdateTripData?.({ id: result.tripId, shareId: result.shareId });
+      onUpdateTripData?.({ id: result.tripId, shareId: result.shareId, shareMessage: customMessage });
       setIsSaved(true);
+      setShowShareModal(false);
       toast.success("Trip saved to your account! ✈️");
     }
   } catch (error) {
@@ -598,6 +607,25 @@ async function onClickSaveTrip() {
 
   const destination = data.Destination?.trim() || 'your destination';
   const dayCount = Math.max(1, Number(data?.days) || data.dayPlan?.length || 1);
+
+  const isSharedView = window.location.pathname.includes('/share/');
+
+  if (!isEditMode && data?.shareMessage && !hasRevealed && isSharedView) {
+    return (
+      <div className="fixed inset-0 bg-violet-600 z-[100] flex flex-col items-center justify-center p-6">
+         <h2 className="text-white text-3xl font-bold text-center max-w-2xl leading-relaxed">
+           {data.shareMessage}
+         </h2>
+         <button 
+           onClick={() => setHasRevealed(true)}
+           className="mt-8 bg-white text-violet-600 px-8 py-4 rounded-full font-black hover:scale-105 transition-transform"
+         >
+           Reveal Itinerary ✨
+         </button>
+      </div>
+    );
+  }
+
   const days = Array.from({ length: dayCount }, (_, i) => i + 1);
   // const activeDayPlan = data.dayPlan?.find((item) => item.day === activeDay);
   const handleUpdateStats = (field: string, value: any) => {
@@ -900,9 +928,9 @@ async function onClickSaveTrip() {
                           <div className="flex-shrink-0 w-10 h-10 md:w-12 md:h-12 rounded-2xl bg-slate-50 border border-slate-100 flex items-center justify-center group-hover/item:bg-slate-900 group-hover/item:border-slate-900 transition-all duration-300 shadow-sm">
                             <span className="text-slate-400 font-black text-xs md:text-sm group-hover/item:text-white">0{idx + 1}</span>
                           </div>
-                          <p className="text-slate-600 text-sm md:text-lg leading-relaxed font-medium pt-1 md:pt-2">
+                          <div className="text-slate-600 text-sm md:text-lg leading-relaxed font-medium pt-1 md:pt-2">
                             <GhostWriter text={item} />
-                          </p>
+                          </div>
                         </div>
                       ))}
                     </div>
@@ -1257,16 +1285,7 @@ async function onClickSaveTrip() {
                     <button
                       type="button"
                       onClick={() => {
-                        if (navigator.share) {
-                          navigator.share({
-                            title: `Trip to ${data.Destination}`,
-                            text: `Check out my itinerary for ${data.Destination}!`,
-                            url: `${window.location.origin}/share/${data.shareId}`,
-                          });
-                        } else {
-                          navigator.clipboard.writeText(`${window.location.origin}/share/${data.shareId}`);
-                          alert('Link copied to clipboard!');
-                        }
+                        setShowShareModal(true);
                       }}
                       className="w-full md:w-auto py-2.5 sm:px-6 sm:py-4 bg-white text-slate-900 border-2 border-slate-200 rounded-2xl font-bold text-sm sm:text-lg hover:border-violet-400 hover:text-violet-600 hover:translate-y-[-2px] transition-all duration-300 active:scale-95 flex items-center justify-center gap-2"
                     >
@@ -1336,6 +1355,52 @@ async function onClickSaveTrip() {
                 </button>
               </div>
             </div>
+          </div>
+        )}
+
+        {/* Share Modal */}
+        {showShareModal && (
+          <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-md flex items-center justify-center z-[200] p-4">
+             <div className="bg-white p-8 rounded-[2.5rem] max-w-md w-full shadow-2xl">
+                <h3 className="text-2xl font-black text-slate-900 mb-2">Add a Custom Message</h3>
+                <p className="text-slate-500 mb-6 font-medium text-sm">This message will be shown to anyone who opens the link before revealing the itinerary. (Optional)</p>
+                <textarea 
+                  value={customMessage} 
+                  onChange={(e) => setCustomMessage(e.target.value)}
+                  placeholder="E.g., Hey guys, pack your bags!"
+                  className="w-full bg-slate-50 border border-slate-200 rounded-2xl p-4 min-h-[120px] outline-none focus:border-violet-400 focus:bg-white transition-all font-medium text-slate-700 mb-6"
+                />
+                <div className="flex gap-3">
+                  <button 
+                    onClick={() => setShowShareModal(false)}
+                    className="flex-1 bg-slate-100 text-slate-600 py-4 rounded-xl font-bold hover:bg-slate-200 transition-colors"
+                  >
+                     Cancel
+                  </button>
+                  <button 
+                    onClick={async () => {
+                       const finalData = { ...data, shareMessage: customMessage };
+                       await onSaveTripUpdates(finalData);
+                       
+                       const url = `${window.location.origin}/share/${data.shareId}`;
+                       if (navigator.share) {
+                          navigator.share({
+                            title: `Trip to ${data.Destination}`,
+                            text: `Check out my itinerary for ${data.Destination}!`,
+                            url: url,
+                          }).catch(console.error);
+                       } else {
+                          navigator.clipboard.writeText(url);
+                          toast.success('Link copied to clipboard!');
+                       }
+                       setShowShareModal(false);
+                    }}
+                    className="flex-1 bg-violet-600 text-white py-4 rounded-xl font-bold hover:bg-violet-700 shadow-xl shadow-violet-200 active:scale-95 transition-all"
+                  >
+                     Generate Link
+                  </button>
+                </div>
+             </div>
           </div>
         )}
       </div>

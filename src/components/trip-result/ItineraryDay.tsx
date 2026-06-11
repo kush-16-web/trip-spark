@@ -287,9 +287,9 @@ function ActivityItem({
               onChange={(e) => onUpdateActivity(idx, { ...item, desc: e.target.value })}
             />
           ) : (
-            <p className="text-slate-600 leading-relaxed text-[13px] md:text-lg font-medium bg-slate-50/40 p-4 md:p-6 rounded-2xl md:rounded-3xl border border-slate-100/30">
+            <div className="text-slate-600 leading-relaxed text-[13px] md:text-lg font-medium bg-slate-50/40 p-4 md:p-6 rounded-2xl md:rounded-3xl border border-slate-100/30">
               <GhostWriter text={item.desc} />
-            </p>
+            </div>
           )}
         </div>
       </details>
